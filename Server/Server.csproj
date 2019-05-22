@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <ApplicationIcon />
+    <StartupObject></StartupObject>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Demos.contentarchive" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Content\ServerContents.contentarchive" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MySql.Data" Version="8.0.16" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BepuPhysics\BepuPhysics.csproj" />
+    <ProjectReference Include="..\BepuUtilities\BepuUtilities.csproj" />
+    <ProjectReference Include="..\ContentLoader\ContentLoader.csproj" />
+    <ProjectReference Include="..\ContentRenderer\ContentRenderer.csproj" />
+  </ItemGroup>
+
+</Project>
