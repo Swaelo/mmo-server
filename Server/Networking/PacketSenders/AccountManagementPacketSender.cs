@@ -1,4 +1,9 @@
-﻿using Server.Interface;
+﻿// ================================================================================================================================
+// File:        AccountManagementPacketSender.cs
+// Description: Formats and delivers network packets to game clients while they are logging into or creating new user accounts
+// ================================================================================================================================
+
+using Server.Interface;
 using Server.Database;
 using Server.Data;
 
@@ -12,7 +17,7 @@ namespace Server.Networking.PacketSenders
             //Fetch the packet writer, write the packet type, and log a window message
             PacketWriter QueueWriter = PacketSender.GetQueueWriter(ClientID);
             QueueWriter.WriteInt((int)ServerPacketType.AccountRegistrationReply);
-            Log.OutgoingPacketsWindow.DisplayNewMessage(ClientID + ": AccountManagement.AccountRegistrationReply");
+            Log.PrintOutgoingPacketMessage(ClientID + ": AccountManagement.AccountRegistrationReply");
 
             //Write the rest of the packet data
             QueueWriter.WriteInt(RegistrationSuccess ? 1 : 0);
@@ -25,7 +30,7 @@ namespace Server.Networking.PacketSenders
             //Fetch the packet writer, write the packet type, and log a window message
             PacketWriter QueueWriter = PacketSender.GetQueueWriter(ClientID);
             QueueWriter.WriteInt((int)ServerPacketType.AccountLoginReply);
-            Log.OutgoingPacketsWindow.DisplayNewMessage(ClientID + ": AccountManagement.AccountLoginReply");
+            Log.PrintOutgoingPacketMessage(ClientID + ": AccountManagement.AccountLoginReply");
 
             //Write the rest of the packet data
             QueueWriter.WriteInt(LoginSuccess ? 1 : 0);
@@ -65,7 +70,7 @@ namespace Server.Networking.PacketSenders
             //Fetch the packet writer, write the packet type, and log a window message
             PacketWriter QueueWriter = PacketSender.GetQueueWriter(ClientID);
             QueueWriter.WriteInt((int)ServerPacketType.CharacterCreationReply);
-            Log.OutgoingPacketsWindow.DisplayNewMessage(ClientID + ": AccountManagement.CharacterCreationReply");
+            Log.PrintOutgoingPacketMessage(ClientID + ": AccountManagement.CharacterCreationReply");
 
             //Write the rest of the packet data
             QueueWriter.WriteInt(CreationSuccess ? 1 : 0);
@@ -78,7 +83,7 @@ namespace Server.Networking.PacketSenders
             //Fetch the packet writer, write the packet type, and log a window message
             PacketWriter QueueWriter = PacketSender.GetQueueWriter(ClientID);
             QueueWriter.WriteInt((int)ServerPacketType.CharacterDataReply);
-            Log.OutgoingPacketsWindow.DisplayNewMessage(ClientID + ": AccountManagement.CharacterDataRequest");
+            Log.PrintOutgoingPacketMessage(ClientID + ": AccountManagement.CharacterDataRequest");
 
             //Get the number of characters in the users account, write that number into the packet
             int CharacterCount = CharactersDatabase.GetCharacterCount(AccountName);

@@ -5,7 +5,6 @@
 
 using System;
 using System.Numerics;
-using BepuUtilities;
 using MySql.Data.MySqlClient;
 using Server.Data;
 

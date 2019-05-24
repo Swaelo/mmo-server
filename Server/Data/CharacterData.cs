@@ -4,7 +4,6 @@
 // ================================================================================================================================
 
 using System.Numerics;
-using BepuUtilities;
 using Quaternion = BepuUtilities.Quaternion;
 
 namespace Server.Data

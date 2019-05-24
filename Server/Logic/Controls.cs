@@ -1,16 +1,12 @@
 ﻿// ================================================================================================================================
-// File:        Constrols.cs
-// Description: 
+// File:        Controls.cs
+// Description: Taken from the bepu demos
 // ================================================================================================================================
 
-//System includes
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
-//Demo includes
 using ServerUtilities;
-//OpenTK includes
 using OpenTK.Input;
 
 namespace Server.Logic

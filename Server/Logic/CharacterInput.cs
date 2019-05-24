@@ -1,24 +1,17 @@
 ﻿// ================================================================================================================================
 // File:        CharacterInput.cs
-// Description: 
+// Description: Taken from the bepu demos
 // ================================================================================================================================
 
-using BepuUtilities;
 using ContentRenderer;
 using BepuPhysics;
 using BepuPhysics.Collidables;
 using System.Numerics;
-using Quaternion = BepuUtilities.Quaternion;
 using System;
 using BepuPhysics.CollisionDetection;
 using System.Runtime.CompilerServices;
-using System.Diagnostics;
 using BepuPhysics.Constraints;
-using ContentLoader;
 using ServerUtilities;
-using BepuUtilities.Memory;
-using static BepuUtilities.GatherScatter;
-using BepuUtilities.Collections;
 using ContentRenderer.UI;
 using OpenTK.Input;
 

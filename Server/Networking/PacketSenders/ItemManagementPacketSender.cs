@@ -1,4 +1,9 @@
-﻿using System.Collections.Generic;
+﻿// ================================================================================================================================
+// File:        ItemManagementPacketSender.cs
+// Description: Formats and delivers network packets to game clients to keep them updated on the state of any item pickups in the game world
+// ================================================================================================================================
+
+using System.Collections.Generic;
 using Server.Maths;
 using Server.Interface;
 using Server.GameItems;
@@ -11,7 +16,7 @@ namespace Server.Networking.PacketSenders
         public static void SendListSpawnItemPickup(List<ClientConnection> Clients, GameItem ItemPickup)
         {
             //Log a message to the display window
-            Log.OutgoingPacketsWindow.DisplayNewMessage("ItemManagement.SendListSpawnItemPickup");
+            Log.PrintOutgoingPacketMessage("ItemManagement.SendListSpawnItemPickup");
 
             //Loop through each client in the list who needs to have this information delivered to them
             foreach(ClientConnection Client in Clients)
@@ -31,7 +36,7 @@ namespace Server.Networking.PacketSenders
         public static void SendListRemoveItemPickup(List<ClientConnection> Clients, int ItemID)
         {
             //Log a message to the display window
-            Log.OutgoingPacketsWindow.DisplayNewMessage("ItemManagement.SendListRemoveItemPickup");
+            Log.PrintOutgoingPacketMessage("ItemManagement.SendListRemoveItemPickup");
 
             //Loop through each client in the list
             foreach(ClientConnection Client in Clients)

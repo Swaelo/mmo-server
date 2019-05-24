@@ -1,13 +1,12 @@
 ﻿// ================================================================================================================================
 // File:        SceneSet.cs
-// Description: 
+// Description: Maintains a list of game scenes that can be swapped between during runtime, taken from the bepu demos
 // ================================================================================================================================
 
 using ContentLoader;
 using ContentRenderer;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Server.Scenes
 {

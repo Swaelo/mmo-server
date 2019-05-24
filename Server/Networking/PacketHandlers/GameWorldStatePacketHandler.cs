@@ -1,12 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿// ================================================================================================================================
+// File:        GameWorldStatePacketHandler.cs
+// Description: Handles client packets regarding the current state of the game world
+// ================================================================================================================================
+
+using System.Numerics;
 using Server.Interface;
+using System.Collections.Generic;
 using Server.Networking.PacketSenders;
 using Server.Entities;
 using Server.Maths;
 using Server.GameItems;
+using Server.Scenes;
 using Server.Database;
+using BepuPhysics;
+using BepuPhysics.Collidables;
+using Quaternion = BepuUtilities.Quaternion;
 
 namespace Server.Networking.PacketHandlers
 {
@@ -16,7 +24,7 @@ namespace Server.Networking.PacketHandlers
         public static void HandleEnterWorldRequest(int ClientID, byte[] PacketData)
         {
             //Log a message to the display window
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": GameWorldState.EnterWorldRequest");
+            Log.PrintIncomingPacketMessage(ClientID + ": GameWorldState.EnterWorldRequest");
 
             //Open up the network packet and read the type in from it
             PacketReader Reader = new PacketReader(PacketData);
@@ -105,36 +113,30 @@ namespace Server.Networking.PacketHandlers
             }
         }
 
-        //After recieving the active player list, the new client will then request info about all the active entities in the game
-        public static void HandleActiveEntityRequest(int ClientID, byte[] PacketData)
-        {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": GameWorldState.ActiveEntityRequest");
-
-            GameWorldStatePacketSender.SendActiveEntityList(ClientID);
-        }
-
-        //After recieving the active entity list, the new client will then request to be sent the list of items active in the game world
-        public static void HandleActiveItemRequest(int ClientID, byte[] PacketData)
-        {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": GameWorldState.ActiveItemRequest");
-
-            GameWorldStatePacketSender.SendActiveItemList(ClientID);
-        }
-
         //After recieving the active entity list, the new client will tell us they are ready to enter into the game world
         public static void HandleNewPlayerReady(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": GameWorldState.NewPlayerReady");
+            Log.PrintIncomingPacketMessage(ClientID + ": GameWorldState.NewPlayerReady");
 
+            //Store the new clients information
             ClientConnection NewClient = ConnectionManager.ActiveConnections[ClientID];
             NewClient.InGame = true;
-            Log.PrintDebugMessage("TODO: add player collider to game world when they join");
-            //NewClient.ServerCollider = new BEPUphysics.Entities.Prefabs.Sphere(NewClient.CharacterPosition, 1);
-            //Physics.WorldSimulator.Space.Add(NewClient.ServerCollider);
-            //Rendering.Window.Instance.ModelDrawer.Add(NewClient.ServerCollider);
-            ////All the other players need to be told about the new player
-            //List<ClientConnection> OtherClients = ConnectionManager.GetActiveClientsExceptFor(ClientID);
-            //l.og(ClientID + " has entered the game");
+
+            //Add a new collider into the physics scene to represent where this client is located
+            Simulation Scene = SceneHarness.CurrentScene.Simulation;
+            Capsule ClientShape = new Capsule(0.5f, 1);
+            CollidableDescription ClientDescription = new CollidableDescription(Scene.Shapes.Add(ClientShape), 0.1f);
+            ClientShape.ComputeInertia(1, out var Inertia);
+            Vector3 SpawnLocation = new Vector3(NewClient.CharacterPosition.X, NewClient.CharacterPosition.Y + 2, NewClient.CharacterPosition.Z);
+            RigidPose ClientPose = new RigidPose(SpawnLocation, Quaternion.Identity);
+            NewClient.PhysicsBody = BodyDescription.CreateDynamic(ClientPose, Inertia, ClientDescription, new BodyActivityDescription(0.01f));
+            NewClient.BodyHandle = Scene.Bodies.Add(NewClient.PhysicsBody);
+
+            //Tell all the other already active players this new client has entered the game
+            List<ClientConnection> OtherClients = ConnectionManager.GetActiveClientsExceptFor(NewClient.NetworkID);
+            PlayerManagementPacketSender.SendListSpawnOtherCharacter(OtherClients, NewClient.CharacterName, NewClient.CharacterPosition);
+
+            Log.PrintDebugMessage("Networking.PacketHandlers.GameWorldStatePacketHandler " + NewClient.CharacterName + " has entered the game at " + NewClient.CharacterPosition);
         }
     }
 }

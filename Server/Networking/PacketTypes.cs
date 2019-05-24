@@ -3,7 +3,6 @@
 // Description: Defines all the different types of packets which can be sent over the network
 // ================================================================================================================================
 
-
 namespace Server.Networking
 {
     public enum ClientPacketType

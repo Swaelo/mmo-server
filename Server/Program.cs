@@ -6,7 +6,6 @@
 using BepuUtilities;
 using ContentLoader;
 using ServerUtilities;
-using OpenTK;
 using Server.Logic;
 using Server.Scenes;
 using Server.Database;

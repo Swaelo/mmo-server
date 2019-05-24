@@ -3,7 +3,6 @@
 // Description: Stores information for an ingame item
 // ================================================================================================================================
 
-using BepuUtilities;
 using BepuPhysics;
 using BepuPhysics.Collidables;
 using System.Numerics;
@@ -22,7 +21,7 @@ namespace Server.GameItems
 
         public Box ItemColliderShape;    //Physics collider variables
         public CollidableDescription ItemColliderDescription;
-
+        public int ItemColliderHandle;
 
         public GameItem(string Name, string Type, int Number, int ID, Vector3 Location)
         {
@@ -36,7 +35,7 @@ namespace Server.GameItems
             ItemColliderShape = new Box(.25f, .25f, .25f);
             ItemColliderDescription = new CollidableDescription(SceneHarness.CurrentScene.Simulation.Shapes.Add(ItemColliderShape), 0.25f);
             ItemColliderShape.ComputeInertia(1, out var Inertia);
-            SceneHarness.CurrentScene.Simulation.Bodies.Add(BodyDescription.CreateDynamic(new RigidPose(Location, Quaternion.Identity), Inertia, ItemColliderDescription, new BodyActivityDescription(0.01f)));
+            ItemColliderHandle = SceneHarness.CurrentScene.Simulation.Bodies.Add(BodyDescription.CreateDynamic(new RigidPose(Location, Quaternion.Identity), Inertia, ItemColliderDescription, new BodyActivityDescription(0.01f)));
         }
     }
 }

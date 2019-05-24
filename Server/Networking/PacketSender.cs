@@ -4,15 +4,7 @@
 //              to each client when a game tick passes
 // ================================================================================================================================
 
-using System;
 using System.Collections.Generic;
-using System.Text;
-using Server.Interface;
-using Server.Database;
-using Server.Data;
-using Server.Entities;
-using Server.Maths;
-using Server.GameItems;
 
 namespace Server.Networking
 {

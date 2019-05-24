@@ -1,10 +1,9 @@
 ﻿// ================================================================================================================================
 // File:        SceneCallbacks.cs
-// Description: 
+// Description: Defines function callbacks used for managing the an active game scene, taken from the bepu demos
 // ================================================================================================================================
 
 using BepuUtilities;
-using BepuUtilities.Memory;
 using BepuPhysics;
 using BepuPhysics.Collidables;
 using BepuPhysics.CollisionDetection;

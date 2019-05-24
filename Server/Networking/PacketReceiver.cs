@@ -4,11 +4,8 @@
 //              functions to be handled accordingly
 // ================================================================================================================================
 
-using System;
 using System.Collections.Generic;
-using System.Text;
 using Server.Networking.PacketHandlers;
-using Server.Interface;
 
 namespace Server.Networking
 {
@@ -39,8 +36,6 @@ namespace Server.Networking
             PacketHandlers.Add((int)ClientPacketType.CharacterDataRequest, AccountManagementPacketHandler.HandleCharacterDataRequest);
 
             PacketHandlers.Add((int)ClientPacketType.EnterWorldRequest, GameWorldStatePacketHandler.HandleEnterWorldRequest);
-            PacketHandlers.Add((int)ClientPacketType.ActiveEntityRequest, GameWorldStatePacketHandler.HandleActiveEntityRequest);
-            PacketHandlers.Add((int)ClientPacketType.ActiveItemRequest, GameWorldStatePacketHandler.HandleActiveItemRequest);
             PacketHandlers.Add((int)ClientPacketType.NewPlayerReady, GameWorldStatePacketHandler.HandleNewPlayerReady);
 
             PacketHandlers.Add((int)ClientPacketType.PlayerChatMessage, PlayerCommunicationPacketHandler.HandlePlayerChatMessage);

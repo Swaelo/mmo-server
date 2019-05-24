@@ -1,6 +1,10 @@
-﻿using System.Collections.Generic;
+﻿// ================================================================================================================================
+// File:        PlayerManagementPacketSender.cs
+// Description: Formats and delivers network packets to game clients regarding the state of all players currently in the game world
+// ================================================================================================================================
+
+using System.Collections.Generic;
 using System.Numerics;
-using Server.Networking;
 using Server.Interface;
 using Quaternion = BepuUtilities.Quaternion;
 
@@ -12,7 +16,7 @@ namespace Server.Networking.PacketSenders
         public static void SendListPlayerUpdate(List<ClientConnection> Clients, string CharacterName, Vector3 CharacterPosition, Quaternion CharacterRotation)
         {
             //Log a message to the display window
-            Log.PrintOutgoingPacketMessage("PlayerManagement.SendListPlayerUpdate");
+            //Log.PrintOutgoingPacketMessage("PlayerManagement.SendListPlayerUpdate");
 
             //Loop through the list of clients which need to have this information delivered to them
             foreach (ClientConnection Client in Clients)

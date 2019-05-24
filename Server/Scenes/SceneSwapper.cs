@@ -1,15 +1,12 @@
 ﻿// ================================================================================================================================
 // File:        SceneSwapper.cs
-// Description: 
+// Description: Used to change between the available game scenes during runtime
 // ================================================================================================================================
 
 using ContentRenderer.UI;
 using ServerUtilities;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Numerics;
-using System.Text;
 
 namespace Server.Scenes
 {

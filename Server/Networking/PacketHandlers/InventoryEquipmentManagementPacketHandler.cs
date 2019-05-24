@@ -1,6 +1,9 @@
-﻿using System;
+﻿// ================================================================================================================================
+// File:        InventoryEquipmentPacketHandler.cs
+// Description: Handles packets from clients regarding management of their inventory and worn equipment items
+// ================================================================================================================================
+
 using System.Collections.Generic;
-using System.Text;
 using Server.GameItems;
 using Server.Database;
 using Server.Interface;
@@ -13,7 +16,7 @@ namespace Server.Networking.PacketHandlers
         //User is requesting for a list of all items in their inventory
         public static void HandlePlayerInventoryRequest(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": InventoryEquipmentManagement.CharacterInventoryRequest");
+            Log.PrintIncomingPacketMessage(ClientID + ": InventoryEquipmentManagement.CharacterInventoryRequest");
 
             //Open the network packet
             PacketReader Reader = new PacketReader(PacketData);
@@ -31,7 +34,7 @@ namespace Server.Networking.PacketHandlers
         //User is requesting for a list of items they have equipped on their character
         public static void HandlePlayerEquipmentRequest(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": InventoryEquipmentManagement.CharacterEquipmentRequest");
+            Log.PrintIncomingPacketMessage(ClientID + ": InventoryEquipmentManagement.CharacterEquipmentRequest");
 
             //Open the network packet
             PacketReader Reader = new PacketReader(PacketData);
@@ -46,7 +49,7 @@ namespace Server.Networking.PacketHandlers
         //Provide a user with a list of all the abilities currently equipped on their characters action bar
         public static void HandlePlayerActionBarRequest(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": InventoryEquipmentManagement.CharacterActionBarRequest");
+            Log.PrintIncomingPacketMessage(ClientID + ": InventoryEquipmentManagement.CharacterActionBarRequest");
 
             //Open the network packet
             PacketReader Reader = new PacketReader(PacketData);

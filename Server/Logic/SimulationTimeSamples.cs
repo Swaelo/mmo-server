@@ -1,13 +1,10 @@
 ﻿// ================================================================================================================================
 // File:        SimulationTimeSamples.cs
-// Description: 
+// Description: Taken from the bepu demos
 // ================================================================================================================================
 
 using BepuPhysics;
 using BepuUtilities.Memory;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Server.Logic
 {

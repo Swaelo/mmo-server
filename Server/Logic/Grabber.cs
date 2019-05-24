@@ -1,6 +1,6 @@
 ﻿// ================================================================================================================================
 // File:        Grabber.cs
-// Description: used to throw objects around the physics scene
+// Description: used to throw objects around the physics scene, taken from the bepu demos
 // ================================================================================================================================
 
 using BepuPhysics;
@@ -8,14 +8,11 @@ using BepuPhysics.Collidables;
 using BepuPhysics.CollisionDetection;
 using BepuPhysics.Constraints;
 using BepuPhysics.Trees;
-using BepuUtilities;
 using ContentRenderer;
 using ContentRenderer.Constraints;
 using System;
-using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Text;
 using Quaternion = BepuUtilities.Quaternion;
 
 namespace Server.Logic

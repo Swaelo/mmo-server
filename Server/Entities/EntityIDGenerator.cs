@@ -3,11 +3,8 @@
 // Description: Little helper class used to assign unique ID to new entities whenever they are added into the game world
 // ================================================================================================================================
 
-
 using System;
 using System.Threading;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Server.Entities
 {

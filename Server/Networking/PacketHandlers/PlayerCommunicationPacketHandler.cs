@@ -1,6 +1,9 @@
-﻿using System;
+﻿// ================================================================================================================================
+// File:        PlayerCommunicationPacketHanlder.cs
+// Description: Manages packets from game clients related to communication between players
+// ================================================================================================================================
+
 using System.Collections.Generic;
-using System.Text;
 using Server.Interface;
 using Server.Networking.PacketSenders;
 
@@ -11,7 +14,7 @@ namespace Server.Networking.PacketHandlers
         //Recieves a chat message from a player
         public static void HandlePlayerChatMessage(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": PlayerCommunication.PlayerChatMessage");
+            Log.PrintIncomingPacketMessage(ClientID + ": PlayerCommunication.PlayerChatMessage");
 
             //Get the message contents from the network packet
             PacketReader Reader = new PacketReader(PacketData);

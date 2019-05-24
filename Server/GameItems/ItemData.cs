@@ -3,10 +3,6 @@
 // Description: Contains information about a game item and everything about it
 // ================================================================================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace Server.GameItems
 {
     public class ItemData

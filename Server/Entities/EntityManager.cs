@@ -4,14 +4,8 @@
 //              for sending all their updated information to any connected game clients to keep them updated on the entities states
 // ================================================================================================================================
 
-using System;
-using System.Threading;
 using System.Collections.Generic;
-using BepuUtilities;
-using BepuPhysics.Collidables;
-using BepuPhysics.CollisionDetection;
 using Server.Networking;
-using Server.GameItems;
 using Server.Scenes;
 using Server.Database;
 using System.Numerics;
@@ -90,15 +84,16 @@ namespace Server.Entities
         //Handles having a player disconnect from the game, has all enemies drop them as their target, and backs up the characters data to the database
         public static void HandleClientDisconnect(ClientConnection Client)
         {
-            if (Client.PhysicsID != -1)
+            if (Client.BodyHandle != -1)
             {
-                //Remove them from the physics scene if they have an active physics collider
-                SceneHarness.CurrentScene.Simulation.Bodies.Remove(Client.PhysicsID);
+                //Remove them from the physics scene
+                SceneHarness.CurrentScene.Simulation.Bodies.Remove(Client.BodyHandle);
+                Client.BodyHandle = -1;
 
-                //Tell any enemies targetting this player to drop their target
+                //Tell any enemies targetting this character to stop targetting them
                 EntityManager.DropTarget(Client);
 
-                //Backup their character data into the database
+                //Backup the characters data
                 CharactersDatabase.SaveCharacterLocation(Client.CharacterName, Maths.VectorTranslate.ConvertVector(Client.CharacterPosition));
             }
         }

@@ -1,6 +1,6 @@
 ﻿// ================================================================================================================================
 // File:        Scene.cs
-// Description: 
+// Description: Defines a single scene that may be simulated while the game is active, taken from the bepu demos
 // ================================================================================================================================
 
 using BepuUtilities.Memory;
@@ -8,8 +8,6 @@ using ContentRenderer;
 using ServerUtilities;
 using BepuPhysics;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using ContentRenderer.UI;
 using ContentLoader;
 using Server.Logic;

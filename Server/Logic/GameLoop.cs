@@ -1,16 +1,13 @@
 ﻿// ================================================================================================================================
 // File:        GameLoop.cs
-// Description: 
+// Description: Taken from the bepu demos
 // ================================================================================================================================
 
 using System;
-using System.Text;
-using System.Collections.Generic;
 using ServerUtilities;
 using ContentRenderer;
 using BepuUtilities;
 using BepuUtilities.Memory;
-using OpenTK;
 using Server.Scenes;
 
 namespace Server.Logic

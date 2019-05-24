@@ -1,16 +1,12 @@
 ﻿// ================================================================================================================================
 // File:        SceneHarness.cs
-// Description: 
+// Description: Maintains current scene, and handles changing between different scenes during runtime, taken from the bepu demos
 // ================================================================================================================================
 
-//System includes
 using System;
 using System.Numerics;
-//Bepu includes
 using BepuUtilities;
-using BepuUtilities.Memory;
 using Quaternion = BepuUtilities.Quaternion;
-//Demo includes
 using ContentLoader;
 using ContentRenderer;
 using ContentRenderer.UI;

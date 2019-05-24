@@ -1,6 +1,10 @@
-﻿using System.Collections.Generic;
+﻿// ================================================================================================================================
+// File:        PlayerCommunicationPacketSender.cs
+// Description: Formats and delivers network packets to game clients with messages sent from other players
+// ================================================================================================================================
+
+using System.Collections.Generic;
 using Server.Interface;
-using Server.Networking;
 
 namespace Server.Networking.PacketSenders
 {

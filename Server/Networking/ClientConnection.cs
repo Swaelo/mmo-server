@@ -7,9 +7,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Collections.Generic;
-using BepuUtilities;
-using BepuPhysics.Collidables;
+using BepuPhysics;
 using System.Numerics;
 using Server.Interface;
 
@@ -17,8 +15,6 @@ namespace Server.Networking
 {
     public class ClientConnection
     {
-        public Sphere ServerCollider;    //Clients currently active game character world physics collider
-        public int PhysicsID = -1;
         public int NetworkID;  //Each currently connected client has a unique ID number (their IP address)
         public bool InGame = false; //Tracks if this client is active in the game world or not
         public string AccountName;  //The name of the account this client is currently logged into
@@ -27,6 +23,10 @@ namespace Server.Networking
         public TcpClient NetworkConnection; //The current TCP connection between the server and this client
         public NetworkStream DataStream;    //Current datastream for sending information back and forth between this client and the game server
         public byte[] DataBuffer;   //Buffer where data is written from the data stream until the current stream has finished writing its data
+
+        //Physics simulation variables
+        public int BodyHandle = -1;
+        public BodyDescription PhysicsBody;
 
         //default constructor
         public ClientConnection(TcpClient NewConnection)
@@ -55,14 +55,14 @@ namespace Server.Networking
             try { PacketSize = DataStream.EndRead(Result); }
             catch(System.IO.IOException)
             {
-                Log.PrintDebugMessage("readpacket io exception, closing client connection");
+                Log.PrintDebugMessage("Networking.ClientConnection readpacket io exception, closing client connection");
                 ConnectionManager.CloseConnection(this);
                 return;
             }
             //Also need to make sure packet size isnt 0, this means the client shut down the network connection on their end, triggered an end to the datastream sending us here
             if(PacketSize == 0)
             {
-                Log.PrintDebugMessage("ReadPacket PacketSize == 0, client shut down connection from their end, closing connection");
+                Log.PrintDebugMessage("Networking.ClientConnection ReadPacket PacketSize == 0, client shut down connection from their end, closing connection");
                 ConnectionManager.CloseConnection(this);
                 return;
             }

@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Numerics;
-using Quaternion = BepuUtilities.Quaternion;
+﻿// ================================================================================================================================
+// File:        GameWorldStatePacketSender.cs
+// Description: Formats and delivers network packets to game clients to keep them updated on the current state of the game world
+// ================================================================================================================================
+
+using System.Collections.Generic;
 using Server.Interface;
-using Server.Database;
-using Server.Data;
 using Server.Entities;
 using Server.Maths;
 using Server.GameItems;
@@ -18,7 +19,7 @@ namespace Server.Networking.PacketSenders
             //Fetch the packet writer, write the packet type and log a message to the display window
             PacketWriter QueueWriter = PacketSender.GetQueueWriter(ClientID);
             QueueWriter.WriteInt((int)ServerPacketType.ActivePlayerList);
-            Log.OutgoingPacketsWindow.DisplayNewMessage(ClientID + ": GameWorldState.ActivePlayerList");
+            Log.PrintOutgoingPacketMessage(ClientID + ": GameWorldState.ActivePlayerList");
 
             //Fetch the list of all other active game clients and write into the packet how many there are
             List<ClientConnection> OtherClients = ConnectionManager.GetActiveClientsExceptFor(ClientID);
@@ -38,7 +39,7 @@ namespace Server.Networking.PacketSenders
             //Fetch the packet writer, write the packet type and log a message to the display window
             PacketWriter QueueWriter = PacketSender.GetQueueWriter(ClientID);
             QueueWriter.WriteInt((int)ServerPacketType.ActiveEntityList);
-            Log.OutgoingPacketsWindow.DisplayNewMessage(ClientID + ": GameWorldState.ActiveEntityList");
+            Log.PrintOutgoingPacketMessage(ClientID + ": GameWorldState.ActiveEntityList");
 
             //Fetch the list of all the active ingame entities, write the total number of entities into the packet
             List<BaseEntity> ActiveEntities = EntityManager.ActiveEntities;
@@ -60,7 +61,7 @@ namespace Server.Networking.PacketSenders
             //Fetch the packet writer, write the packet type and log a message to the display window
             PacketWriter QueueWriter = PacketSender.GetQueueWriter(ClientID);
             QueueWriter.WriteInt((int)ServerPacketType.ActiveItemList);
-            Log.OutgoingPacketsWindow.DisplayNewMessage(ClientID + ": GameWorldState.ActiveItemList");
+            Log.PrintOutgoingPacketMessage(ClientID + ": GameWorldState.ActiveItemList");
 
             //Fetch the list of active game item picks, write the list length into the packet
             List<GameItem> ItemPickups = ItemManager.GetActiveItemList();

@@ -1,18 +1,13 @@
 ﻿// ================================================================================================================================
 // File:        Graph.cs
-// Description: 
+// Description: Displays a very detailed performance monitor to the UI, taken from the bepu demos
 // ================================================================================================================================
 
-using BepuUtilities;
-using BepuUtilities.Collections;
-using BepuUtilities.Memory;
 using ContentRenderer.UI;
 using ServerUtilities;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Numerics;
-using System.Text;
 
 namespace Server.Logic
 {

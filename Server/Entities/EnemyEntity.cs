@@ -5,7 +5,6 @@
 
 using System.Collections.Generic;
 using System.Numerics;
-using BepuUtilities;
 using BepuPhysics;
 using BepuPhysics.Collidables;
 using Quaternion = BepuUtilities.Quaternion;

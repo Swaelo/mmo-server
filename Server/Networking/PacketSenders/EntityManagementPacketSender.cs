@@ -1,6 +1,9 @@
-﻿using System;
+﻿// ================================================================================================================================
+// File:        EntityManagementPacketSender.cs
+// Description: Formats and delivers network packets to game clients to keep them updated on the current state of entities in the game world
+// ================================================================================================================================
+
 using System.Collections.Generic;
-using System.Text;
 using Server.Entities;
 using Server.Interface;
 using Server.Maths;
@@ -13,7 +16,7 @@ namespace Server.Networking.PacketSenders
         public static void SendListEntityUpdates(List<ClientConnection> Clients, List<BaseEntity> Entities)
         {
             //Log a message to the display window
-            Log.OutgoingPacketsWindow.DisplayNewMessage("GameWorldState.SendListEntityUpdates");
+            Log.PrintOutgoingPacketMessage("GameWorldState.SendListEntityUpdates");
 
             //Loop through each client in the list
             foreach (ClientConnection Client in Clients)
@@ -39,7 +42,7 @@ namespace Server.Networking.PacketSenders
         public static void SendListRemoveEntities(List<ClientConnection> Clients, List<BaseEntity> Entities)
         {
             //Log a message to the display window
-            Log.OutgoingPacketsWindow.DisplayNewMessage("GameWorldState.SendListRemoveEntities");
+            Log.PrintOutgoingPacketMessage("GameWorldState.SendListRemoveEntities");
 
             //Loop through each client in the clist
             foreach (ClientConnection Client in Clients)

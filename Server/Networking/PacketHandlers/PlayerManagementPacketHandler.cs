@@ -1,9 +1,14 @@
-﻿using System;
+﻿// ================================================================================================================================
+// File:        PlayerManagementPacketHandler.cs
+// Description: Manages packets sent from game clients regarding the current state of the player characters
+// ================================================================================================================================
+
 using System.Collections.Generic;
-using System.Text;
 using System.Numerics;
 using Quaternion = BepuUtilities.Quaternion;
+using BepuPhysics;
 using Server.Interface;
+using Server.Scenes;
 using Server.Networking.PacketSenders;
 
 namespace Server.Networking.PacketHandlers
@@ -13,7 +18,7 @@ namespace Server.Networking.PacketHandlers
         //Recieves a players updated position/rotation values
         public static void HandlePlayerUpdate(int ClientID, byte[] PacketData)
         {
-            //Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": PlayerManagement.CharacterUpdate");
+            //Log.PrintIncomingPacketMessage(ClientID + ": PlayerManagement.CharacterUpdate");
 
             //Extract the updated player information from the network packet
             PacketReader Reader = new PacketReader(PacketData);
@@ -24,19 +29,25 @@ namespace Server.Networking.PacketHandlers
 
             //Update this players position in the server
             ClientConnection Client = ConnectionManager.ActiveConnections[ClientID];
-            //if (Client.ServerCollider != null)
-            //    Client.ServerCollider.Position = CharacterPosition;
-            //Client.CharacterPosition = CharacterPosition;
+            if(Client.BodyHandle != -1)
+            {
+                //Update the clients physics body location
+                Client.CharacterPosition = CharacterPosition;
+                Simulation Scene = SceneHarness.CurrentScene.Simulation;
+                Scene.Bodies.GetDescription(Client.BodyHandle, out Client.PhysicsBody);
+                Client.PhysicsBody.Pose.Position = CharacterPosition;
+                Scene.Bodies.ApplyDescription(Client.BodyHandle, ref Client.PhysicsBody);
+            }
 
-            ////Share this updated data out to all the other connected clients
-            //List<ClientConnection> OtherClients = ConnectionManager.GetActiveClientsExceptFor(ClientID);
-            //SendListPlayerUpdate(OtherClients, CharacterName, CharacterPosition, CharacterRotation);
+            //Share this updated location data to all the other clients in the game
+            List<ClientConnection> OtherClients = ConnectionManager.GetActiveClientsExceptFor(ClientID);
+            PlayerManagementPacketSender.SendListPlayerUpdate(OtherClients, CharacterName, CharacterPosition, CharacterRotation);
         }
 
         //Receives the location where a players attack landed in the world
         public static void HandlePlayerAttack(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": PlayerManagement.CharacterAttack");
+            Log.PrintIncomingPacketMessage(ClientID + ": PlayerManagement.CharacterAttack");
 
             //Figure out where the players attack landed
             PacketReader Reader = new PacketReader(PacketData);
@@ -53,7 +64,7 @@ namespace Server.Networking.PacketHandlers
         //Removes a player from the game once they have stopped playing
         public static void HandlePlayerDisconnect(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": PlayerManagement.PlayerDisconnectionNotice");
+            Log.PrintIncomingPacketMessage(ClientID + ": PlayerManagement.PlayerDisconnectionNotice");
 
             ClientConnection Client = ConnectionManager.ActiveConnections[ClientID];
             Entities.EntityManager.HandleClientDisconnect(Client);

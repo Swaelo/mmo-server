@@ -1,7 +1,9 @@
-﻿using System;
-using System.Text;
+﻿// ================================================================================================================================
+// File:        ItemManagementPacketHandler.cs
+// Description: Handles packets from game clients regarding item pickups
+// ================================================================================================================================
+
 using System.Numerics;
-using System.Collections.Generic;
 using Server.Database;
 using Server.GameItems;
 using Server.Interface;
@@ -14,7 +16,7 @@ namespace Server.Networking.PacketHandlers
         //User is trying to pick up an item from the ground
         public static void HandlePlayerTakeItem(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": ItemManagement.CharacterTakeItem");
+            Log.PrintIncomingPacketMessage(ClientID + ": ItemManagement.CharacterTakeItem");
 
             //Open the network packet
             PacketReader Reader = new PacketReader(PacketData);
@@ -42,7 +44,7 @@ namespace Server.Networking.PacketHandlers
         //Removes an item from a players inventory
         public static void HandleRemoveInventoryItem(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": ItemManagement.RemoveInventoryItem");
+            Log.PrintIncomingPacketMessage(ClientID + ": ItemManagement.RemoveInventoryItem");
 
             //Read the information from the packet data
             PacketReader Reader = new PacketReader(PacketData);
@@ -60,7 +62,7 @@ namespace Server.Networking.PacketHandlers
         //Moves an item from the players inventory to their equipment screen
         public static void HandleEquipInventoryItem(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": ItemManagement.EquipInventoryItem");
+            Log.PrintIncomingPacketMessage(ClientID + ": ItemManagement.EquipInventoryItem");
 
             //Open the network packet
             PacketReader Reader = new PacketReader(PacketData);
@@ -82,7 +84,7 @@ namespace Server.Networking.PacketHandlers
         //Moves an item from the players equipment to their inventory
         public static void HandleUnequipItem(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": ItemManagement.UnequipItem");
+            Log.PrintIncomingPacketMessage(ClientID + ": ItemManagement.UnequipItem");
 
             //Open the network packet
             PacketReader Reader = new PacketReader(PacketData);
@@ -103,7 +105,7 @@ namespace Server.Networking.PacketHandlers
         //Changes the position of one of the items in a players inventory
         public static void HandleMoveInventoryItem(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": ItemManagement.MoveInventoryItem");
+            Log.PrintIncomingPacketMessage(ClientID + ": ItemManagement.MoveInventoryItem");
 
             PacketReader Reader = new PacketReader(PacketData);
             int PacketType = Reader.ReadInt();
@@ -117,7 +119,7 @@ namespace Server.Networking.PacketHandlers
         //Swaps the positions of two items in a players inventory
         public static void HandleSwapInventoryItems(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": ItemManagement.SwapInventoryItems");
+            Log.PrintIncomingPacketMessage(ClientID + ": ItemManagement.SwapInventoryItems");
 
             //Extract all the info we need from the network packet
             PacketReader Reader = new PacketReader(PacketData);
@@ -137,7 +139,7 @@ namespace Server.Networking.PacketHandlers
         //Swaps the position of an equipped item and an item in the players inventory
         public static void HandleSwapEquipmentItem(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": ItemManagement.SwapEquipmentItem");
+            Log.PrintIncomingPacketMessage(ClientID + ": ItemManagement.SwapEquipmentItem");
 
             //Open the network packet
             PacketReader Reader = new PacketReader(PacketData);
@@ -164,7 +166,7 @@ namespace Server.Networking.PacketHandlers
         //Removes an item from a players posession and drops it into the game world for anyone to take
         public static void HandlePlayerDropItem(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": ItemManagement.CharacterDropItem");
+            Log.PrintIncomingPacketMessage(ClientID + ": ItemManagement.CharacterDropItem");
 
             //Open the network packet
             PacketReader Reader = new PacketReader(PacketData);
@@ -227,7 +229,7 @@ namespace Server.Networking.PacketHandlers
         //Moves an ability gem from a characters inventory onto their action bar
         public static void HandlePlayerEquipAbility(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": ItemManagement.CharacterEquipAbility");
+            Log.PrintIncomingPacketMessage(ClientID + ": ItemManagement.CharacterEquipAbility");
 
             PacketReader Reader = new PacketReader(PacketData);
             int PacketType = Reader.ReadInt();
@@ -250,7 +252,7 @@ namespace Server.Networking.PacketHandlers
         //Swaps an ability gem from a characters inventory with one that is already equipped
         public static void HandlePlayerSwapEquipAbility(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": ItemManagement.CharacterSwapEquipAbility");
+            Log.PrintIncomingPacketMessage(ClientID + ": ItemManagement.CharacterSwapEquipAbility");
 
             //Open up the network packet
             PacketReader Reader = new PacketReader(PacketData);
@@ -276,7 +278,7 @@ namespace Server.Networking.PacketHandlers
         //Unequips an ability gem from a character and places it into their inventory
         public static void HandlePlayerUnequipAbility(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": ItemManagement.CharacterUnequipAbility");
+            Log.PrintIncomingPacketMessage(ClientID + ": ItemManagement.CharacterUnequipAbility");
 
             PacketReader Reader = new PacketReader(PacketData);
             int PacketType = Reader.ReadInt();
@@ -299,7 +301,7 @@ namespace Server.Networking.PacketHandlers
         //Swaps the positions of the gems currently on the action bar
         public static void HandlePlayerSwapAbilities(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": ItemManagement.CharacterSwapAbilities");
+            Log.PrintIncomingPacketMessage(ClientID + ": ItemManagement.CharacterSwapAbilities");
 
             //Open the network packet
             PacketReader Reader = new PacketReader(PacketData);
@@ -325,7 +327,7 @@ namespace Server.Networking.PacketHandlers
         //Moves the position of one of the gems on the characters action bar
         public static void HandlePlayerMoveAbility(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": ItemManagement.CharacterMoveAbilityGem");
+            Log.PrintIncomingPacketMessage(ClientID + ": ItemManagement.CharacterMoveAbilityGem");
 
             //Open the network packet
             PacketReader Reader = new PacketReader(PacketData);

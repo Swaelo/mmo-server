@@ -1,24 +1,17 @@
 ﻿// ================================================================================================================================
 // File:        GameWorldScene.cs
-// Description: 
+// Description: The current physics scene used to simulate the entire game world
 // ================================================================================================================================
 
-using BepuUtilities;
 using ContentRenderer;
 using BepuPhysics;
 using BepuPhysics.Collidables;
 using System.Numerics;
 using Quaternion = BepuUtilities.Quaternion;
 using System;
-using BepuPhysics.CollisionDetection;
-using System.Runtime.CompilerServices;
-using System.Diagnostics;
 using BepuPhysics.Constraints;
 using ContentLoader;
 using ServerUtilities;
-using BepuUtilities.Memory;
-using static BepuUtilities.GatherScatter;
-using BepuUtilities.Collections;
 using ContentRenderer.UI;
 using OpenTK.Input;
 using Server.Logic;

@@ -1,21 +1,18 @@
 ﻿// ================================================================================================================================
 // File:        CharacterControllers.cs
-// Description: 
+// Description: Taken from the bepu demos
 // ================================================================================================================================
 
 using BepuPhysics;
 using BepuPhysics.Collidables;
 using BepuPhysics.CollisionDetection;
-using BepuPhysics.Constraints;
 using BepuUtilities;
 using BepuUtilities.Collections;
 using BepuUtilities.Memory;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using Quaternion = BepuUtilities.Quaternion;
 

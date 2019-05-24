@@ -3,10 +3,6 @@
 // Description: Defines all the different equipment slots available to the player
 // ================================================================================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace Server.GameItems
 {
     public enum EquipmentSlot

@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
-using Server.Networking;
+﻿// ================================================================================================================================
+// File:        InventoryEquipmentManagementPacketSender.cs
+// Description: Formats and delivers network packets to game clients keeping them updated on the state of their inventory and work equipment items
+// ================================================================================================================================
+
+using System.Collections.Generic;
 using Server.Interface;
-using Server.Data;
 using Server.Database;
 using Server.GameItems;
 

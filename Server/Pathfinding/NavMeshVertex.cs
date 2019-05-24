@@ -7,75 +7,71 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using BepuUtilities;
-using BepuPhysics;
 
 namespace Server.Pathfinding
 {
     public class NavMeshVertex
     {
         public Vector3 VertexLocation = Vector3.Zero;   //This vertices world location
-        public List<NavMeshVertex> NeighbouringVertices = new List<NavMeshVertex>();    //The rest of the vertices which included with this one make up a node in the navmesh
 
-        //Default constructor
+        //Neighbouring Vertices
+        public List<NavMeshVertex> VertexNeighbours = new List<NavMeshVertex>();    //The adjacent verices connected to
+        public void LinkVertices(NavMeshVertex OtherVertex)
+        {//Assign the two vertices as neighbours to one another
+            if (!VertexNeighbours.Contains(OtherVertex))
+                VertexNeighbours.Add(OtherVertex);
+            if (!OtherVertex.VertexNeighbours.Contains(this))
+                OtherVertex.VertexNeighbours.Add(this);
+        }
+
+        //Pathfinding values
+        public NavMeshVertex Parent = null; //Which node to travel to next to traverse along the computed pathway
+        public float GScore = float.MaxValue;    //Cost to travel from the starting vertex to this vertex
+        public float FScore = float.MaxValue;    //Cost to travel from this vertex to the ending vertex
+        public void ResetPathfindingValues()
+        {
+            Parent = null;
+            GScore = float.MaxValue;
+            FScore = float.MaxValue;
+        }
+
+        //Default Constructor
         public NavMeshVertex(Vector3 VertexLocation)
         {
             this.VertexLocation = VertexLocation;
         }
 
-        //Pathfinding values used during A* pathway navigation
-        public NavMeshVertex ParentVertex = null;   //This neighbouring vertex which should be travelled to next to reach the target location in the shortest path possible
-        public float GScore = float.MaxValue;       //GScore and FScore values are valued more highly when they have a lower value, setting them to max value by default ensures proper pathfinding
-        public float FScore = float.MaxValue;
-
-        //Resets all the pathfinding values to default, should be called on every vertex before starting a new A* search
-        public void ResetPathfindingValues()
-        {
-            ParentVertex = null;
-            GScore = float.MaxValue;
-            FScore = float.MaxValue;
-        }
-
-        //Assigns to vertices as neighbours to each other
-        public void LinkVertices(NavMeshVertex OtherVertex)
-        {
-            if (!NeighbouringVertices.Contains(OtherVertex))
-                NeighbouringVertices.Add(OtherVertex);
-            if (!OtherVertex.NeighbouringVertices.Contains(this))
-                OtherVertex.NeighbouringVertices.Add(this);
-        }
-
-        //Adds every vertex in the arry to our list of neighbours
+        //Adds all the vertices in the given array to our list of neighbour vertices
         public void AddNeighbours(List<NavMeshVertex> NewNeighbours)
         {
-            //Loop through each vertex which needs to be added to our list of neighbours
-            foreach(NavMeshVertex NewNeighbour in NewNeighbours)
+            //Loop through all of the new vertices which need to be added to our list of neighbours
+            foreach (NavMeshVertex NewNeighbour in NewNeighbours)
             {
-                //Check that they arent already in the list before adding them
-                if (!NeighbouringVertices.Contains(NewNeighbour))
-                    NeighbouringVertices.Add(NewNeighbour);
+                //Only add the neighbours which arent already in our neighbours
+                if (!VertexNeighbours.Contains(NewNeighbour))
+                    VertexNeighbours.Add(NewNeighbour);
             }
         }
 
-        //Computes the heuristic cost to travel from this node to the given target vertex
-        //(this is pretty much the distance between the 2 nodes when cast onto a 2d plane
-        public float HeurtisticCost(NavMeshVertex TargetVertex)
+        //Computes the heuristic cost value between this node and the given node
+        //This is simply the vector2 distance between the two points if the navmesh were flatten onto a 2d plane
+        public float HeuristicCost(NavMeshVertex Goal)
         {
             Vector2 CurrentHeuristic = new Vector2(VertexLocation.X, VertexLocation.Z);
-            Vector2 TargetHeuristic = new Vector2(TargetVertex.VertexLocation.X, TargetVertex.VertexLocation.Z);
-            return Vector2.Distance(CurrentHeuristic, TargetHeuristic);
+            Vector2 GoalHeuristic = new Vector2(Goal.VertexLocation.X, Goal.VertexLocation.Z);
+            return Vector2.Distance(CurrentHeuristic, GoalHeuristic);
         }
 
-        //Performs a line of sight check between the two vertices to see if there are any obstacles in between that may make a pathway invalid
-        public bool LOSCheck(NavMeshVertex TargetVertex)
+        //Performs a line of sight check between two nodes, the function will return true if there is a straight line between these two
+        //vertices with no obstacles in the way and having no point of the line step outside of the nav mesh
+        public bool LineofSight(NavMeshVertex Target)
         {
-            Vector3 RayDirection = VertexLocation - TargetVertex.VertexLocation;
+            //First check if theres anything between the two nodes that would block walking in a straight line
+            Vector3 RayDirection = VertexLocation - Target.VertexLocation;
+            //Ray Ray = new Ray(VertexLocation, RayDirection);
+            //RayCastResult Result;
+            //Physics.WorldSimulator.Space.RayCast(Ray, out Result);
 
-            Console.WriteLine("Reimplement navmeshvertex line of sight raycasting");
-
-            //Space.RayCast changed to Simulation.RayCast
-
-            
             return false;
         }
     }

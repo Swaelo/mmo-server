@@ -1,9 +1,8 @@
 ﻿// ================================================================================================================================
 // File:        SimpleThreadDispatcher.cs
-// Description: 
+// Description: Taken from the bepu demos
 // ================================================================================================================================
 
-using BepuPhysics;
 using System;
 using System.Diagnostics;
 using System.Threading;

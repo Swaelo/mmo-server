@@ -4,9 +4,6 @@
 // ================================================================================================================================
 
 using System;
-using System.Collections.Generic;
-using System.Threading;
-using BepuUtilities;
 using Server.Data;
 using Server.Database;
 using Server.Interface;
@@ -37,7 +34,7 @@ namespace Server.Networking.PacketHandlers
         //Allows users to register new accounts into the database
         public static void HandleAccountRegistrationRequest(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": AccountManagement.AccountRegistrationRequest");
+            Log.PrintIncomingPacketMessage(ClientID + ": AccountManagement.AccountRegistrationRequest");
 
             //Extract the required information from the network packet
             PacketReader Reader = new PacketReader(PacketData);
@@ -70,7 +67,7 @@ namespace Server.Networking.PacketHandlers
         //Allows a user to login to their account
         public static void HandleAccountLoginRequest(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": AccountManagement.AccountLoginRequest");
+            Log.PrintIncomingPacketMessage(ClientID + ": AccountManagement.AccountLoginRequest");
 
             PacketReader Reader = new PacketReader(PacketData);
             int PacketType = Reader.ReadInt();
@@ -104,7 +101,7 @@ namespace Server.Networking.PacketHandlers
         //Allows users to create new characters once logged into their accounts
         public static void HandleCharacterCreationRequest(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": AccountManagement.CharacterCreationRequest");
+            Log.PrintIncomingPacketMessage(ClientID + ": AccountManagement.CharacterCreationRequest");
 
             //Extract the data from the network packet
             PacketReader Reader = new PacketReader(PacketData);
@@ -131,7 +128,7 @@ namespace Server.Networking.PacketHandlers
         //Sends a user data about all the created characters after they have logged into their account
         public static void HandleCharacterDataRequest(int ClientID, byte[] PacketData)
         {
-            Log.IncomingPacketsWindow.DisplayNewMessage(ClientID + ": AccountManagement.CharacterDataRequest");
+            Log.PrintIncomingPacketMessage(ClientID + ": AccountManagement.CharacterDataRequest");
 
             PacketReader Reader = new PacketReader(PacketData);
             int PacketType = Reader.ReadInt();

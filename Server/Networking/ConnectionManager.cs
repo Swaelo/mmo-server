@@ -39,7 +39,7 @@ namespace Server.Networking
         //Callback event triggered when a new client has connected to the server
         private static void NewClientConnected(IAsyncResult Result)
         {
-            Log.PrintDebugMessage("new client connected");
+            Log.PrintDebugMessage("Networking.ConnectionManager new client connected");
 
             //Store this new client locally so we can handle it in a bit, but first reset the listener 
             //so it starts listening for other new clients again straight away, we dont want to miss any
