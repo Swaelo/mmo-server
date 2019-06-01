@@ -148,6 +148,26 @@ namespace ServerUtilities
                 window.Close();
         }
 
+        public void Run(Action<float> UpdateHandler)
+        {
+            long previousTime = Stopwatch.GetTimestamp();
+            windowUpdateLoopRunning = true;
+            while (true)
+            {
+                if (disposed)
+                    break;
+                window.ProcessEvents();
+                if (tryToClose)
+                {
+                    window.Close();
+                    break;
+                }
+                long time = Stopwatch.GetTimestamp();
+                var dt = (float)((time - previousTime) / (double)Stopwatch.Frequency);
+                previousTime = time;
+            }
+            windowUpdateLoopRunning = false;
+        }
 
         /// <summary>
         /// Launches the update loop for the window. Processes events before every invocation of the update handler.

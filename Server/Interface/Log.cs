@@ -8,8 +8,8 @@ namespace Server.Interface
     public class Log
     {
         public static MessageDisplayWindow DebugMessageWindow = new MessageDisplayWindow("Debug Messages");
-        public static MessageDisplayWindow IncomingPacketsWindow = new MessageDisplayWindow("Incoming Packets");
-        public static MessageDisplayWindow OutgoingPacketsWindow = new MessageDisplayWindow("Outgoing Packets");
+        public static MessageDisplayWindow NetworkPackets = new MessageDisplayWindow("Network Packets");
+        public static MessageDisplayWindow SQLCommands = new MessageDisplayWindow("SQL Commands");
 
         //Prints a new message to the DebugMessagesDisplayWindow
         public static void PrintDebugMessage(string DebugMessage)
@@ -20,13 +20,19 @@ namespace Server.Interface
         //Prints a new message to the IncomingPacketsDisplayWindow
         public static void PrintIncomingPacketMessage(string IncomingPacketMessage)
         {
-            IncomingPacketsWindow.DisplayNewMessage(IncomingPacketMessage);
+            NetworkPackets.DisplayNewMessage("IN: " + IncomingPacketMessage);
         }
 
         //Prints a new message to the OutgoingPacketsDisplayWindow
         public static void PrintOutgoingPacketMessage(string OutgoingPacketMessage)
         {
-            OutgoingPacketsWindow.DisplayNewMessage(OutgoingPacketMessage);
+            NetworkPackets.DisplayNewMessage("OUT: " + OutgoingPacketMessage);
+        }
+
+        //Displays an SQL command that was executed to the SQLCommands window
+        public static void PrintSQLCommand(string CommandQuery)
+        {
+            SQLCommands.DisplayNewMessage(CommandQuery);
         }
     }
 }

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using MySql.Data.MySqlClient;
 using Server.GameItems;
+using Server.Interface;
 
 namespace Server.Database
 {
@@ -22,31 +23,13 @@ namespace Server.Database
             for (int i = 1; i < 6; i++)
             {
                 //Return this action bars slot number if its empty
-                if (CharactersActionBars[i].ItemNumber == 0)
+                if (CharactersActionBars[i].ItemNumber == 0 || CharactersActionBars[i].ItemNumber == -1)
                     return i;
             }
 
             //Return garbage value if no action bars were free
             return -1;
         }
-
-        //Purges a characters action bar of all items, leaving it completely empty
-        public static void PurgeCharactersActionBar(string CharacterName)
-        {
-            for (int i = 1; i < 6; i++)
-            {
-                string Query = GetPurgeQuery(CharacterName, i);
-                MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
-                Command.ExecuteNonQuery();
-            }
-        }
-
-        private static string GetPurgeQuery(string CharacterName, int ActionBarSlot)
-        {
-            return "UPDATE actionbars SET ActionBarSlot" + ActionBarSlot + "ItemNumber='0', ActionBarSlot" + ActionBarSlot + "ItemID='0' WHERE CharacterName='" + CharacterName + "'";
-        }
-
-        //string Query = "UPDATE actionbars SET ActionBarSlot" + GetFirstFreeActionBarSlot(CharacterName) + "ItemNumber='" + AbilityItem.ItemNumber + "', ActionBarSlot" + GetFirstFreeActionBarSlot(CharacterName) + "ItemID='" + AbilityItem.ItemID + "' WHERE CharacterName='" + CharacterName + "'";
 
         //Returns ItemData object detailing the current state of one of the characters action bar slots
         public static ItemData GetActionBarItem(string CharacterName, int ActionBarSlot)
@@ -56,9 +39,13 @@ namespace Server.Database
 
             //Read the items values from the database into the ActionBarItem object
             string Query = "SELECT ActionBarSlot" + ActionBarSlot + "ItemNumber FROM actionbars WHERE CharacterName='" + CharacterName + "'";
+            Log.PrintSQLCommand(Query);
+
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             ActionBarItem.ItemNumber = Convert.ToInt32(Command.ExecuteScalar());
             Query = "SELECT ActionBarSlot" + ActionBarSlot + "ItemID FROM actionbars WHERE CharacterName='" + CharacterName + "'";
+            Log.PrintSQLCommand(Query);
+
             Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             ActionBarItem.ItemID = Convert.ToInt32(Command.ExecuteScalar());
 
@@ -109,6 +96,7 @@ namespace Server.Database
         {
             //Define/execute command to update the database placing this ability onto the characters first available action bar slot
             string Query = "UPDATE actionbars SET ActionBarSlot" + GetFirstFreeActionBarSlot(CharacterName) + "ItemNumber='" + AbilityItem.ItemNumber + "', ActionBarSlot" + GetFirstFreeActionBarSlot(CharacterName) + "ItemID='" + AbilityItem.ItemID + "' WHERE CharacterName='" + CharacterName + "'";
+            Log.PrintSQLCommand(Query);
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             Command.ExecuteNonQuery();
         }
@@ -117,6 +105,7 @@ namespace Server.Database
         public static void GiveCharacterAbility(string CharacterName, ItemData AbilityItem, int ActionBarSlot)
         {
             string Query = "UPDATE actionbars SET ActionBarSlot" + ActionBarSlot + "ItemNumber='" + AbilityItem.ItemNumber + "', ActionBarSlot" + ActionBarSlot + "ItemID='" + AbilityItem.ItemID + "' WHERE CharacterName='" + CharacterName + "'";
+            Log.PrintSQLCommand(Query);
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             Command.ExecuteNonQuery();
         }
@@ -125,6 +114,7 @@ namespace Server.Database
         public static void TakeCharacterAbility(string CharacterName, int ActionBarSlot)
         {
             string Query = "UPDATE actionbars SET ActionBarSlot" + ActionBarSlot + "ItemNumber='0', ActionBarSlot" + ActionBarSlot + "ItemID='0' WHERE CharacterName='" + CharacterName + "'";
+            Log.PrintSQLCommand(Query);
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             Command.ExecuteNonQuery();
         }

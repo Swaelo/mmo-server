@@ -18,7 +18,7 @@ namespace BepuPhysics
         Bodies bodies;
         Solver solver;
         BroadPhase broadPhase;
-        internal PairCache pairCache;
+        public PairCache pairCache;
         ConstraintRemover constraintRemover;
         BufferPool pool;
         public int InitialIslandBodyCapacity { get; set; } = 1024;

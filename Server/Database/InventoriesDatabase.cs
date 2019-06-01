@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using MySql.Data.MySqlClient;
 using Server.GameItems;
+using Server.Interface;
 
 namespace Server.Database
 {
@@ -22,7 +23,7 @@ namespace Server.Database
             for (int i = 0; i < CharactersInventory.Count; i++)
             {
                 //Return this bag slots index if its empty
-                if (CharactersInventory[i].ItemNumber == 0)
+                if (CharactersInventory[i].ItemNumber == 0 || CharactersInventory[i].ItemNumber == -1)
                     return (i + 1);
             }
 
@@ -38,32 +39,17 @@ namespace Server.Database
 
             //Extract the items information from the inventory database into the new ItemData object
             string Query = "SELECT ItemSlot" + InventorySlot + "ItemNumber FROM inventories WHERE CharacterName='" + CharacterName + "'";
+            Log.PrintSQLCommand(Query);
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             InventoryItem.ItemNumber = Convert.ToInt32(Command.ExecuteScalar());
             Query = "SELECT ItemSlot" + InventorySlot + "ItemID FROM inventories WHERE CharacterName='" + CharacterName + "'";
+            Log.PrintSQLCommand(Query);
             Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             InventoryItem.ItemID = Convert.ToInt32(Command.ExecuteScalar());
-            InventoryItem.ItemEquipmentSlot = ItemList.GetItemEquipmentSlot(InventoryItem.ItemNumber);
+            InventoryItem.ItemEquipmentSlot = ItemInfoDatabase.GetItemSlot(InventoryItem.ItemNumber);
 
             //Return the final InventoryItem object
             return InventoryItem;
-        }
-
-        //Purges a characters inventory of all items contained within, leaving it completely empty
-        public static void PurgeCharactersItems(string CharacterName)
-        {
-            //Loop through and purge the contents of each of the characters inventory slots
-            for (int i = 0; i < 9; i++)
-            {
-                string PurgeQuery = GetPurgeQuery(CharacterName, i + 1);
-                MySqlCommand PurgeCommand = new MySqlCommand(PurgeQuery, DatabaseManager.DatabaseConnection);
-                PurgeCommand.ExecuteNonQuery();
-            }
-        }
-
-        private static string GetPurgeQuery(string CharacterName, int InventorySlot)
-        {
-            return "UPDATE inventories SET ItemSlot" + InventorySlot + "ItemNumber='0', ItemSlot" + InventorySlot + "ItemID='0' WHERE CharacterName='" + CharacterName + "'";
         }
 
         //Returns a list of ItemData objects detailing the current state of every slot in a characters inventory
@@ -88,6 +74,7 @@ namespace Server.Database
         {
             //Places the new item into the first free slot in the characters inventory
             string Query = "UPDATE inventories SET ItemSlot" + GetFirstFreeInventorySlot(CharacterName) + "ItemNumber='" + NewItem.ItemNumber + "', ItemSlot" + GetFirstFreeInventorySlot(CharacterName) + "ItemID='" + NewItem.ItemID + "' WHERE CharacterName='" + CharacterName + "'";
+            Log.PrintSQLCommand(Query);
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             Command.ExecuteNonQuery();
         }
@@ -96,6 +83,7 @@ namespace Server.Database
         public static void GiveCharacterItem(string CharacterName, ItemData NewItem, int InventorySlot)
         {
             string Query = "UPDATE inventories SET ItemSlot" + InventorySlot + "ItemNumber='" + NewItem.ItemNumber + "', ItemSlot" + InventorySlot + "ItemID='" + NewItem.ItemID + "' WHERE CharacterName='" + CharacterName + "'";
+            Log.PrintSQLCommand(Query);
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             Command.ExecuteNonQuery();
         }
@@ -104,6 +92,7 @@ namespace Server.Database
         public static void RemoveCharacterItem(string CharacterName, int InventorySlot)
         {
             string Query = "UPDATE inventories SET ItemSlot" + InventorySlot + "ItemNumber='0', ItemSlot" + InventorySlot + "ItemID='0' WHERE CharacterName='" + CharacterName + "'";
+            Log.PrintSQLCommand(Query);
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             Command.ExecuteNonQuery();
         }
@@ -139,7 +128,7 @@ namespace Server.Database
             //Run through them all looking for an which is empty
             foreach (ItemData InventorySlot in InventorySlots)
             {
-                if (InventorySlot.ItemNumber == 0)
+                if (InventorySlot.ItemNumber == 0 || InventorySlot.ItemNumber == -1)
                     return false;
             }
 

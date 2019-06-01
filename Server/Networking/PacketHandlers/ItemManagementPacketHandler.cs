@@ -16,6 +16,7 @@ namespace Server.Networking.PacketHandlers
         //User is trying to pick up an item from the ground
         public static void HandlePlayerTakeItem(int ClientID, byte[] PacketData)
         {
+            //Log a message to the network packets display window
             Log.PrintIncomingPacketMessage(ClientID + ": ItemManagement.CharacterTakeItem");
 
             //Open the network packet
@@ -27,18 +28,36 @@ namespace Server.Networking.PacketHandlers
             int ItemNumber = Reader.ReadInt();
             int ItemID = Reader.ReadInt();
 
-            //Ignore the request entirely if the character has no free space in their inventory
-            if (InventoriesDatabase.IsInventoryFull(CharacterName))
+            //Ignore the request if the item is no longer in the list of active pickups
+            if(!ItemManager.ActiveItemDictionary.ContainsKey(ItemID))
+            {
+                Log.PrintDebugMessage("ItemManagementPacketHandler.HandlePlayerTakeItem Item has already been taken, request denied.");
                 return;
+            }
+            //Ignore the request if the item is in the queue to be removed from the game world
+            if(ItemManager.IsItemInRemoveQueue(ItemID))
+            {
+                Log.PrintDebugMessage("ItemManagementPacketHandler.HandlePlayerTakeItem Item is in the queue to be removed, request denied.");
+                return;
+            }
+            //Ignore the request if the character has no free space in their inventory
+            if (InventoriesDatabase.IsInventoryFull(CharacterName))
+            {
+                Log.PrintDebugMessage("PlayerTakeItem request denied, their inventory is full.");
+                return;
+            }
 
-            //Get the information about the item the character is picking up, place it in their inventory
-            ItemData GroundItem = ItemList.MasterItemList[ItemNumber];
-            InventoriesDatabase.GiveCharacterItem(CharacterName, GroundItem);
-            //Send them a UI update
+            //Queue to have this item pickup removed from the physics scene, GameWorld will do this when its ready
+            GameItem ItemPickup = ItemManager.ActiveItemDictionary[ItemID];
+            ItemManager.QueueRemoveItemPickup(ItemPickup);
 
+            //Tell all game clients to remove the item pickup from their game world
+            ItemManagementPacketSender.SendAllRemoveItemPickup(ItemPickup);
+
+            //Place this item into the players inventory
+            ItemData ItemInfo = ItemInfoDatabase.GetItemInfo(ItemNumber);
+            InventoriesDatabase.GiveCharacterItem(CharacterName, ItemInfo);
             InventoryEquipmentManagementPacketSender.SendCharacterEverything(ClientID, CharacterName);
-            //Remove the item pickup from the game world, automatically telling all active clients to do the same on their worlds
-            ItemManager.RemoveItemPickup(ItemID);
         }
 
         //Removes an item from a players inventory
@@ -187,8 +206,8 @@ namespace Server.Networking.PacketHandlers
                         ItemData InventoryItem = InventoriesDatabase.GetInventorySlot(CharacterName, BagSlot);
                         InventoriesDatabase.RemoveCharacterItem(CharacterName, BagSlot);
                         InventoryEquipmentManagementPacketSender.SendCharacterEverything(ClientID, CharacterName);
-                        //FInally, add the item into the game world as a new pickup object
-                        ItemManager.AddItemPickup(InventoryItem.ItemNumber, DropLocation);
+                        //Finally, add the item into the game world as a new pickup object
+                        ItemManager.AddNewItemPickup(InventoryItem.ItemNumber, Program.World.WorldSimulation, DropLocation);
                     }
                     break;
 
@@ -204,7 +223,7 @@ namespace Server.Networking.PacketHandlers
                         EquipmentsDatabase.CharacterRemoveItem(CharacterName, GearSlot);
                         InventoryEquipmentManagementPacketSender.SendCharacterEverything(ClientID, CharacterName);
                         //Finally add the item into the game world as a new pickup object
-                        ItemManager.AddItemPickup(EquipmentItem.ItemNumber, DropLocation);
+                        ItemManager.AddNewItemPickup(EquipmentItem.ItemNumber, Program.World.WorldSimulation, DropLocation);
                     }
                     break;
 
@@ -220,7 +239,7 @@ namespace Server.Networking.PacketHandlers
                         ActionBarsDatabase.TakeCharacterAbility(CharacterName, ActionBarSlot);
                         InventoryEquipmentManagementPacketSender.SendCharacterEverything(ClientID, CharacterName);
                         //Add the item into the game world as a new pickup object
-                        ItemManager.AddItemPickup(AbilityItem.ItemNumber, DropLocation);
+                        ItemManager.AddNewItemPickup(AbilityItem.ItemNumber, Program.World.WorldSimulation, DropLocation);
                     }
                     break;
             }

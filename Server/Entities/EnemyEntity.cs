@@ -41,9 +41,9 @@ namespace Server.Entities
             //Store the entities default location then add a new physics collider into the world physics simulation
             DefaultLocation = SpawnLocation;
             EntityColliderShape = new Cylinder(0.6f, 1.7f);
-            EntityColliderDescription = new CollidableDescription(SceneHarness.CurrentScene.Simulation.Shapes.Add(EntityColliderShape), 0.25f);
+            EntityColliderDescription = new CollidableDescription(Program.World.WorldSimulation.Shapes.Add(EntityColliderShape), 0.25f);
             EntityColliderShape.ComputeInertia(1, out var Inertia);
-            SceneHarness.CurrentScene.Simulation.Bodies.Add(BodyDescription.CreateDynamic(new RigidPose(SpawnLocation, Quaternion.Identity), Inertia, EntityColliderDescription, new BodyActivityDescription(0.01f)));
+            Program.World.WorldSimulation.Bodies.Add(BodyDescription.CreateDynamic(new RigidPose(SpawnLocation, Quaternion.Identity), Inertia, EntityColliderDescription, new BodyActivityDescription(0.01f)));
 
             //Pass it to the entity manager to be stored with all the others and set the enemies type value
             EntityManager.AddEntity(this);

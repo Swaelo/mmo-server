@@ -16,19 +16,19 @@ namespace BepuPhysics
     /// </summary>
     public partial class Simulation : IDisposable
     {
-        public IslandAwakener Awakener { get; private set; }
-        public IslandSleeper Sleeper { get; private set; }
+        public IslandAwakener Awakener { get; set; }
+        public IslandSleeper Sleeper { get; set; }
         public Bodies Bodies { get; private set; }
         public Statics Statics { get; private set; }
         public Shapes Shapes { get; private set; }
         public BodyLayoutOptimizer BodyLayoutOptimizer { get; private set; }
         public ConstraintLayoutOptimizer ConstraintLayoutOptimizer { get; private set; }
         public BatchCompressor SolverBatchCompressor { get; private set; }
-        public Solver Solver { get; private set; }
-        public IPoseIntegrator PoseIntegrator { get; private set; }
+        public Solver Solver { get; set; }
+        public IPoseIntegrator PoseIntegrator { get; set; }
         public BroadPhase BroadPhase { get; private set; }
-        public CollidableOverlapFinder BroadPhaseOverlapFinder { get; private set; }
-        public NarrowPhase NarrowPhase { get; private set; }
+        public CollidableOverlapFinder BroadPhaseOverlapFinder { get; set; }
+        public NarrowPhase NarrowPhase { get; set; }
 
         SimulationProfiler profiler = new SimulationProfiler(13);
         /// <summary>
@@ -55,7 +55,7 @@ namespace BepuPhysics
         /// </summary>
         public bool Deterministic { get; set; }
 
-        protected Simulation(BufferPool bufferPool, SimulationAllocationSizes initialAllocationSizes, int solverIterationCount, int solverFallbackBatchThreshold, ITimestepper timestepper)
+        public Simulation(BufferPool bufferPool, SimulationAllocationSizes initialAllocationSizes, int solverIterationCount, int solverFallbackBatchThreshold, ITimestepper timestepper)
         {
             BufferPool = bufferPool;
             Shapes = new Shapes(bufferPool, initialAllocationSizes.ShapesPerType);
@@ -127,8 +127,6 @@ namespace BepuPhysics
 
             return simulation;
         }
-
-
 
         private int ValidateAndCountShapefulBodies(ref BodySet bodySet, ref Tree tree, ref Buffer<CollidableReference> leaves)
         {

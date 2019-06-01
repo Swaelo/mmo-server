@@ -48,10 +48,12 @@ namespace Server.Interface
             for(int i = 0; i < 10; i++)
             {
                 //Display each message to the window as we loop through the whole list
-                renderer.TextBatcher.Write(textBuilder.Clear().Append(MessageContents[i]), MessageLocation, 16, new Vector3(1), font);
+                renderer.TextBatcher.Write(textBuilder.Clear().Append("- " + MessageContents[i]), MessageLocation, 16, new Vector3(1), font);
                 //Offset the render location for the next message in the window
                 MessageLocation.Y += 17;
             }
+
+            renderer.TextBatcher.Write(textBuilder.Clear().Append("------------------------------"), MessageLocation, 16, new Vector3(1), font);
         }
     }
 }

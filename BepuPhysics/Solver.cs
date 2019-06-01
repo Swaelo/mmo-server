@@ -65,7 +65,7 @@ namespace BepuPhysics
         public TypeProcessor[] TypeProcessors;
 
         internal Bodies bodies;
-        internal PairCache pairCache;
+        public PairCache pairCache;
         internal IslandAwakener awakener;
 
         /// <summary>

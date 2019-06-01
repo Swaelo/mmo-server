@@ -12,41 +12,47 @@ namespace Server.Networking.PacketSenders
 {
     public static class ItemManagementPacketSender
     {
-        //Tells a list of clients to spawn a new item pickup into their game world
-        public static void SendListSpawnItemPickup(List<ClientConnection> Clients, GameItem ItemPickup)
+        /// <summary>
+        /// Instructs all active game clients to add a new item pickup to their game worlds
+        /// </summary>
+        /// <param name="ItemPickup">The new game item thats going to be spawned</param>
+        public static void SendAllSpawnItemPickup(GameItem ItemPickup)
         {
-            //Log a message to the display window
-            Log.PrintOutgoingPacketMessage("ItemManagement.SendListSpawnItemPickup");
+            //Log a message to the network packets window
+            Log.PrintOutgoingPacketMessage("ItemManagement.SendAllSpawnItemPickup");
 
-            //Loop through each client in the list who needs to have this information delivered to them
-            foreach(ClientConnection Client in Clients)
+            //Go through the list of all the active game clients
+            List<ClientConnection> ActiveClients = ConnectionManager.GetActiveClients();
+            foreach(ClientConnection ActiveClient in ActiveClients)
             {
-                //Fetch each clients PacketWriter and write in the packet type
-                PacketWriter QueueWriter = PacketSender.GetQueueWriter(Client.NetworkID);
+                //Send each of them a new network packet that instructs them to spawn this item pickup into their gameworld
+                PacketWriter QueueWriter = PacketSender.GetQueueWriter(ActiveClient.NetworkID);
                 QueueWriter.WriteInt((int)ServerPacketType.SpawnItem);
-
-                //Write the new item pickups information into the packet data
+                //The clients must be told the items number, network ID and the location where its going to be spawned
                 QueueWriter.WriteInt(ItemPickup.ItemNumber);
                 QueueWriter.WriteInt(ItemPickup.ItemID);
                 QueueWriter.WriteVector3(VectorTranslate.ConvertVector(ItemPickup.ItemPosition));
             }
         }
 
-        //Tells a list of clients to remove one of the active item pickups from their game worlds
-        public static void SendListRemoveItemPickup(List<ClientConnection> Clients, int ItemID)
+        /// <summary>
+        /// Instructs all active game clients to remove an item pickup from their game worlds
+        /// </summary>
+        /// <param name="ItemPickup"></param>
+        public static void SendAllRemoveItemPickup(GameItem ItemPickup)
         {
-            //Log a message to the display window
-            Log.PrintOutgoingPacketMessage("ItemManagement.SendListRemoveItemPickup");
+            //Log a message to the network packets window
+            Log.PrintOutgoingPacketMessage("ItemManagement.SendAllRemoveItemPickup");
 
-            //Loop through each client in the list
-            foreach(ClientConnection Client in Clients)
+            //Go through the list of all the active game clients
+            List<ClientConnection> ActiveClients = ConnectionManager.GetActiveClients();
+            foreach(ClientConnection ActiveClient in ActiveClients)
             {
-                //Fetch each clients PacketWriter and write in the packet type
-                PacketWriter QueueWriter = PacketSender.GetQueueWriter(Client.NetworkID);
+                //Send each of them a new network packet that instructs them to remove this item pickup from their gameworld
+                PacketWriter QueueWriter = PacketSender.GetQueueWriter(ActiveClient.NetworkID);
                 QueueWriter.WriteInt((int)ServerPacketType.RemoveItem);
-
-                //Write the items info
-                QueueWriter.WriteInt(ItemID);
+                //The only need to know the items network ID to be able to remove it
+                QueueWriter.WriteInt(ItemPickup.ItemID);
             }
         }
     }

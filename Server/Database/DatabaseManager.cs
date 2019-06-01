@@ -4,6 +4,7 @@
 // ================================================================================================================================
 
 using MySql.Data.MySqlClient;
+using Server.Interface;
 
 namespace Server.Database
 {
@@ -15,9 +16,16 @@ namespace Server.Database
         //Helps define the connection string used to establish the initial connection to the database server
         private static string CreateConnectionString(string IP, string Port)
         {
-            return "Server=" + IP + ";" +
-                    "Port=" + Port + ";" +
-                    "Database;User=;";
+            string ConnectionString =
+                "Server=" + IP + ";" +
+                "Port=" + Port + ";" +
+                "Database=;" +
+                "User=root;" +
+                "Password=Fuckyahoo420;";
+
+            Log.PrintSQLCommand(ConnectionString);
+
+            return ConnectionString;
         }
 
         //Initializes the connection to the database server
@@ -28,7 +36,7 @@ namespace Server.Database
             DatabaseConnection.Open();
 
             //Tell the database we want to use the gamedatabase
-            MySqlCommand DatabaseCommand = new MySqlCommand("USE gamedatabase", DatabaseConnection);
+            MySqlCommand DatabaseCommand = new MySqlCommand("USE gameserverdatabase", DatabaseConnection);
             DatabaseCommand.ExecuteNonQuery();
         }
     }

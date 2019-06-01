@@ -123,14 +123,14 @@ namespace Server.Networking.PacketHandlers
             NewClient.InGame = true;
 
             //Add a new collider into the physics scene to represent where this client is located
-            Simulation Scene = SceneHarness.CurrentScene.Simulation;
+            Simulation World = Program.World.WorldSimulation;
             Capsule ClientShape = new Capsule(0.5f, 1);
-            CollidableDescription ClientDescription = new CollidableDescription(Scene.Shapes.Add(ClientShape), 0.1f);
+            CollidableDescription ClientDescription = new CollidableDescription(World.Shapes.Add(ClientShape), 0.1f);
             ClientShape.ComputeInertia(1, out var Inertia);
             Vector3 SpawnLocation = new Vector3(NewClient.CharacterPosition.X, NewClient.CharacterPosition.Y + 2, NewClient.CharacterPosition.Z);
             RigidPose ClientPose = new RigidPose(SpawnLocation, Quaternion.Identity);
             NewClient.PhysicsBody = BodyDescription.CreateDynamic(ClientPose, Inertia, ClientDescription, new BodyActivityDescription(0.01f));
-            NewClient.BodyHandle = Scene.Bodies.Add(NewClient.PhysicsBody);
+            NewClient.BodyHandle = World.Bodies.Add(NewClient.PhysicsBody);
 
             //Tell all the other already active players this new client has entered the game
             List<ClientConnection> OtherClients = ConnectionManager.GetActiveClientsExceptFor(NewClient.NetworkID);

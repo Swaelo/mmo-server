@@ -29,14 +29,14 @@ namespace Server.Networking.PacketHandlers
 
             //Update this players position in the server
             ClientConnection Client = ConnectionManager.ActiveConnections[ClientID];
-            if(Client.BodyHandle != -1)
+            if (Client.BodyHandle != -1)
             {
                 //Update the clients physics body location
                 Client.CharacterPosition = CharacterPosition;
-                Simulation Scene = SceneHarness.CurrentScene.Simulation;
-                Scene.Bodies.GetDescription(Client.BodyHandle, out Client.PhysicsBody);
+                Simulation World = Program.World.WorldSimulation;
+                World.Bodies.GetDescription(Client.BodyHandle, out Client.PhysicsBody);
                 Client.PhysicsBody.Pose.Position = CharacterPosition;
-                Scene.Bodies.ApplyDescription(Client.BodyHandle, ref Client.PhysicsBody);
+                World.Bodies.ApplyDescription(Client.BodyHandle, ref Client.PhysicsBody);
             }
 
             //Share this updated location data to all the other clients in the game

@@ -5,13 +5,49 @@
 
 using System.Collections.Generic;
 using System.Numerics;
+using BepuPhysics;
 using Server.Database;
+using Server.Interface;
+using Server.Networking;
+using Server.Networking.PacketSenders;
 
 namespace Server.GameItems
 {
     public static class ItemManager
     {
-        //The universal item ID number to be assigned to the next item that is createrd
+        //Queue up a list of item pickups that need to be removed from the scene, the GameWorld will access this queue and remove them when its able to
+        public static List<GameItem> ItemsToRemove = new List<GameItem>();
+
+        //Checks if an item is currently in the queue to be removed from the game
+        public static bool IsItemInRemoveQueue(int ItemID)
+        {
+            foreach(GameItem ItemPickup in ItemsToRemove)
+            {
+                if (ItemPickup.ItemID == ItemID)
+                    return true;
+            }
+            return false;
+        }
+
+        //Removes all the item pickups from the game world simulation which have been queued up to be removed
+        public static void ClearRemoveQueue(Simulation GameWorld)
+        {
+            //Loop through each item in the queue
+            foreach(GameItem ItemPickup in ItemsToRemove)
+            {
+                //Remove them all from the game world simulation
+                GameWorld.Bodies.Remove(ItemPickup.ItemColliderHandle);
+                GameWorld.Shapes.Remove(ItemPickup.ItemShapeIndex);
+                //Remove the item from the active item dictionary if its still in there for some reason
+                if (ActiveItemDictionary.ContainsKey(ItemPickup.ItemID))
+                    ActiveItemDictionary.Remove(ItemPickup.ItemID);
+            }
+
+            //Now clear the list since all the items in it are gone now
+            ItemsToRemove.Clear();
+        }
+
+        //The universal item ID number to be assigned to the next item that is created
         private static int NextItemID = -1;
 
         //Keep a list of all the items that have been dropped into the game world and are still available to be taken by players
@@ -57,49 +93,26 @@ namespace Server.GameItems
             return NewItemID;
         }
 
-        //Add a new item pickup into the game world
-        public static void AddItemPickup(int ItemNumber, Vector3 ItemPosition)
+        /// <summary>
+        /// Spawns a new item pickup into the game world that players are able to pick up
+        /// </summary>
+        /// <param name="ItemNumber">The game items unique number identifer used to fetch all of its data from the ItemList</param>
+        /// <param name="ItemSpawnLocation">Location in the game world where the item will be instantiated</param>
+        public static void AddNewItemPickup(int ItemNumber, Simulation GameWorld, Vector3 ItemSpawnLocation)
         {
-            //Gather information regarding the new item pickup about to be added into the game world
-            string NewItemName = ItemList.GetItemName(ItemNumber);
-            string NewItemType = ItemList.GetItemType(ItemNumber);
+            //Create the new item pickup and store it in the dictionary with all the other active pickup items
+            GameItem ItemPickup = new GameItem(ItemNumber, GameWorld, ItemSpawnLocation);
+            ItemPickup.ItemID = GetNextID();
+            ActiveItemDictionary.Add(ItemPickup.ItemID, ItemPickup);
 
-            //Instantiate this new item pickup into the servers game world, store it in the dictionary with the others
-            GameItem NewItem = new GameItem(NewItemName, NewItemType, ItemNumber, GetNextID(), ItemPosition);
-            ActiveItemDictionary.Add(NewItem.ItemID, NewItem);
-
-            //Instruct all active clients to spawn this new item pickup into the game worlds
-            //PacketManager.SendListSpawnItem(ConnectionManager.GetActiveClients(), NewItem);
+            //Tell all the active game clients to spawn this item pickup into their game world
+            ItemManagementPacketSender.SendAllSpawnItemPickup(ItemPickup);
         }
 
-        //Adds an item pickup into the game world with a pre-existing ID value
-        public static void AddItemPickup(int ItemNumber, int ItemID, Vector3 ItemLocation)
+        //Queues up an item to be removed from the game world in the next GameWorld.Update call
+        public static void QueueRemoveItemPickup(GameItem ItemPickup)
         {
-            //Gather information regarding teh new item pickup about to be added into the game world
-            string NewItemName = ItemList.GetItemName(ItemNumber);
-            string NewItemType = ItemList.GetItemType(ItemNumber);
-
-            //Instantiate this new item pickup object and store it in the dictionary with the others
-            GameItem NewItem = new GameItem(NewItemName, NewItemType, ItemNumber, ItemID, ItemLocation);
-            ActiveItemDictionary.Add(ItemID, NewItem);
-
-            //Instruct all the active clients to spawn this new item pickup into their game worlds
-            //PacketManager.SendListSpawnItem(ConnectionManager.GetActiveClients(), NewItem);
-        }
-
-        //Removes an active item pickup from the game world
-        public static void RemoveItemPickup(int ItemID)
-        {
-            ////Get this items information out of the dictionary
-            //GameItem ItemPickup = ActiveItemDictionary[ItemID];
-
-            ////Remove the item from the dictionary and from the game world
-            //Physics.WorldSimulator.Space.Remove(ItemPickup.Collider);
-            //Rendering.Window.Instance.ModelDrawer.Remove(ItemPickup.Collider);
-            //ActiveItemDictionary.Remove(ItemID);
-
-            ////Instruct all active clients to remove this item pickup from their game worlds
-            //PacketManager.SendListRemoveItem(ConnectionManager.GetActiveClients(), ItemID);
+            ItemsToRemove.Add(ItemPickup);
         }
     }
 }

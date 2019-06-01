@@ -4,6 +4,7 @@
 // ================================================================================================================================
 
 using MySql.Data.MySqlClient;
+using Server.Interface;
 
 namespace Server.Database
 {
@@ -14,13 +15,12 @@ namespace Server.Database
         {
             //Define the query to search for an account with this name in the database
             string AccountQuery = "SELECT * FROM accounts WHERE Username='" + AccountName + "'";
+            Log.PrintSQLCommand(AccountQuery);
 
             //Execute the command and start reading from the accounts table
             MySqlCommand AccountCommand = new MySqlCommand(AccountQuery, DatabaseManager.DatabaseConnection);
             MySqlDataReader AccountReader = AccountCommand.ExecuteReader();
 
-            //Read from the table and check if any account exists with the given given account name
-            AccountReader.Read();
             bool AccountNameAvailable = !AccountReader.HasRows;
             AccountReader.Close();
 
@@ -32,6 +32,8 @@ namespace Server.Database
         public static void RegisterNewAccount(string AccountName, string AccountPassword)
         {
             string RegisterQuery = "INSERT INTO accounts(Username,Password) VALUES('" + AccountName + "','" + AccountPassword + "')";
+            Log.PrintSQLCommand(RegisterQuery);
+
             MySqlCommand RegisterCommand = new MySqlCommand(RegisterQuery, DatabaseManager.DatabaseConnection);
             RegisterCommand.ExecuteNonQuery();
         }
@@ -42,18 +44,24 @@ namespace Server.Database
         {
             //Define the query to check this accounts login credentials
             string PasswordQuery = "SELECT * FROM accounts WHERE Username='" + AccountName + "' AND Password='" + AccountPassword + "'";
+            Log.PrintSQLCommand(PasswordQuery);
 
             //Execute this command to open up the table for this account name
             MySqlCommand PasswordCommand = new MySqlCommand(PasswordQuery, DatabaseManager.DatabaseConnection);
             MySqlDataReader PasswordReader = PasswordCommand.ExecuteReader();
 
             //Read the table to check if the password provided is correct
-            PasswordReader.Read();
-            bool PasswordMatches = PasswordReader.HasRows;
-            PasswordReader.Close();
+            if(PasswordReader.Read())
+            {
+                bool PasswordMatches = PasswordReader.HasRows;
+                PasswordReader.Close();
 
-            //Return the final value
-            return PasswordMatches;
+                //Return the final value
+                return PasswordMatches;
+            }
+
+            Log.PrintDebugMessage("AccountsDatabase.IsPasswordCorrect Error reading password, returning false.");
+            return false;
         }
     }
 }

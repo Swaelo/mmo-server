@@ -31,7 +31,7 @@ namespace Server.Entities
             //remove them from the list of entities
             ActiveEntities.Remove(OldEntity);
             //remove them from the physics simulation too
-            SceneHarness.CurrentScene.Simulation.Bodies.Remove(OldEntity.BodyID);
+            Program.World.WorldSimulation.Bodies.Remove(OldEntity.BodyID);
         }
 
         //Removes a whole list of entities from the game world
@@ -87,7 +87,7 @@ namespace Server.Entities
             if (Client.BodyHandle != -1)
             {
                 //Remove them from the physics scene
-                SceneHarness.CurrentScene.Simulation.Bodies.Remove(Client.BodyHandle);
+                Program.World.WorldSimulation.Bodies.Remove(Client.BodyHandle);
                 Client.BodyHandle = -1;
 
                 //Tell any enemies targetting this character to stop targetting them

@@ -7,6 +7,7 @@ using System;
 using System.Numerics;
 using MySql.Data.MySqlClient;
 using Server.Data;
+using Server.Interface;
 
 namespace Server.Database
 {
@@ -16,20 +17,16 @@ namespace Server.Database
         //NOTE: assumes the character name provided is valid
         public static bool IsCharacterNameAvailable(string CharacterName)
         {
-            //define the sql query to look up the current table of characters
-            string CharactersQuery = "SELECT * FROM characters WHERE CharacterName='" + CharacterName + "'";
+            //Search the characters database for a column with this name
+            string Query = "SELECT * FROM characters WHERE CharacterName='" + CharacterName + "'";
+            Log.PrintSQLCommand(Query);
+            MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
+            MySqlDataReader Reader = Command.ExecuteReader();
 
-            //Execute the command and start reading the characters table to check if this name is being used or not
-            MySqlCommand CharactersCommand = new MySqlCommand(CharactersQuery, DatabaseManager.DatabaseConnection);
-            MySqlDataReader CharacterReader = CharactersCommand.ExecuteReader();
-
-            //Read the table to check if this name is being used or not
-            CharacterReader.Read();
-            bool CharacterNameAvailable = !CharacterReader.HasRows;
-            CharacterReader.Close();
-
-            //Return the final value
-            return CharacterNameAvailable;
+            //If no column was found the name is available to use
+            bool NameAvailable = !Reader.HasRows;
+            Reader.Close();
+            return NameAvailable;
         }
 
         //Returns the number of characters that exist under a given user account
@@ -37,6 +34,7 @@ namespace Server.Database
         {
             //Define the query to check how many characters this user has created so far
             string CharacterCountQuery = "SELECT CharactersCreated FROM accounts WHERE Username='" + AccountName + "'";
+            Log.PrintSQLCommand(CharacterCountQuery);
 
             //Execute the command and return the final value
             MySqlCommand CharacterCountCommand = new MySqlCommand(CharacterCountQuery, DatabaseManager.DatabaseConnection);
@@ -46,37 +44,40 @@ namespace Server.Database
         //Saves a brand new player character and all of its relevant information into the characters database
         public static void SaveNewCharacter(CharacterData NewCharacterData)
         {
-            //Insert a new row into the characters table storing this new characters information
-            //values are string:OwnerAccountName float:XPosition float:YPosition float:ZPosition string:CharacterName int:ExperiencePoints int:ExperienceToLevel int:Level int:IsMale
-            string NewCharacterQuery = "INSERT INTO characters(OwnerAccountName,CharacterName,IsMale) VALUES('" + NewCharacterData.Account + "','" + NewCharacterData.Name + "','" + (NewCharacterData.IsMale ? 1 : 0) + "')";
-            MySqlCommand NewCharacterCommand = new MySqlCommand(NewCharacterQuery, DatabaseManager.DatabaseConnection);
-            NewCharacterCommand.ExecuteNonQuery();
+            //Insert a new row into the characters table to store this new characters information
+            string Query = "INSERT INTO characters(OwnerAccountName,CharacterName,IsMale) VALUE('" + NewCharacterData.Account + "','" + NewCharacterData.Name + "','" + (NewCharacterData.IsMale ? 1 : 0) + "')";
+            Log.PrintSQLCommand(Query);
+            MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
+            Command.ExecuteNonQuery();
 
-            //Update the characters account table to store the new number of characters this player has created under their account so far
+            //Update the accounts table to reference this users new number of owned characters
             int NewCharacterCount = GetCharacterCount(NewCharacterData.Account) + 1;
-            string NewCharacterCountQuery = "UPDATE accounts SET CharactersCreated='" + NewCharacterCount + "' WHERE Username='" + NewCharacterData.Account + "'";
-            MySqlCommand NewCharacterCountCommand = new MySqlCommand(NewCharacterCountQuery, DatabaseManager.DatabaseConnection);
-            NewCharacterCountCommand.ExecuteNonQuery();
+            Query = "UPDATE accounts SET CharactersCreated='" + NewCharacterCount + "' WHERE Username='" + NewCharacterData.Account + "'";
+            Log.PrintSQLCommand(Query);
+            Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
+            Command.ExecuteNonQuery();
 
-            //Store a refence in the users account table to note that this character belongs to them
+            //Update the accounts table to reference this character under the owners account details
             string NewCharacterReference = NewCharacterCount == 1 ? "FirstCharacterName" :
                 NewCharacterCount == 2 ? "SecondCharacterName" : "ThirdCharacterName";
-            string NewCharacterReferenceQuery = "UPDATE accounts SET " + NewCharacterReference + "' WHERE Username='" + NewCharacterData.Account + "'";
-            MySqlCommand NewCharacterReferenceCommand = new MySqlCommand(NewCharacterReferenceQuery, DatabaseManager.DatabaseConnection);
-            NewCharacterReferenceCommand.ExecuteNonQuery();
+            Query = "UPDATE accounts SET " + NewCharacterReference + "='" + NewCharacterData.Name + "' WHERE Username='" + NewCharacterData.Account + "'";
+            Log.PrintSQLCommand(Query);
+            Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
+            Command.ExecuteNonQuery();
 
-            //Next, create a new entry into the inventory database to keep track of this new characters inventory
-            string NewInventoryQuery = "INSERT INTO inventories(CharacterName) VALUES('" + NewCharacterData.Name + "')'";
-            MySqlCommand NewInventoryCommand = new MySqlCommand(NewInventoryQuery, DatabaseManager.DatabaseConnection);
-            NewInventoryCommand.ExecuteNonQuery();
-            //As well as a new entry into the equipments database to track what items they have equipped
-            string NewEquipmentQuery = "INSERT INTO equipments(CharacterName) VALUES('" + NewCharacterData.Name + "')'";
-            MySqlCommand NewEquipmentCommand = new MySqlCommand(NewEquipmentQuery, DatabaseManager.DatabaseConnection);
-            NewEquipmentCommand.ExecuteNonQuery();
-            //and finally, a new entry into the actionbars database to track what abilities they have equipped
-            string NewActionBarQuery = "INSERT INTO actionbars(CharacterName) VALUES('" + NewCharacterData.Name + "')'";
-            MySqlCommand NewActionBarCommand = new MySqlCommand(NewActionBarQuery, DatabaseManager.DatabaseConnection);
-            NewActionBarCommand.ExecuteNonQuery();
+            //Create new blank entry into the inventory, equipments and actionbars database for the new character
+            Query = "INSERT INTO inventories(CharacterName) VALUE('" + NewCharacterData.Name + "')";
+            Log.PrintSQLCommand(Query);
+            Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
+            Command.ExecuteNonQuery();
+            Query = "INSERT INTO equipments(CharacterName) VALUE('" + NewCharacterData.Name + "')";
+            Log.PrintSQLCommand(Query);
+            Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
+            Command.ExecuteNonQuery();
+            Query = "INSERT INTO actionbars(CharacterName) VALUE('" + NewCharacterData.Name + "')";
+            Log.PrintSQLCommand(Query);
+            Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
+            Command.ExecuteNonQuery();
         }
 
         //Returns the name of the users character which exists in the given character slot number
@@ -84,18 +85,23 @@ namespace Server.Database
         {
             //First open up the accounts database and start reading the names of characters in this users account
             string CharacterNameQuery = "SELECT * FROM accounts WHERE Username='" + AccountName + "'";
+            Log.PrintSQLCommand(CharacterNameQuery);
             MySqlCommand CharacterNameCommand = new MySqlCommand(CharacterNameQuery, DatabaseManager.DatabaseConnection);
             MySqlDataReader CharacterNameReader = CharacterNameCommand.ExecuteReader();
-            CharacterNameReader.Read();
-
             //Read from this table the name of the character in the given character slot number
-            string SlotName = CharacterSlot == 1 ? "FirstCharacterName" :
+            if(CharacterNameReader.Read())
+            {
+                string SlotName = CharacterSlot == 1 ? "FirstCharacterName" :
                 CharacterSlot == 2 ? "SecondCharacterName" : "ThirdCharacterName";
-            string CharacterName = CharacterNameReader[SlotName].ToString();
-            CharacterNameReader.Close();
+                string CharacterName = CharacterNameReader[SlotName].ToString();
+                CharacterNameReader.Close();
 
-            //return the final character name value
-            return CharacterName;
+                //return the final character name value
+                return CharacterName;
+            }
+
+            Log.PrintDebugMessage("CharactersDatabase.GetCharacterName Error reading characters name, returning empty string.");
+            return "";
         }
 
         //Loads all of a characters information from the database
@@ -106,28 +112,34 @@ namespace Server.Database
 
             //First open up this characters table and start reading all the data from it
             string CharacterDataQuery = "SELECT * FROM characters WHERE CharacterName='" + CharacterName + "'";
+            Log.PrintSQLCommand(CharacterDataQuery);
             MySqlCommand CharacterDataCommand = new MySqlCommand(CharacterDataQuery, DatabaseManager.DatabaseConnection);
             MySqlDataReader CharacterDataReader = CharacterDataCommand.ExecuteReader();
-            CharacterDataReader.Read();
+            if(CharacterDataReader.Read())
+            {
+                //Extract and store all of this characters information into the new CharacterData object
+                CharacterData.Account = CharacterDataReader["OwnerAccountName"].ToString();
+                CharacterData.Position = new Vector3(Convert.ToInt64(CharacterDataReader["XPosition"]), Convert.ToInt64(CharacterDataReader["YPosition"]), Convert.ToInt64(CharacterDataReader["ZPosition"]));
+                CharacterData.Name = CharacterName;
+                CharacterData.Experience = Convert.ToInt32(CharacterDataReader["ExperiencePoints"]);
+                CharacterData.ExperienceToLevel = Convert.ToInt32(CharacterDataReader["ExperienceToLevel"]);
+                CharacterData.Level = Convert.ToInt32(CharacterDataReader["Level"]);
+                CharacterData.IsMale = Convert.ToBoolean(CharacterDataReader["IsMale"]);
 
-            //Extract and store all of this characters information into the new CharacterData object
-            CharacterData.Account = CharacterDataReader["OwnerAccountName"].ToString();
-            CharacterData.Position = new Vector3(Convert.ToInt64(CharacterDataReader["XPosition"]), Convert.ToInt64(CharacterDataReader["YPosition"]), Convert.ToInt64(CharacterDataReader["ZPosition"]));
-            CharacterData.Name = CharacterName;
-            CharacterData.Experience = Convert.ToInt32(CharacterDataReader["ExperiencePoints"]);
-            CharacterData.ExperienceToLevel = Convert.ToInt32(CharacterDataReader["ExperienceToLevel"]);
-            CharacterData.Level = Convert.ToInt32(CharacterDataReader["Level"]);
-            CharacterData.IsMale = Convert.ToBoolean(CharacterDataReader["IsMale"]);
+                //Return the final CharacterData object which has all the relevant information stored within
+                CharacterDataReader.Close();
+                return CharacterData;
+            }
 
-            //Return the final CharacterData object which has all the relevant information stored within
-            CharacterDataReader.Close();
-            return CharacterData;
+            Log.PrintDebugMessage("CharactersDatabase.GetCharacterData Error reading character data, returning null.");
+            return null;
         }
 
         //Backs up the location of a player character into the database
         public static void SaveCharacterLocation(string CharacterName, Vector3 CharacterLocation)
         {
             string CharacterLocationQuery = "UPDATE characters SET XPosition='" + CharacterLocation.X + "', YPosition='" + CharacterLocation.Y + "', ZPosition='" + CharacterLocation.Z + "' WHERE CharacterName='" + CharacterName + "'";
+            Log.PrintSQLCommand(CharacterLocationQuery);
             MySqlCommand CharacterLocationCommand = new MySqlCommand(CharacterLocationQuery, DatabaseManager.DatabaseConnection);
             CharacterLocationCommand.ExecuteNonQuery();
         }

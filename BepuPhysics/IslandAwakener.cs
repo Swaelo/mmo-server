@@ -22,7 +22,7 @@ namespace BepuPhysics
         BroadPhase broadPhase;
         IslandSleeper sleeper;
         BufferPool pool;
-        internal PairCache pairCache;
+        public PairCache pairCache;
 
         public IslandAwakener(Bodies bodies, Statics statics, Solver solver, BroadPhase broadPhase, IslandSleeper sleeper, BufferPool pool)
         {

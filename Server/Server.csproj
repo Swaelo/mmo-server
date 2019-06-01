@@ -11,8 +11,21 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Scenes\GameWorldScene.cs" />
+    <Compile Remove="Scenes\Scene.cs" />
+    <Compile Remove="Scenes\SceneHarness.cs" />
+    <Compile Remove="Scenes\SceneSet.cs" />
+    <Compile Remove="Scenes\SceneSwapper.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Remove="Demos.contentarchive" />
+    <None Remove="ServerContents.contentarchive" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,6 +41,10 @@
     <ProjectReference Include="..\BepuUtilities\BepuUtilities.csproj" />
     <ProjectReference Include="..\ContentLoader\ContentLoader.csproj" />
     <ProjectReference Include="..\ContentRenderer\ContentRenderer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
 </Project>
