@@ -3,6 +3,7 @@
 // Description: Allows the server to interact with the local SQL database which is used to store all user account and character info
 // ================================================================================================================================
 
+using System;
 using MySql.Data.MySqlClient;
 using Server.Interface;
 
@@ -14,30 +15,37 @@ namespace Server.Database
         public static MySqlConnection DatabaseConnection;
 
         //Helps define the connection string used to establish the initial connection to the database server
-        private static string CreateConnectionString(string IP, string Port)
+        private static string CreateConnectionString(string IP, int Port, string Username = "root", string Password = "")
         {
             string ConnectionString =
                 "Server=" + IP + ";" +
-                "Port=" + Port + ";" +
+                "Port=" + Port.ToString() + ";" +
                 "Database=;" +
-                "User=root;" +
-                "Password=Fuckyahoo420;";
+                "User=" + Username + ";" +
+                "Password=" + Password + ";";
 
             Log.PrintSQLCommand(ConnectionString);
-
             return ConnectionString;
         }
 
         //Initializes the connection to the database server
-        public static void InitializeDatabaseConnection(string ServerIP, string ServerPort)
+        public static bool InitializeDatabaseConnection(string ServerIP = "localhost", int ServerPort = 3306, string Database = "", string Username = "root", string Password = "")
         {
             //Open connection to the database server
-            DatabaseConnection = new MySqlConnection(CreateConnectionString(ServerIP, ServerPort));
+            DatabaseConnection = new MySqlConnection(CreateConnectionString(ServerIP, ServerPort, Username, Password));
             DatabaseConnection.Open();
 
-            //Tell the database we want to use the gamedatabase
-            MySqlCommand DatabaseCommand = new MySqlCommand("USE gameserverdatabase", DatabaseConnection);
+            //Check if the database connection failed to connect
+            if(DatabaseConnection.State != System.Data.ConnectionState.Open)
+            {
+                Console.WriteLine("Failed to connect to the SQL server, shutting down.");
+                return false;
+            }
+
+            //Tell the server which database we want to use
+            MySqlCommand DatabaseCommand = new MySqlCommand("USE " + Database, DatabaseConnection);
             DatabaseCommand.ExecuteNonQuery();
+            return true;
         }
     }
 }
