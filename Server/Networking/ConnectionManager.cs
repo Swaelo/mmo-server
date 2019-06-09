@@ -62,8 +62,7 @@ namespace Server.Networking
             //Remove them from the list of active client connections
             ActiveConnections.Remove(Connection.NetworkID);
 
-            //Tell all the other clients this player has left the game world
-            
+            //TODO: Tell all the other clients this player has left the game world
         }
 
         //Returns a subset of the ClientConnections list, containing only this clients who are currently logged in and playing one of their characters
