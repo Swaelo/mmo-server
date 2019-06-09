@@ -3,14 +3,14 @@
 // Description: Defines function callbacks used for managing the an active game scene, taken from the bepu demos
 // ================================================================================================================================
 
+using System;
+using System.Runtime.CompilerServices;
+using System.Numerics;
 using BepuUtilities;
 using BepuPhysics;
 using BepuPhysics.Collidables;
 using BepuPhysics.CollisionDetection;
 using BepuPhysics.Constraints;
-using System;
-using System.Runtime.CompilerServices;
-using System.Numerics;
 
 namespace Server.Scenes
 {
