@@ -1,0 +1,24 @@
+HealingPotion:Healing Potion:Consumable:NULL:1
+ManaPotion:Mana Potion:Consumable:NULL:2
+StaminaPotion:Stamina Potion:Consumable:NULL:3
+AstorasStraightSword:Astora's Straight Sword:Equipment:RightHand:4
+BattleHelm:Battle Helm:Equipment:Head:5
+CrusadersShield:Crusader's Shield:Equipment:LeftHand:6
+EpicPurpleShirt:Epic Purple Shirt:Equipment:Chest:7
+Kusabimaru:Kusabimaru:Equipment:RightHand:8
+LeatherCloak:Leather Cloak:Equipment:Back:9
+LeftBonemouldPauldron:Left Bonemould Pauldron:Equipment:LeftShoulder:10
+LeftClothGlove:Left Cloth Glove:Equipment:LeftGlove:11
+LeftMannaSandal:Left Manna Sandal:Equipment:LeftFoot:12
+LeftNormalBoot:Left Normal Boot:Equipment:LeftFoot:13
+MannaAbs:Manna Abs:Equipment:Chest:14
+MannaLeggings:Manna Leggings:Equipment:Legs:15
+MysteriousAmulet:Mysterious Amulet:Equipment:Neck:16
+OldPants:Old Pants:Equipment:Legs:17
+RightBonemouldPauldron:Right Bonemould Pauldron:Equipment:RightShoulder:18
+RightClothGlove:Right Cloth Glove:Equipment:RightGlove:19
+RightMannaSandal:Right Manna Sandal:Equipment:RightFoot:20
+RightNormalBoot:Right Normal Boot:Equipment:RightFoot:21
+BattleShout:Battle Shout:AbilityGem:NULL:22
+Dash:Dash:AbilityGem:NULL:23
+Fireball:Fireball:AbilityGem:NULL:24
