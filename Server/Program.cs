@@ -3,15 +3,15 @@
 // Description: The server programs main entry point
 // ================================================================================================================================
 
+using System;
 using BepuUtilities;
 using ContentLoader;
 using ServerUtilities;
 using Server.Logic;
-using Server.World;
+using Server.Scenes;
 using Server.Database;
 using Server.GameItems;
 using Server.Networking;
-using Server.Scenes;
 
 namespace Server
 {
@@ -25,26 +25,34 @@ namespace Server
 
         static void Main(string[] args)
         {
+            string LocalIP = IPAddressGetter.GetLocalIPAddress();
+
             Application = new Program();
-            Application.StartServer();
-            Application.RunServer();
-            Application.StopServer();
+            if(Application.StartServer(LocalIP))
+            {
+                Application.RunServer();
+                Application.StopServer();
+            }
         }
 
-        private void StartServer()
+        private bool StartServer(string ServerIP)
         {
+            Console.WriteLine("Starting server on " + ServerIP);
+
             //Connect to the sql database server
-            DatabaseManager.InitializeDatabaseConnection("localhost", "3306");
+            if (!DatabaseManager.InitializeDatabaseConnection(ServerIP, 3306, "serverdatabase", "harleylaurie", "Fuckyahoo420"))
+                return false;
 
             //Load all the existing game items from the exported text file
-            ItemInfoDatabase.LoadItemList();
+            ItemInfoDatabase.LoadItemList("Content/MasterItemList.txt");
             ItemManager.InitializeItemManager();
 
             //Start listening for new network client connections
-            ConnectionManager.InitializeManager();
+            WebSocketConnectionManager.InitializeManager(ServerIP);
+            //ConnectionManager.InitializeManager();
 
             //Open a new window for rendering so we can see whats going on while the server is up
-            ApplicationWindow = new Window("Swaelo Server 2.0", new Int2(1280, 720), new Int2(-1500, 100), WindowMode.Windowed);
+            ApplicationWindow = new Window("Swaelo Server 2.0", new Int2(800, 600), WindowMode.Windowed);// new Int2(-1500, 100), WindowMode.Windowed);
             LogicLoop = new GameLoop(ApplicationWindow);
 
             //Load in the contents needed for the scene to run
@@ -52,8 +60,10 @@ namespace Server
             using (var Stream = typeof(Program).Assembly.GetManifestResourceStream("Server.Content.ServerContents.contentarchive"))
                 Content = ContentArchive.Load(Stream);
 
-            //Start up the game world simulation
+            //Initialize the game world simulation
             World = new GameWorld(LogicLoop, Content);
+
+            return true;
         }
 
         private void RunServer()
