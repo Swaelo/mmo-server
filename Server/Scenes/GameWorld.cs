@@ -5,7 +5,6 @@
 
 using System;
 using System.Numerics;
-using System.Collections.Generic;
 using BepuPhysics;
 using BepuPhysics.Collidables;
 using BepuUtilities;
@@ -18,10 +17,9 @@ using ServerUtilities;
 using Server.Logic;
 using Server.Interface;
 using Server.GameItems;
-using Server.Scenes;
 using Server.Networking;
 
-namespace Server.World
+namespace Server.Scenes
 {
     public class GameWorld
     {
@@ -130,8 +128,8 @@ namespace Server.World
             PerformanceGraph.AddSeries("Constraint Opt", new Vector3(0, 0.5f, 1), 0.125f, TimeSamples.ConstraintOptimizer);
             PerformanceGraph.AddSeries("Batch Compress", new Vector3(0, 0.5f, 0), 0.125f, TimeSamples.BatchCompressor);
 
-            SceneCamera.Position = new Vector3(20, 10, 20);
-            SceneCamera.Yaw = MathF.PI;
+            SceneCamera.Position = new Vector3(6, 2.5f, -8);
+            SceneCamera.Yaw = -3.14f;
             SceneCamera.Pitch = 0;
             BufferPool = new BufferPool();
             ThreadDispatcher = new SimpleThreadDispatcher(Environment.ProcessorCount);
@@ -142,8 +140,8 @@ namespace Server.World
             WorldSimulation.Statics.Add(new StaticDescription(new Vector3(0), new CollidableDescription(WorldSimulation.Shapes.Add(new Box(200, 1, 200)), 0.1f)));
 
             //Add character controller used to navigate and observe the current scene
-            CharacterActive = true;
-            Character = new CharacterInput(Characters, new Vector3(0, 2, -4), new Capsule(0.5f, 1), 0.1f, 1, 20, 100, 6, 4, MathF.PI * 0.4f);
+            //CharacterActive = true;
+            //Character = new CharacterInput(Characters, new Vector3(0, 2, -4), new Capsule(0.5f, 1), 0.1f, 1, 20, 100, 6, 4, MathF.PI * 0.4f);
 
             //Add some item pickups into the game world
             Vector3 ItemSpawnLocation = new Vector3(-10, 1, 2.5f);
