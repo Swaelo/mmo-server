@@ -20,7 +20,6 @@ namespace Server
         public static Program Application;
         public static Window ApplicationWindow; //Window used to render whats happening in the game server to observe events
         public static GameLoop LogicLoop;       //Main update loop where all the magic happens
-        //public static SceneHarness SceneManager;    //Used to change between game scenes on the fly
         public static GameWorld World;
 
         static void Main(string[] args)
@@ -49,7 +48,6 @@ namespace Server
 
             //Start listening for new network client connections
             WebSocketConnectionManager.InitializeManager(ServerIP);
-            //ConnectionManager.InitializeManager();
 
             //Open a new window for rendering so we can see whats going on while the server is up
             ApplicationWindow = new Window("Swaelo Server 2.0", new Int2(800, 600), WindowMode.Windowed);// new Int2(-1500, 100), WindowMode.Windowed);
