@@ -11,11 +11,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ContentLoader", "ContentLoa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ContentBuilder", "ContentBuilder\ContentBuilder.csproj", "{579563D5-31D2-48C8-91C1-F168E1EB789D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerUtilities", "ServerUtilities\ServerUtilities.csproj", "{14BC7A34-4D66-4D16-B39B-DC39FE39E983}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServerUtilities", "ServerUtilities\ServerUtilities.csproj", "{14BC7A34-4D66-4D16-B39B-DC39FE39E983}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{3FBBD4F5-4768-4177-88BC-FD98F90A8C78}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Server", "Server\Server.csproj", "{3FBBD4F5-4768-4177-88BC-FD98F90A8C78}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContentRenderer", "ContentRenderer\ContentRenderer.csproj", "{39634A00-B55B-4E3C-9FA4-0121828FE09B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ContentRenderer", "ContentRenderer\ContentRenderer.csproj", "{39634A00-B55B-4E3C-9FA4-0121828FE09B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

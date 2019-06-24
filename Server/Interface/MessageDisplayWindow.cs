@@ -3,6 +3,7 @@
 // Description: Maintains a little window in the UI where messages can be displayed to, helpful for debugging purposes
 // ================================================================================================================================
 
+using System;
 using System.Numerics;
 using ContentRenderer;
 using ContentRenderer.UI;
@@ -31,6 +32,7 @@ namespace Server.Interface
                 MessageContents[i] = MessageContents[i - 1];
 
             MessageContents[0] = NewMessage;
+            Console.WriteLine(NewMessage);
         }
 
         //Renders all the current messages to the server application window

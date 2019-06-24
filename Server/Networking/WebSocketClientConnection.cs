@@ -55,7 +55,7 @@ namespace Server.Networking
             if (!ConnectionUpgraded)
                 UpgradeConnection(PacketBuffer);
             //Otherwise we need to extract the clients message from the buffer and decode it to become readable again
-            else if(PacketSize != 0)
+            else if (PacketSize != 0)
             {
                 Log.PrintDebugMessage("Packet Size: " + PacketSize);
                 //When recieving messages from clients they will be encoded, visit https://tools.ietf.org/html/rfc6455#section-5.2 for more information on how decoding works
@@ -84,7 +84,7 @@ namespace Server.Networking
 
                 //With a length between 0-125 we continue as normal
                 //With a length equal to 126, we read bytes 3-4 to find the actual length
-                if(PayloadLength == 126)
+                if (PayloadLength == 126)
                 {
                     byte[] PayloadBytes = DataExtractor.ReadBytes(PacketBuffer, 3, 4);
                     PayloadBinary = BinaryConverter.ByteArrayToBinaryString(PayloadBytes);
@@ -94,7 +94,7 @@ namespace Server.Networking
                     PayloadDataIndex += 2;
                 }
                 //With a length equal to 127, we read bytes 3-10 to find the actual length
-                else if(PayloadLength == 127)
+                else if (PayloadLength == 127)
                 {
                     byte[] PayloadBytes = DataExtractor.ReadBytes(PacketBuffer, 3, 10);
                     PayloadBinary = BinaryConverter.ByteArrayToBinaryString(PayloadBytes);
@@ -115,10 +115,10 @@ namespace Server.Networking
                 //Convert the PayloadData array into an ASCII string
                 string FinalMessage = Encoding.ASCII.GetString(PayloadData);
 
-                Log.PrintDebugMessage(FinalMessage);
+                Log.PrintDebugMessage("Client: " + FinalMessage);
             }
         }
-        
+
         /// <summary>
         /// Handshakes with a new network client, upgrading their connection to WebSocket from HTTP
         /// </summary>
@@ -127,12 +127,15 @@ namespace Server.Networking
             //Convert the data in the packet buffer into string format
             string PacketData = Encoding.UTF8.GetString(PacketBuffer);
 
+            Console.Write("Client Handshake Request: " + PacketData);
+
             //Make sure the new client sent a proper GET request before we complete the handshake
-            if(new System.Text.RegularExpressions.Regex("^GET").IsMatch(Encoding.UTF8.GetString(PacketBuffer)))
+            if (new System.Text.RegularExpressions.Regex("^GET").IsMatch(Encoding.UTF8.GetString(PacketBuffer)))
             {
                 //Return the correct response to complete the handshake and upgrade the client to websockets
                 string EOL = "\r\n";
-                byte[] HandshakeResponse = Encoding.UTF8.GetBytes("HTTP/1.1 101 Switching Protocols" + EOL
+                byte[] HandshakeResponse = Encoding.UTF8.GetBytes(
+                    "HTTP/1.1 101 Switching Protocols" + EOL
                     + "Connection: Upgrade" + EOL
                     + "Upgrade: websocket" + EOL
                     + "Sec-WebSocket-Accept: " + Convert.ToBase64String(
@@ -145,11 +148,86 @@ namespace Server.Networking
                         + EOL);
 
                 //Send the completed handshake response to the client
-                DataStream.BeginWrite(HandshakeResponse, 0, HandshakeResponse.Length, null, null);
+                Console.Write("Server Handshake Response: " + Encoding.UTF8.GetString(HandshakeResponse));
+
+                DataStream.BeginWrite(HandshakeResponse, 0, HandshakeResponse.Length, PacketSent, null);
             }
 
             //Take note that we have completed upgrading this clients connection
             ConnectionUpgraded = true;
+        }
+
+        //Transmits a message to this client 
+        public void SendPacket(string PacketMessage)
+        {
+            byte[] PacketData = GetFrameFromString(PacketMessage);
+            string PacketString = Encoding.UTF8.GetString(PacketData);
+            Console.Write("Send: " + PacketString);
+            DataStream.BeginWrite(PacketData, 0, PacketData.Length, PacketSent, null);
+        }
+
+        //Frames the message correctly so it can be sent to the client
+        private static byte[] GetFrameFromString(string Message)
+        {
+            byte[] response;
+            byte[] bytesRaw = Encoding.Default.GetBytes(Message);
+            byte[] frame = new byte[10];
+
+            int indexStartRawData = -1;
+            int length = bytesRaw.Length;
+
+            frame[0] = (byte)(128 + (int)2);
+            if (length <= 125)
+            {
+                frame[1] = (byte)length;
+                indexStartRawData = 2;
+            }
+            else if (length >= 126 && length <= 65535)
+            {
+                frame[1] = (byte)126;
+                frame[2] = (byte)((length >> 8) & 255);
+                frame[3] = (byte)(length & 255);
+                indexStartRawData = 4;
+            }
+            else
+            {
+                frame[1] = (byte)127;
+                frame[2] = (byte)((length >> 56) & 255);
+                frame[3] = (byte)((length >> 48) & 255);
+                frame[4] = (byte)((length >> 40) & 255);
+                frame[5] = (byte)((length >> 32) & 255);
+                frame[6] = (byte)((length >> 24) & 255);
+                frame[7] = (byte)((length >> 16) & 255);
+                frame[8] = (byte)((length >> 8) & 255);
+                frame[9] = (byte)(length & 255);
+
+                indexStartRawData = 10;
+            }
+
+            response = new byte[indexStartRawData + length];
+
+            int i, responseIdx = 0;
+
+            //Add the frame bytes to the response
+            for(i = 0; i < indexStartRawData; i++)
+            {
+                response[responseIdx] = frame[i];
+                responseIdx++;
+            }
+
+            //Add the data bytes to the response
+            for(i = 0; i < length; i++)
+            {
+                response[responseIdx] = bytesRaw[i];
+                responseIdx++;
+            }
+
+            return response;
+        }
+
+        public async void PacketSent(IAsyncResult Result)
+        {
+            Console.WriteLine("finished sending packet to client");
         }
     }
 }

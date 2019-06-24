@@ -8,11 +8,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Collections.Generic;
-using BepuUtilities;
 using Server.Entities;
-using Server.Scenes;
-using Server.Database;
-using Server.Maths;
 using Server.Interface;
 using Server.Networking.PacketSenders;
 
@@ -25,13 +21,13 @@ namespace Server.Networking
         public static Dictionary<int, ClientConnection> ActiveConnections = new Dictionary<int, ClientConnection>();
 
         //Sets up the connection manager and starts listening for new incoming game client connections
-        public static void InitializeManager()
+        public static void InitializeManager(string ServerIP)
         {
             //Register all the packet reader handler functions
             PacketReceiver.RegisterPacketHandlers();
 
             //Start listening to new incoming client connections
-            NewClientListener = new TcpListener(IPAddress.Any, 5500);
+            NewClientListener = new TcpListener(IPAddress.Parse(ServerIP), 5500);
             NewClientListener.Start();
             NewClientListener.BeginAcceptTcpClient(new AsyncCallback(NewClientConnected), null);
         }

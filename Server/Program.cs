@@ -24,10 +24,11 @@ namespace Server
 
         static void Main(string[] args)
         {
-            string LocalIP = IPAddressGetter.GetLocalIPAddress();
+            string LocalIP = "192.168.1.102";
+            string PublicIP = "203.221.43.175";
 
             Application = new Program();
-            if(Application.StartServer(LocalIP))
+            if (Application.StartServer(LocalIP))
             {
                 Application.RunServer();
                 Application.StopServer();
@@ -39,7 +40,7 @@ namespace Server
             Console.WriteLine("Starting server on " + ServerIP);
 
             //Connect to the sql database server
-            if (!DatabaseManager.InitializeDatabaseConnection(ServerIP, 3306, "serverdatabase", "harleylaurie", "Fuckyahoo420"))
+            if (!DatabaseManager.InitializeDatabaseConnection("localhost", 3306, "serverdatabase", "harleylaurie", "Fuckyahoo420"))
                 return false;
 
             //Load all the existing game items from the exported text file
@@ -50,7 +51,7 @@ namespace Server
             WebSocketConnectionManager.InitializeManager(ServerIP);
 
             //Open a new window for rendering so we can see whats going on while the server is up
-            ApplicationWindow = new Window("Swaelo Server 2.0", new Int2(800, 600), WindowMode.Windowed);// new Int2(-1500, 100), WindowMode.Windowed);
+            ApplicationWindow = new Window("Swaelo Server 2.0", new Int2(1280, 800), WindowMode.Windowed); // new Int2(1700, 100), WindowMode.Windowed);
             LogicLoop = new GameLoop(ApplicationWindow);
 
             //Load in the contents needed for the scene to run

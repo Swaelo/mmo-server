@@ -37,5 +37,11 @@ namespace Server.Networking
         {
             ActiveConnections.Remove(Connection.NetworkID);
         }
+
+        public static void MessageAllClients(string ClientMessage)
+        {
+            foreach (KeyValuePair<int, WebSocketClientConnection> Client in ActiveConnections)
+                Client.Value.SendPacket(ClientMessage);
+        }
     }
 }

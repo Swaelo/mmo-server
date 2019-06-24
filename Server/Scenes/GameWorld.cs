@@ -144,12 +144,12 @@ namespace Server.Scenes
             //Character = new CharacterInput(Characters, new Vector3(0, 2, -4), new Capsule(0.5f, 1), 0.1f, 1, 20, 100, 6, 4, MathF.PI * 0.4f);
 
             //Add some item pickups into the game world
-            Vector3 ItemSpawnLocation = new Vector3(-10, 1, 2.5f);
-            for (int i = 1; i < 5; i++)
-            {
-                ItemManager.AddNewItemPickup(i, WorldSimulation, ItemSpawnLocation);
-                ItemSpawnLocation.X += 1;
-            }
+            //Vector3 ItemSpawnLocation = new Vector3(-10, 1, 2.5f);
+            //for (int i = 1; i < 5; i++)
+            //{
+            //    ItemManager.AddNewItemPickup(i, WorldSimulation, ItemSpawnLocation);
+            //    ItemSpawnLocation.X += 1;
+            //}
 
             //Setup text builder for rendering UI text components
             UIText = new TextBuilder(128);
@@ -300,6 +300,12 @@ namespace Server.Scenes
                         Character = new CharacterInput(Characters, SceneCamera.Position, new Capsule(0.5f, 1), 0.1f, 1, 20, 100, 6, 4, MathF.PI * 0.4f);
                         CharacterActive = true;
                     }
+                }
+
+                //Send a test packet to all connected WebGL clients when P key is pressed
+                if(UserInput.WasPushed(Key.P))
+                {
+                    WebSocketConnectionManager.MessageAllClients("hello client");
                 }
 
                 //Update the character controller whenever its active

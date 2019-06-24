@@ -17,6 +17,15 @@ namespace Server.Interface
             DebugMessageWindow.DisplayNewMessage(DebugMessage);
         }
 
+        //Prints out each value in an array of integers
+        public static void PrintDebugMessage(string DebugMessage, int[] Bits)
+        {
+            string Message = DebugMessage + ": ";
+            for (int i = 0; i < Bits.Length; i++)
+                Message += Bits[i].ToString();
+            DebugMessageWindow.DisplayNewMessage(Message);
+        }
+
         //Prints a new message to the IncomingPacketsDisplayWindow
         public static void PrintIncomingPacketMessage(string IncomingPacketMessage)
         {
