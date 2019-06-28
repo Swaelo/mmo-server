@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        ItemManagementPacketHandler.cs
 // Description: Handles packets from game clients regarding item pickups
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System.Numerics;

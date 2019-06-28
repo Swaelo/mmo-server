@@ -2,6 +2,7 @@
 // File:        BaseEntity.cs
 // Description: Base Entity type to implement from when defining more advanced entity types like EnemyEntity or a boss type entity
 //              All entities once created, are stored in the EntityManager in this base class type to be kept in a single list
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System.Numerics;

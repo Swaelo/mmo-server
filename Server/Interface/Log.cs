@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        Log.cs
 // Description: Quickly and easily print messages to the chat window from anywhere in the code by typing l.og("hello world");
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 namespace Server.Interface

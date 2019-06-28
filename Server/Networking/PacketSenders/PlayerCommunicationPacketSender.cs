@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        PlayerCommunicationPacketSender.cs
-// Description: Formats and delivers network packets to game clients with messages sent from other players
+// Description: Formats and delivers network packets to game clients with messages sent from other player
+// Author:      Harley Laurie https://www.github.com/Swaelo/s
 // ================================================================================================================================
 
 using System.Collections.Generic;

@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        EquipmentSlots.cs
 // Description: Defines all the different equipment slots available to the player
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 namespace Server.GameItems

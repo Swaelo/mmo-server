@@ -2,6 +2,7 @@
 // File:        EntityManager.cs
 // Description: Keeps track of all entities currently active in the servers world simulation, used to keep them all up to date and
 //              for sending all their updated information to any connected game clients to keep them updated on the entities states
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System.Collections.Generic;

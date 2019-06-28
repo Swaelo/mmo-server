@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        CharacterData.cs
 // Description: Stores all the current information regarding a clients active player character currently active in the game world
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System.Numerics;

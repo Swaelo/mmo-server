@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        PlayerCommunicationPacketHanlder.cs
 // Description: Manages packets from game clients related to communication between players
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System.Collections.Generic;

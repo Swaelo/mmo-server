@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        ItemInfoDatabase.cs
 // Description: Used to fetch the rest of an items information with just its ItemNumber
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System;

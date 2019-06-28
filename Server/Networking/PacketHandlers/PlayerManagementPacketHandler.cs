@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        PlayerManagementPacketHandler.cs
 // Description: Manages packets sent from game clients regarding the current state of the player characters
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System.Collections.Generic;
@@ -8,7 +9,6 @@ using System.Numerics;
 using Quaternion = BepuUtilities.Quaternion;
 using BepuPhysics;
 using Server.Interface;
-using Server.Scenes;
 using Server.Networking.PacketSenders;
 
 namespace Server.Networking.PacketHandlers

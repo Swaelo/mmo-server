@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        ItemData.cs
 // Description: Contains information about a game item and everything about it
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 namespace Server.GameItems

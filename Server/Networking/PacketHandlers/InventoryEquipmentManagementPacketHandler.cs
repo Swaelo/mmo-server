@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        InventoryEquipmentPacketHandler.cs
 // Description: Handles packets from clients regarding management of their inventory and worn equipment items
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System.Collections.Generic;

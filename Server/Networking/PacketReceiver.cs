@@ -2,6 +2,7 @@
 // File:        PacketReceiver.cs
 // Description: Defines all the functions used for recieving data through the network, and passes the data onto the correct
 //              functions to be handled accordingly
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System.Collections.Generic;

@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        GetSystemTime.cs
 // Description: Returns the current time in a nicely formatted string
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System;

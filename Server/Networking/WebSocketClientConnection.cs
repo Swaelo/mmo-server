@@ -1,12 +1,14 @@
 ﻿// ================================================================================================================================
 // File:        WebSocketClientConnection.cs
 // Description: WebSocket implementation of the ClientConnection class
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Numerics;
 using Server.Interface;
 using Server.Maths;
 
@@ -15,6 +17,11 @@ namespace Server.Networking
     public class WebSocketClientConnection
     {
         public int NetworkID;   //Each client has a unique network ID so they dont get mixed up
+        public bool InGame = false;
+        public string AccountName;
+        public string CharacterName;
+        public Vector3 CharacterPosition;
+        public Quaternion CharacterRotation;
         public TcpClient NetworkConnection; //The servers network connection to this client
         private bool ConnectionUpgraded = false;    //When clients first connect we need to handshake them
         public NetworkStream DataStream;    //Information is transmitted back and forth with this
@@ -57,7 +64,6 @@ namespace Server.Networking
             //Otherwise we need to extract the clients message from the buffer and decode it to become readable again
             else if (PacketSize != 0)
             {
-                Log.PrintDebugMessage("Packet Size: " + PacketSize);
                 //When recieving messages from clients they will be encoded, visit https://tools.ietf.org/html/rfc6455#section-5.2 for more information on how decoding works
 
                 //Lets first extract the data from the first byte
@@ -114,8 +120,7 @@ namespace Server.Networking
 
                 //Convert the PayloadData array into an ASCII string
                 string FinalMessage = Encoding.ASCII.GetString(PayloadData);
-
-                Log.PrintDebugMessage("Client: " + FinalMessage);
+                WebSocketPacketHandler.ReadClientPacket(NetworkID, FinalMessage);
             }
         }
 
@@ -148,9 +153,9 @@ namespace Server.Networking
                         + EOL);
 
                 //Send the completed handshake response to the client
-                Console.Write("Server Handshake Response: " + Encoding.UTF8.GetString(HandshakeResponse));
+                //Console.Write("Server Handshake Response: " + Encoding.UTF8.GetString(HandshakeResponse));
 
-                DataStream.BeginWrite(HandshakeResponse, 0, HandshakeResponse.Length, PacketSent, null);
+                DataStream.BeginWrite(HandshakeResponse, 0, HandshakeResponse.Length, null, null);
             }
 
             //Take note that we have completed upgrading this clients connection
@@ -162,8 +167,8 @@ namespace Server.Networking
         {
             byte[] PacketData = GetFrameFromString(PacketMessage);
             string PacketString = Encoding.UTF8.GetString(PacketData);
-            Console.Write("Send: " + PacketString);
-            DataStream.BeginWrite(PacketData, 0, PacketData.Length, PacketSent, null);
+            //Console.Write("Send: " + PacketString);
+            DataStream.BeginWrite(PacketData, 0, PacketData.Length, null, null);
         }
 
         //Frames the message correctly so it can be sent to the client
@@ -223,11 +228,6 @@ namespace Server.Networking
             }
 
             return response;
-        }
-
-        public async void PacketSent(IAsyncResult Result)
-        {
-            Console.WriteLine("finished sending packet to client");
         }
     }
 }

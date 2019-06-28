@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        EntityIDGenerator.cs
 // Description: Little helper class used to assign unique ID to new entities whenever they are added into the game world
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System;

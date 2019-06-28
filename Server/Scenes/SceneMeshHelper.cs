@@ -2,6 +2,7 @@
 // File:        SceneMeshHelper.cs
 // Description: Used to load models and other assets into the current game scene, useful for loading in nav meshes,collision
 // meshes etc, taken from the bepu demos
+// Author:      Bepu Entertainment https://www.github.com/bepu/
 // ================================================================================================================================
 
 using BepuPhysics.Collidables;

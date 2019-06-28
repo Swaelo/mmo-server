@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        Grabber.cs
 // Description: used to throw objects around the physics scene, taken from the bepu demos
+// Author:      Bepu Entertainment https://www.github.com/bepu/
 // ================================================================================================================================
 
 using BepuPhysics;

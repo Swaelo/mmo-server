@@ -2,6 +2,7 @@
 // File:        ClientConnection.cs
 // Description: Handles a network connection between the server and a single game client, helps transfer packets between the two and
 //              keeps track of what account and character is being used by that game client
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System;

@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        EntityManagementPacketSender.cs
 // Description: Formats and delivers network packets to game clients to keep them updated on the current state of entities in the game world
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System.Collections.Generic;

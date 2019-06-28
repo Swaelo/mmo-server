@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        PacketTypes.cs
 // Description: Defines all the different types of packets which can be sent over the network
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 namespace Server.Networking
@@ -37,8 +38,10 @@ namespace Server.Networking
         PlayerUnequipAbility = 26,
         PlayerSwapAbilities = 27,
         PlayerMoveAbility = 28,
-        PlayerDropAbility = 29
-    }
+        PlayerDropAbility = 29,
+
+        AccountLogoutAlert = 30
+    };
 
     public enum ServerPacketType
     {

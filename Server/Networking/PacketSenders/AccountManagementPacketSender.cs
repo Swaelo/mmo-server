@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        AccountManagementPacketSender.cs
 // Description: Formats and delivers network packets to game clients while they are logging into or creating new user accounts
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using Server.Interface;

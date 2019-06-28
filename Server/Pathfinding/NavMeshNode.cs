@@ -2,6 +2,7 @@
 // File:        NavMeshNode.cs
 // Description: Defines one of the triangle meshes which make up part of the navigation mesh, lists its neighbours and the vertices
 //              which make up the 3 points of the triangle
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System.Collections.Generic;

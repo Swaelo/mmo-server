@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        DataExtractor.cs
 // Description: Helper functions used by the WebSocketClientConnection class when reading messages sent in from game clients
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 namespace Server.Networking

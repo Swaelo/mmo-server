@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        ActionBarsDatabase.cs
 // Description: Allows the server to interact with the local SQL database actionbars tables
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System;

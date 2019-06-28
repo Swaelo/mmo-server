@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        EnemyEntity.cs
 // Description: Defines a single enemy currently active in the servers world simulation, controls all of their AI/Behaviour during play
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System.Collections.Generic;

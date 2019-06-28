@@ -2,6 +2,7 @@
 // File:        ConnectionManager.cs
 // Description: Keeps track of all the game clients which are currently connected to the server, and allows you to managed those
 //              connections, and send packets to the clients as needed
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System;

@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        PlayerManagementPacketSender.cs
 // Description: Formats and delivers network packets to game clients regarding the state of all players currently in the game world
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System.Collections.Generic;

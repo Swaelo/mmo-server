@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        GameWorld.cs
 // Description: Handles the current game world simulation and everything within
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System;
@@ -300,12 +301,6 @@ namespace Server.Scenes
                         Character = new CharacterInput(Characters, SceneCamera.Position, new Capsule(0.5f, 1), 0.1f, 1, 20, 100, 6, 4, MathF.PI * 0.4f);
                         CharacterActive = true;
                     }
-                }
-
-                //Send a test packet to all connected WebGL clients when P key is pressed
-                if(UserInput.WasPushed(Key.P))
-                {
-                    WebSocketConnectionManager.MessageAllClients("hello client");
                 }
 
                 //Update the character controller whenever its active

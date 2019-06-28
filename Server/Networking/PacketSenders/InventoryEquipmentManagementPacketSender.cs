@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        InventoryEquipmentManagementPacketSender.cs
 // Description: Formats and delivers network packets to game clients keeping them updated on the state of their inventory and work equipment items
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System.Collections.Generic;

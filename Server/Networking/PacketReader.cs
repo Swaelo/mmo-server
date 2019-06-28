@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        PacketReader.cs
 // Description: Class for extracting data from network packets received from game clients
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System;

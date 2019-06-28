@@ -2,6 +2,7 @@
 // File:        AStarSearch.cs
 // Description: Constructs a list of world locations which can be travelled across one at a time to traverse from the starting location
 //              to the ending location. Based on the A* Pseudocode found in this wikipedia article https://en.wikipedia.org/wiki/A*_search_algorithm
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System.Numerics;

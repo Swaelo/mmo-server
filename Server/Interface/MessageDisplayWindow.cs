@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        MessageDisplayWindow.cs
 // Description: Maintains a little window in the UI where messages can be displayed to, helpful for debugging purposes
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System;

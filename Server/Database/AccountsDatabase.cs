@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        AccountsDatabase.cs
 // Description: Allows the server to interact with the local SQL database accounts tables
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using MySql.Data.MySqlClient;

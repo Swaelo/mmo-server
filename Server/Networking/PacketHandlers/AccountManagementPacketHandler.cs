@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        AccountManagementPacketHandlers.cs
 // Description: Defines all the packet handlers related to user account management
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System;

@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        Graph.cs
 // Description: Displays a very detailed performance monitor to the UI, taken from the bepu demos
+// Author:      Bepu Entertainment https://www.github.com/bepu/
 // ================================================================================================================================
 
 using ContentRenderer.UI;

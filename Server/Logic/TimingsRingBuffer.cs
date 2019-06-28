@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        TimingsRingBuffer.cs
 // Description: Taken from the bepu demos
+// Author:      Bepu Entertainment https://www.github.com/bepu/
 // ================================================================================================================================
 
 using BepuUtilities.Collections;

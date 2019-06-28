@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        GameWorldStatePacketHandler.cs
 // Description: Handles client packets regarding the current state of the game world
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System.Numerics;

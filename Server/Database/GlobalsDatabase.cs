@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        GlobalsDatabase.cs
 // Description: Allows the server to interact with the local SQL database globals table
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System;

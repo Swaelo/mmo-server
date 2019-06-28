@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        InventoriesDatabase.cs
 // Description: Allows the server to interact with the local SQL database inventories tables
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System;

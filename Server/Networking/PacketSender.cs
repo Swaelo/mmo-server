@@ -2,6 +2,7 @@
 // File:        PacketSender.cs
 // Description: Used to queue up instructions which need to be sent to a client in the next game tick, then sends all the instructions
 //              to each client when a game tick passes
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System.Collections.Generic;

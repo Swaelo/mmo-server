@@ -2,6 +2,7 @@
 // File:        NavMeshVertex.cs
 // Description: Defines a single vertex in a NavMesh, lists which other vertices in the NavMesh it is linked to, and stored values
 //              used for pathfinding while computing a pathway with A* searches
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System;

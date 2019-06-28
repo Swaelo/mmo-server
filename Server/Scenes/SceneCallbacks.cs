@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        SceneCallbacks.cs
 // Description: Defines function callbacks used for managing the an active game scene, taken from the bepu demos
+// Author:      Bepu Entertainment https://www.github.com/bepu/
 // ================================================================================================================================
 
 using System;

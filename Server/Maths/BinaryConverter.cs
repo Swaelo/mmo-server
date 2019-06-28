@@ -1,6 +1,7 @@
 ﻿// ================================================================================================================================
 // File:        BinaryConverter.cs
 // Description: Helper functions used by the WebSocketClientConnection class when reading in data sent from game clients
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System;

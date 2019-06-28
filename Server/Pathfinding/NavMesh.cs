@@ -2,6 +2,7 @@
 // File:        NavMesh.cs
 // Description: Stores information for the entire nav mesh to be loaded into the server simulation, once the nav mesh is set up you
 //              can use the various pathfinding functions to computes a pathway between two locations in the mesh
+// Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System.Numerics;
