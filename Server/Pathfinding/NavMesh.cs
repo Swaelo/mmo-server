@@ -38,8 +38,8 @@ namespace Server.Pathfinding
         public NavMesh(string FileName)
         {
             //Variables to temporarily store all the data loaded from file while the nav mesh is constructed
-            Vector3[] Vertices; //The entire list of vertices which make up the entirety of the navigation mesh
-            int[] Indices;  //The indices of the vertices of the navigation mesh
+           // Vector3[] Vertices; //The entire list of vertices which make up the entirety of the navigation mesh
+            //int[] Indices;  //The indices of the vertices of the navigation mesh
             //Model ModelData;    //Model object constructed from the navmesh resource file, vertices and indices are extracted from this
 
             ////Load the nav mesh from file
@@ -141,7 +141,7 @@ namespace Server.Pathfinding
                     return Node;
             }
 
-            Log.PrintDebugMessage("Pathfinding.NavMesh this point lies completely outside of the navmesh");
+            Log.Chat("Pathfinding.NavMesh this point lies completely outside of the navmesh");
             return null;
         }
     }
