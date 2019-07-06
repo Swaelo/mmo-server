@@ -48,7 +48,7 @@ namespace Server.GameItems
             }
 
             //Print a message to verify all items information was loaded from the file
-            Log.PrintDebugMessage(ItemInfoList.Count + " items information was loaded after processing " + FileLines.Length + " lines of the ItemList file.");
+            Log.Chat(ItemInfoList.Count + " items information was loaded after processing " + FileLines.Length + " lines of the ItemList file.");
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace Server.GameItems
         {
             if (!ItemInfoList.ContainsKey(ItemNumber))
             {
-                Log.PrintDebugMessage("ItemInfoDatabase.GetItemInfo No item exists in the database with number " + ItemNumber + ". Returning null");
+                Log.Chat("ItemInfoDatabase.GetItemInfo No item exists in the database with number " + ItemNumber + ". Returning null");
                 return null;
             }
 

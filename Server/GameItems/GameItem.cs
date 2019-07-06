@@ -7,7 +7,6 @@
 using BepuPhysics;
 using BepuPhysics.Collidables;
 using System.Numerics;
-using Server.Scenes;
 using Quaternion = BepuUtilities.Quaternion;
 
 namespace Server.GameItems

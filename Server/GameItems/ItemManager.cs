@@ -8,9 +8,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using BepuPhysics;
 using Server.Database;
-using Server.Interface;
-using Server.Networking;
-using Server.Networking.PacketSenders;
 
 namespace Server.GameItems
 {
@@ -107,7 +104,7 @@ namespace Server.GameItems
             ActiveItemDictionary.Add(ItemPickup.ItemID, ItemPickup);
 
             //Tell all the active game clients to spawn this item pickup into their game world
-            ItemManagementPacketSender.SendAllSpawnItemPickup(ItemPickup);
+           // ItemManagementPacketSender.SendAllSpawnItemPickup(ItemPickup);
         }
 
         //Queues up an item to be removed from the game world in the next GameWorld.Update call
