@@ -9,7 +9,7 @@ using BepuUtilities;
 using ContentLoader;
 using ServerUtilities;
 using Server.Logic;
-using Server.Scenes;
+using Server.World;
 using Server.Database;
 using Server.GameItems;
 using Server.Networking;
@@ -26,7 +26,6 @@ namespace Server
         static void Main(string[] args)
         {
             string LocalIP = "192.168.1.102";
-            string PublicIP = "203.221.43.175";
 
             Application = new Program();
             if (Application.StartServer(LocalIP))
@@ -49,10 +48,10 @@ namespace Server
             ItemManager.InitializeItemManager();
 
             //Start listening for new network client connections
-            WebSocketConnectionManager.InitializeManager(ServerIP);
+            ConnectionManager.InitializeManager(ServerIP);
 
             //Open a new window for rendering so we can see whats going on while the server is up
-            ApplicationWindow = new Window("Swaelo Server 2.0", new Int2(1024, 768), WindowMode.Windowed); // new Int2(1700, 100), WindowMode.Windowed);
+            ApplicationWindow = new Window("Swaelo Server 2.0", new Int2(1024, 768), new Int2(2050, 100), WindowMode.Windowed); // new Int2(1700, 100), WindowMode.Windowed);
             LogicLoop = new GameLoop(ApplicationWindow);
 
             //Load in the contents needed for the scene to run

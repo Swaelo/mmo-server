@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -16,11 +16,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Scenes\GameWorldScene.cs" />
-    <Compile Remove="Scenes\Scene.cs" />
-    <Compile Remove="Scenes\SceneHarness.cs" />
-    <Compile Remove="Scenes\SceneSet.cs" />
-    <Compile Remove="Scenes\SceneSwapper.cs" />
+    <Compile Remove="World\GameWorldScene.cs" />
+    <Compile Remove="World\Scene.cs" />
+    <Compile Remove="World\SceneHarness.cs" />
+    <Compile Remove="World\SceneSet.cs" />
+    <Compile Remove="World\SceneSwapper.cs" />
   </ItemGroup>
 
   <ItemGroup>
