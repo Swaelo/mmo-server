@@ -13,7 +13,7 @@ using BepuPhysics.Collidables;
 using BepuPhysics.CollisionDetection;
 using BepuPhysics.Constraints;
 
-namespace Server.Scenes
+namespace Server.Logic
 {
     public struct ScenePoseIntegratorCallbacks : IPoseIntegratorCallbacks
     {

@@ -19,62 +19,37 @@ using Server.Logic;
 using Server.Interface;
 using Server.GameItems;
 using Server.Networking;
+using Server.Enums;
 
-namespace Server.Scenes
+namespace Server.World
 {
     public class GameWorld
     {
-        //The game worlds physics simulation
-        public Simulation WorldSimulation = null;
-        
-        //Stuff coming from base scene class
-        public BufferPool BufferPool = null;
-        SimpleThreadDispatcher ThreadDispatcher = null;
+        public Simulation WorldSimulation = null;   //Bepu Physics Engine Simulation containing all characters colliders, enemy entities, item pickups etc
+        public BufferPool BufferPool = null;    //Used to managed and assign chunks of memory to the server application as it needs them during runtime
+        SimpleThreadDispatcher ThreadDispatcher = null; //Used to assign extra processing threads to the server application during runtime
 
-        public Window ApplicationWindow = null;
-        public Input UserInput = null;
-        private Controls UserControls;
-        public Camera SceneCamera = null;
-        private ContentArchive Content = null;
-        private SimulationTimeSamples TimeSamples = null;
-        private Font UIFont = null;
-        private TextBuilder UIText;
-        
-        //Server Performance Monitoring Graph Display
-        private enum TimingDisplayMode
-        {
-            Regular,
-            Big,
-            Minimized
-        }
-        TimingDisplayMode PerformanceDisplayMode;
-        private Graph PerformanceGraph = null;
+        public Window ApplicationWindow = null; //The window displaying all server information when the program is running
+        public Input UserInput = null;  //Current input recieved while controlling the server application during runtime
+        private Controls UserControls;  //Control settings for receiving input
+        public Camera SceneCamera = null;   //The camera used to view the game world during server runtime
+        private ContentArchive Content = null;  //Assets used during the servers runtime
+        private SimulationTimeSamples TimeSamples = null;   //Timesamples used to evaluate and display performance metric on the graph during runtime
+        private Font UIFont = null; //Font type used to draw strings to the application window
+        private TextBuilder UIText; //Used to create our Font for drawing strings to the UI
 
-        //scene camera settings
-        enum CameraMoveSpeedState
-        {
-            Regular,
-            Slow,
-            Fast
-        }
-        CameraMoveSpeedState CameraSpeedState = CameraMoveSpeedState.Regular;
+        CameraMoveSpeedState CameraSpeedState = CameraMoveSpeedState.Regular;   //The current speed value being used by the scene camera while monitoring the game world during runtime
+        CharacterControllers Characters;    //Set of characters currently active in the game world
+        bool CharacterActive = false;   //Tracks whether we are using freeclip mode or character controller mode to view whats happening in the game world
+        CharacterInput Character;   //The character controller used while moving around the game world with that mode
 
-        //Track time passing, send outgoing packets once per second
-        private float SendPacketInterval = 1.0f;
-        private float NextSendPacket = 1.0f;
+        private PerformanceGraph PerformanceGraph = null;    //Graph displayed to the windows UI to monitor performance metrics during the servers runtime
+        private bool ShowControls = false;  //Should the user controls be displayed on the UI
+        private bool ShowConstraints = true;    //Should physics collider shapes be displayed in the servers view window
+        private bool ShowContacts = false;  //Should the active physical contact points between physics objects be displayed in the servers view window
+        private bool ShowBoundingBoxes = false; //Should the physical bounding box colliders edges be displayed in the servers view window
 
-        //Character controller used to move around and observe the game world
-        CharacterControllers Characters;
-        bool CharacterActive = false;
-        CharacterInput Character;
-
-        //Toggle states of what UI components should be displayed
-        private bool ShowControls = false;
-        private bool ShowConstraints = true;
-        private bool ShowContacts = false;
-        private bool ShowBoundingBoxes = false;
-        private int FrameCounter = 0;
-
+        //Constructor which sets up the whole game world scene
         public GameWorld(GameLoop Loop, ContentArchive Content)
         {
             //Store references from the GameLoop class
@@ -89,45 +64,7 @@ namespace Server.Scenes
             var FontContent = Content.Load<FontContent>(@"Content\Carlito-Regular.ttf");
             UIFont = new Font(Loop.Surface.Device, Loop.Surface.Context, FontContent);
 
-            //Setup the performance display monitor
-            PerformanceGraph = new Graph(new GraphDescription
-            {
-                BodyLineColor = new Vector3(1, 1, 1),
-                AxisLabelHeight = 16,
-                AxisLineRadius = 0.5f,
-                HorizontalAxisLabel = "Frames",
-                VerticalAxisLabel = "Time (ms)",
-                VerticalIntervalValueScale = 1e3f,
-                VerticalIntervalLabelRounding = 2,
-                BackgroundLineRadius = 0.125f,
-                IntervalTextHeight = 12,
-                IntervalTickRadius = 0.25f,
-                IntervalTickLength = 6f,
-                TargetHorizontalTickCount = 5,
-                HorizontalTickTextPadding = 0,
-                VerticalTickTextPadding = 3,
-
-                LegendMinimum = new Vector2(20, 200),
-                LegendNameHeight = 12,
-                LegendLineLength = 7,
-
-                TextColor = new Vector3(1, 1, 1),
-                Font = UIFont,
-
-                LineSpacingMultiplier = 1f,
-
-                ForceVerticalAxisMinimumToZero = true
-            });
-            PerformanceGraph.AddSeries("Total", new Vector3(1, 1, 1), 0.75f, TimeSamples.Simulation);
-            PerformanceGraph.AddSeries("Pose Integrator", new Vector3(0, 0, 1), 0.25f, TimeSamples.PoseIntegrator);
-            PerformanceGraph.AddSeries("Sleeper", new Vector3(0.5f, 0, 1), 0.25f, TimeSamples.Sleeper);
-            PerformanceGraph.AddSeries("Broad Update", new Vector3(1, 1, 0), 0.25f, TimeSamples.BroadPhaseUpdate);
-            PerformanceGraph.AddSeries("Collision Test", new Vector3(0, 1, 0), 0.25f, TimeSamples.CollisionTesting);
-            PerformanceGraph.AddSeries("Narrow Flush", new Vector3(1, 0, 1), 0.25f, TimeSamples.NarrowPhaseFlush);
-            PerformanceGraph.AddSeries("Solver", new Vector3(1, 0, 0), 0.5f, TimeSamples.Solver);
-            PerformanceGraph.AddSeries("Body Opt", new Vector3(1, 0.5f, 0), 0.125f, TimeSamples.BodyOptimizer);
-            PerformanceGraph.AddSeries("Constraint Opt", new Vector3(0, 0.5f, 1), 0.125f, TimeSamples.ConstraintOptimizer);
-            PerformanceGraph.AddSeries("Batch Compress", new Vector3(0, 0.5f, 0), 0.125f, TimeSamples.BatchCompressor);
+            PerformanceGraph = new PerformanceGraph(UIFont, TimeSamples);
 
             SceneCamera.Position = new Vector3(6, 2.5f, -8);
             SceneCamera.Yaw = -3.14f;
@@ -140,18 +77,6 @@ namespace Server.Scenes
             //Place a ground plane to walk on
             WorldSimulation.Statics.Add(new StaticDescription(new Vector3(0), new CollidableDescription(WorldSimulation.Shapes.Add(new Box(200, 1, 200)), 0.1f)));
 
-            //Add character controller used to navigate and observe the current scene
-            //CharacterActive = true;
-            //Character = new CharacterInput(Characters, new Vector3(0, 2, -4), new Capsule(0.5f, 1), 0.1f, 1, 20, 100, 6, 4, MathF.PI * 0.4f);
-
-            //Add some item pickups into the game world
-            //Vector3 ItemSpawnLocation = new Vector3(-10, 1, 2.5f);
-            //for (int i = 1; i < 5; i++)
-            //{
-            //    ItemManager.AddNewItemPickup(i, WorldSimulation, ItemSpawnLocation);
-            //    ItemSpawnLocation.X += 1;
-            //}
-
             //Setup text builder for rendering UI text components
             UIText = new TextBuilder(128);
 
@@ -162,38 +87,7 @@ namespace Server.Scenes
         //Allow the window to be resized
         public void OnResize(Int2 Resolution)
         {
-            UpdatePerformanceGraphTimingMode(PerformanceDisplayMode);
-        }
-
-        //Allow changing the display mode for the performance monitor
-        private void UpdatePerformanceGraphTimingMode(TimingDisplayMode NewDisplayMode)
-        {
-            PerformanceDisplayMode = NewDisplayMode;
-            ref var Description = ref PerformanceGraph.Description;
-            var Resolution = ApplicationWindow.Resolution;
-            switch (PerformanceDisplayMode)
-            {
-                case TimingDisplayMode.Big:
-                    {
-                        const float Inset = 150;
-                        Description.BodyMinimum = new Vector2(Inset);
-                        Description.BodySpan = new Vector2(Resolution.X, Resolution.Y) - Description.BodyMinimum - new Vector2(Inset);
-                        Description.LegendMinimum = Description.BodyMinimum - new Vector2(110, 0);
-                        Description.TargetVerticalTickCount = 5;
-                    }
-                    break;
-                case TimingDisplayMode.Regular:
-                    {
-                        const float Inset = 50;
-                        var TargetSpan = new Vector2(400, 150);
-                        Description.BodyMinimum = new Vector2(Resolution.X - TargetSpan.X - Inset, Inset);
-                        Description.BodySpan = TargetSpan;
-                        Description.LegendMinimum = Description.BodyMinimum - new Vector2(130, 0);
-                        Description.TargetVerticalTickCount = 3;
-                    }
-                    break;
-            }
-            //In minimized state the graph is hidden
+            PerformanceGraph.UpdateGraphTimingMode(PerformanceGraph.GraphDisplayMode, ApplicationWindow);
         }
 
         private void ProcessInput(bool WindowFocused, float DeltaTime)
@@ -325,12 +219,7 @@ namespace Server.Scenes
 
                 //Allow changing the timing display mode in the server performance graph display
                 if (UserControls.ChangeTimingDisplayMode.WasTriggered(UserInput))
-                {
-                    var NewDisplayMode = (int)PerformanceDisplayMode + 1;
-                    if (NewDisplayMode > 2)
-                        NewDisplayMode = 0;
-                    UpdatePerformanceGraphTimingMode((TimingDisplayMode)NewDisplayMode);
-                }
+                    PerformanceGraph.ChangeToNextDisplayMode(ApplicationWindow);
             }
             else
                 UserInput.MouseLocked = false;
@@ -344,14 +233,17 @@ namespace Server.Scenes
             //Remove any item pickups from the physics scene which have been queued up to be removed
             ItemManager.ClearRemoveQueue(WorldSimulation);
 
-            //Count down timer until next send packets interval
-            NextSendPacket -= DeltaTime;
-            if (NextSendPacket <= 0.0f)
-            {
-                //Send all the queued network packets and reset the timer
-                PacketSender.SendQueuedPackets();
-                NextSendPacket = SendPacketInterval;
-            }
+            //Calling this will have the ConnectionManager keep track of how much time has passed since we last heard from each client connection
+            //Then automatically cleans up and connections which have been inactive for too long
+            ConnectionManager.CheckConnections(DeltaTime);
+            //Remove any character colliders from the physics scene which have been queued up to be removed
+            ConnectionManager.CleanDeadClients(WorldSimulation);
+
+            //Update the positions of any character colliders who have sent us a new position update since the last world update
+            ConnectionManager.UpdateClientPositions(WorldSimulation);
+
+            //PacketQueue will automatically transmit all the queued outgoing packets to their target clients each communication interval
+            PacketQueue.UpdateQueue(DeltaTime);
 
             //Simulate physics and record frame data for performance monitor
             WorldSimulation.Timestep(DeltaTime, ThreadDispatcher);
@@ -365,24 +257,25 @@ namespace Server.Scenes
             Renderer.Lines.ClearInstances();
 
             //Display the contents of all the message display windows to the UI
-            Log.DebugMessageWindow.RenderMessages(Renderer, UIText, UIFont, new Vector2(10, 25));
-            Log.NetworkPackets.RenderMessages(Renderer, UIText, UIFont, new Vector2(10, 250));
-            Log.SQLCommands.RenderMessages(Renderer, UIText, UIFont, new Vector2(10, 475));
+            Log.DebugMessageWindow.RenderMessages(Renderer, UIText, UIFont, new Vector2(10, 550));
 
-            //Display the controls to the UI
-            float TextHeight = 16;
-            Vector2 TextPosition = new Vector2(Renderer.Surface.Resolution.X - 500, Renderer.Surface.Resolution.Y - TextHeight * 10);
-            Renderer.TextBatcher.Write(UIText.Clear().Append("Toggle character: C"), TextPosition, TextHeight, new Vector3(1), UIFont);
-            TextPosition.Y += TextHeight * 1.2f;
-            Character.RenderControls(TextPosition, TextHeight, Renderer.TextBatcher, UIText, UIFont);
+            //Display controls to the UI if the flag has been set
+            if(ShowControls)
+            {
+                //Display the controls to the UI
+                float TextHeight = 16;
+                Vector2 TextPosition = new Vector2(Renderer.Surface.Resolution.X - 500, Renderer.Surface.Resolution.Y - TextHeight * 10);
+                Renderer.TextBatcher.Write(UIText.Clear().Append("Toggle character: C"), TextPosition, TextHeight, new Vector3(1), UIFont);
+                TextPosition.Y += TextHeight * 1.2f;
+                Character.RenderControls(TextPosition, TextHeight, Renderer.TextBatcher, UIText, UIFont);
+            }
 
-            ////Update the characters camera if its active
+            //Update the characters camera if its active
             if (CharacterActive)
                 Character.UpdateCameraPosition(SceneCamera);
 
             //Render the performance graph to the UI
-            if (PerformanceDisplayMode != TimingDisplayMode.Minimized)
-                PerformanceGraph.Draw(UIText, Renderer.UILineBatcher, Renderer.TextBatcher);
+            PerformanceGraph.RenderGraph(UIText, Renderer);
 
             //Render all the shapes in the scene
             Renderer.Shapes.AddInstances(WorldSimulation, ThreadDispatcher);
