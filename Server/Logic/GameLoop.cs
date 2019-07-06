@@ -9,7 +9,7 @@ using ServerUtilities;
 using ContentRenderer;
 using BepuUtilities;
 using BepuUtilities.Memory;
-using Server.Scenes;
+using Server.World;
 
 namespace Server.Logic
 {
