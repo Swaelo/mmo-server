@@ -4,45 +4,23 @@
 // Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
+using System;
+
 namespace Server.Interface
 {
     public class Log
     {
         public static MessageDisplayWindow DebugMessageWindow = new MessageDisplayWindow("Debug Messages");
-        public static MessageDisplayWindow NetworkPackets = new MessageDisplayWindow("Network Packets");
-        public static MessageDisplayWindow SQLCommands = new MessageDisplayWindow("SQL Commands");
 
-        //Prints a new message to the DebugMessagesDisplayWindow
-        public static void PrintDebugMessage(string DebugMessage)
+        //Prints a new message to the debug message window
+        public static void Chat(string Message, bool PrintToConsole = false)
         {
-            DebugMessageWindow.DisplayNewMessage(DebugMessage);
-        }
-
-        //Prints out each value in an array of integers
-        public static void PrintDebugMessage(string DebugMessage, int[] Bits)
-        {
-            string Message = DebugMessage + ": ";
-            for (int i = 0; i < Bits.Length; i++)
-                Message += Bits[i].ToString();
+            //Send the message contents to the debug message window
             DebugMessageWindow.DisplayNewMessage(Message);
-        }
 
-        //Prints a new message to the IncomingPacketsDisplayWindow
-        public static void PrintIncomingPacketMessage(string IncomingPacketMessage)
-        {
-            NetworkPackets.DisplayNewMessage("IN: " + IncomingPacketMessage);
-        }
-
-        //Prints a new message to the OutgoingPacketsDisplayWindow
-        public static void PrintOutgoingPacketMessage(string OutgoingPacketMessage)
-        {
-            NetworkPackets.DisplayNewMessage("OUT: " + OutgoingPacketMessage);
-        }
-
-        //Displays an SQL command that was executed to the SQLCommands window
-        public static void PrintSQLCommand(string CommandQuery)
-        {
-            SQLCommands.DisplayNewMessage(CommandQuery);
+            //Also print the message to the console window if we have been asked to
+            if (PrintToConsole)
+                Console.WriteLine(Message);
         }
     }
 }
