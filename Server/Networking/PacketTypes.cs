@@ -40,7 +40,8 @@ namespace Server.Networking
         PlayerMoveAbility = 28,
         PlayerDropAbility = 29,
 
-        AccountLogoutAlert = 30
+        AccountLogoutAlert = 30,
+        StillAlive = 31
     };
 
     public enum ServerPacketType
