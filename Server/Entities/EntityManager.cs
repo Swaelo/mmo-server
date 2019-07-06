@@ -6,9 +6,6 @@
 // ================================================================================================================================
 
 using System.Collections.Generic;
-using Server.Networking;
-using Server.Scenes;
-using Server.Database;
 using System.Numerics;
 using Quaternion = BepuUtilities.Quaternion;
 
@@ -67,37 +64,37 @@ namespace Server.Entities
                 Entity.Update(DeltaTime);
         }
 
-        //Instructs the inner AI of any enemies which are currently targetting the given clients game character to drop their current target and return to their default start position and AI behaviour state
-        public static void DropTarget(ClientConnection PlayerTarget)
-        {
-            //Loop through all the active entities trying to find any that currently have this player targetted
-            foreach(var Entity in ActiveEntities)
-            {
-                //Cast it to the enemy entity type
-                EnemyEntity Enemy = (EnemyEntity)Entity;
+        ////Instructs the inner AI of any enemies which are currently targetting the given clients game character to drop their current target and return to their default start position and AI behaviour state
+        //public static void DropTarget(ClientConnection PlayerTarget)
+        //{
+        //    //Loop through all the active entities trying to find any that currently have this player targetted
+        //    foreach(var Entity in ActiveEntities)
+        //    {
+        //        //Cast it to the enemy entity type
+        //        EnemyEntity Enemy = (EnemyEntity)Entity;
 
-                //Tell them to drop target if they have this player targetted
-                if (Enemy.PlayerTarget == PlayerTarget)
-                    Enemy.DropTarget();
-            }
-        }
+        //        //Tell them to drop target if they have this player targetted
+        //        if (Enemy.PlayerTarget == PlayerTarget)
+        //            Enemy.DropTarget();
+        //    }
+        //}
 
-        //Handles having a player disconnect from the game, has all enemies drop them as their target, and backs up the characters data to the database
-        public static void HandleClientDisconnect(ClientConnection Client)
-        {
-            if (Client.BodyHandle != -1)
-            {
-                //Remove them from the physics scene
-                Program.World.WorldSimulation.Bodies.Remove(Client.BodyHandle);
-                Client.BodyHandle = -1;
+        ////Handles having a player disconnect from the game, has all enemies drop them as their target, and backs up the characters data to the database
+        //public static void HandleClientDisconnect(ClientConnection Client)
+        //{
+        //    if (Client.BodyHandle != -1)
+        //    {
+        //        //Remove them from the physics scene
+        //        Program.World.WorldSimulation.Bodies.Remove(Client.BodyHandle);
+        //        Client.BodyHandle = -1;
 
-                //Tell any enemies targetting this character to stop targetting them
-                EntityManager.DropTarget(Client);
+        //        //Tell any enemies targetting this character to stop targetting them
+        //        EntityManager.DropTarget(Client);
 
-                //Backup the characters data
-                CharactersDatabase.SaveCharacterLocation(Client.CharacterName, Maths.VectorTranslate.ConvertVector(Client.CharacterPosition));
-            }
-        }
+        //        //Backup the characters data
+        //        CharactersDatabase.SaveCharacterLocation(Client.CharacterName, Maths.VectorTranslate.ConvertVector(Client.CharacterPosition));
+        //    }
+        //}
 
         //Checks if the attack hit any enemies, damages them accordingly
         public static void HandlePlayerAttack(Vector3 AttackPosition, Vector3 AttackScale, Quaternion AttackRotation)
