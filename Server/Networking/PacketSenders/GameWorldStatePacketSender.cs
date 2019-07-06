@@ -1,80 +1,165 @@
 ﻿// ================================================================================================================================
 // File:        GameWorldStatePacketSender.cs
 // Description: Formats and delivers network packets to game clients to keep them updated on the current state of the game world
-// Author:      Harley Laurie https://www.github.com/Swaelo/
+// Author:	    Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System.Collections.Generic;
-using Server.Interface;
 using Server.Entities;
-using Server.Maths;
+using Server.Misc;
 using Server.GameItems;
+using Server.Database;
 
 namespace Server.Networking.PacketSenders
 {
     public static class GameWorldStatePacketSender
     {
-        //Tells a client where all the other players are in the world to have them spawned in before they can enter into the world
+        //Tells a client where all the other plaeyrs are in the world so they can be spawned in before they can enter the world
         public static void SendActivePlayerList(int ClientID)
         {
-            //Fetch the packet writer, write the packet type and log a message to the display window
-            PacketWriter QueueWriter = PacketSender.GetQueueWriter(ClientID);
-            QueueWriter.WriteInt((int)ServerPacketType.ActivePlayerList);
-            Log.PrintOutgoingPacketMessage(ClientID + ": GameWorldState.ActivePlayerList");
+            //Create a new NetworkPacket object to store the data for this active player list
+            NetworkPacket Packet = new NetworkPacket();
 
-            //Fetch the list of all other active game clients and write into the packet how many there are
-            List<ClientConnection> OtherClients = ConnectionManager.GetActiveClientsExceptFor(ClientID);
-            QueueWriter.WriteInt(OtherClients.Count);
+            //Grab the list of all the other active game clients
+            List<ClientConnection> OtherClients = ConnectionManager.GetInGameClientsExceptFor(ClientID);
 
-            //Loop through all the other clients and write each ones info into the packet
+            //Write the relevant data values into the packet data
+            Packet.WriteType(ServerPacketType.ActivePlayerList);
+            Packet.WriteInt(OtherClients.Count);
+
+            //Loop through the list of other clients and write each of their information into the packet data
             foreach(ClientConnection OtherClient in OtherClients)
             {
-                QueueWriter.WriteString(OtherClient.CharacterName);
-                QueueWriter.WriteVector3(OtherClient.CharacterPosition);
+                Packet.WriteString(OtherClient.CharacterName);
+                Packet.WriteVector3(OtherClient.CharacterPosition);
             }
+
+            //Add this packet to the target clients outgoing packet queue
+            PacketQueue.QueuePacket(ClientID, Packet);
         }
 
-        //Tells a client where all the active entities are in the world to have them spawned in before they are allowed to enter into the game world
+        //Tells a client where all the active entities are in the world to have them spawned in before they can enter the game world
         public static void SendActiveEntityList(int ClientID)
         {
-            //Fetch the packet writer, write the packet type and log a message to the display window
-            PacketWriter QueueWriter = PacketSender.GetQueueWriter(ClientID);
-            QueueWriter.WriteInt((int)ServerPacketType.ActiveEntityList);
-            Log.PrintOutgoingPacketMessage(ClientID + ": GameWorldState.ActiveEntityList");
+            //Create a new NetworkPacket object to store the data for this active entity list
+            NetworkPacket Packet = new NetworkPacket();
 
-            //Fetch the list of all the active ingame entities, write the total number of entities into the packet
+            //Grab the list of all the entities currently active in the game world
             List<BaseEntity> ActiveEntities = EntityManager.ActiveEntities;
-            QueueWriter.WriteInt(ActiveEntities.Count);
 
-            //Loop through the list, writing into the packet each entities information
+            //Write the relevant data values into the packet data
+            Packet.WriteType(ServerPacketType.ActiveEntityList);
+            Packet.WriteInt(ActiveEntities.Count);
+
+            //Loop through the list of active entities and write each of their information into the packet data
             foreach(BaseEntity ActiveEntity in ActiveEntities)
             {
-                QueueWriter.WriteString(ActiveEntity.Type);
-                QueueWriter.WriteString(ActiveEntity.ID);
-                QueueWriter.WriteVector3(VectorTranslate.ConvertVector(ActiveEntity.Location));
-                QueueWriter.WriteInt(ActiveEntity.HealthPoints);
+                Packet.WriteString(ActiveEntity.Type);
+                Packet.WriteString(ActiveEntity.ID);
+                Packet.WriteVector3(VectorTranslate.ConvertVector(ActiveEntity.Location));
+                Packet.WriteInt(ActiveEntity.HealthPoints);
             }
+
+            //Add this packet to the target clients outgoing packet queue
+            PacketQueue.QueuePacket(ClientID, Packet);
         }
 
         //Tells a client where all the active items are in the world to have them spawned in before they can start playing
         public static void SendActiveItemList(int ClientID)
         {
-            //Fetch the packet writer, write the packet type and log a message to the display window
-            PacketWriter QueueWriter = PacketSender.GetQueueWriter(ClientID);
-            QueueWriter.WriteInt((int)ServerPacketType.ActiveItemList);
-            Log.PrintOutgoingPacketMessage(ClientID + ": GameWorldState.ActiveItemList");
+            //Create a new NetworkPacket object to store the data for this active item list
+            NetworkPacket Packet = new NetworkPacket();
 
-            //Fetch the list of active game item picks, write the list length into the packet
+            //Grab the list of all the active item pickups currently in the game world
             List<GameItem> ItemPickups = ItemManager.GetActiveItemList();
-            QueueWriter.WriteInt(ItemPickups.Count);
 
-            //Loop through the entire list, writing each items information into the packet data
+            //Write the relevant data values into the packet data
+            Packet.WriteType(ServerPacketType.ActiveItemList);
+            Packet.WriteInt(ItemPickups.Count);
+
+            //Loop through the list of item pickups and write each of their information into the packet data
             foreach(GameItem ItemPickup in ItemPickups)
             {
-                QueueWriter.WriteInt(ItemPickup.ItemNumber);
-                QueueWriter.WriteInt(ItemPickup.ItemID);
-                QueueWriter.WriteVector3(VectorTranslate.ConvertVector(ItemPickup.ItemPosition));
+                Packet.WriteInt(ItemPickup.ItemNumber);
+                Packet.WriteInt(ItemPickup.ItemID);
+                Packet.WriteVector3(VectorTranslate.ConvertVector(ItemPickup.ItemPosition));
             }
+
+            //Add this packet to the target clients outgoing packet queue
+            PacketQueue.QueuePacket(ClientID, Packet);
+        }
+
+        //Tells a clients all the contents of their chosen characters inventory to be loaded in before they enter into the game world
+        public static void SendInventoryContents(int ClientID, string CharacterName)
+        {
+            //Create a new NetworkPacket object to store the data for this inventory contents request
+            NetworkPacket Packet = new NetworkPacket();
+
+            //Grab the list of all the items currently in the characters inventory
+            List<ItemData> InventoryContents = InventoriesDatabase.GetAllInventorySlots(CharacterName);
+
+            //Write the relevant data values into the packet data
+            Packet.WriteType(ServerPacketType.PlayerInventoryItems);
+            Packet.WriteInt(InventoryContents.Count);
+
+            //Loop through the list of items in the players inventory and write all of their information into the packet data
+            foreach(ItemData Item in InventoryContents)
+            {
+                Packet.WriteInt(Item.ItemNumber);
+                Packet.WriteInt(Item.ItemID);
+            }
+
+            //Add this packet to the target clients outgoing packet queue
+            PacketQueue.QueuePacket(ClientID, Packet);
+        }
+
+        //Tells a client all the items currently equipped on their chosen character to be loaded in before they enter into the game world
+        public static void SendEquippedItems(int ClientID, string CharacterName)
+        {
+            //Create a new NetworkPacket object to store the data for this equipped items request
+            NetworkPacket Packet = new NetworkPacket();
+
+            //Grab the list of all the items currently equipped on the character
+            List<ItemData> EquippedItems = EquipmentsDatabase.GetAllEquipmentSlots(CharacterName);
+
+            //Write the relevant data values into the packet data
+            Packet.WriteType(ServerPacketType.PlayerEquipmentItems);
+            Packet.WriteInt(EquippedItems.Count);
+
+            //Loop through the list and write in each items information into the packet data
+            foreach(ItemData Item in EquippedItems)
+            {
+                Packet.WriteInt((int)Item.ItemEquipmentSlot);
+                Packet.WriteInt(Item.ItemNumber);
+                Packet.WriteInt(Item.ItemID);
+            }
+
+            //Add this packet to the target clients outgoing packet queue
+            PacketQueue.QueuePacket(ClientID, Packet);
+        }
+
+        //Tells a client all the items currently socketed into their ability bar to be loaded in before they can enter into the game world
+        public static void SendSocketedAbilities(int ClientID, string CharacterName)
+        {
+            //Create a new NetworkPacket object to store the data for this socketed abilities request
+            NetworkPacket Packet = new NetworkPacket();
+
+            //Grab the list of all the items currently socketed into the characters action bar
+            List<ItemData> SocketedAbilities = ActionBarsDatabase.GetEveryActionBarItem(CharacterName);
+
+            //Write the relevant data values into the packet data
+            Packet.WriteType(ServerPacketType.PlayerActionBarAbilities);
+            Packet.WriteInt(SocketedAbilities.Count);
+
+            //Loop through the list and write in each items information into the packet data
+            foreach(ItemData Ability in SocketedAbilities)
+            {
+                Packet.WriteInt(Ability.ItemNumber);
+                Packet.WriteInt(Ability.ItemID);
+            }
+
+            //Add this packet to the target clients outgoing packet queue
+            PacketQueue.QueuePacket(ClientID, Packet);
         }
     }
 }
