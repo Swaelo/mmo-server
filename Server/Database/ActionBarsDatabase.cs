@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using MySql.Data.MySqlClient;
 using Server.GameItems;
-using Server.Interface;
 
 namespace Server.Database
 {
@@ -40,12 +39,10 @@ namespace Server.Database
 
             //Read the items values from the database into the ActionBarItem object
             string Query = "SELECT ActionBarSlot" + ActionBarSlot + "ItemNumber FROM actionbars WHERE CharacterName='" + CharacterName + "'";
-            Log.PrintSQLCommand(Query);
 
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             ActionBarItem.ItemNumber = Convert.ToInt32(Command.ExecuteScalar());
             Query = "SELECT ActionBarSlot" + ActionBarSlot + "ItemID FROM actionbars WHERE CharacterName='" + CharacterName + "'";
-            Log.PrintSQLCommand(Query);
 
             Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             ActionBarItem.ItemID = Convert.ToInt32(Command.ExecuteScalar());
@@ -97,7 +94,6 @@ namespace Server.Database
         {
             //Define/execute command to update the database placing this ability onto the characters first available action bar slot
             string Query = "UPDATE actionbars SET ActionBarSlot" + GetFirstFreeActionBarSlot(CharacterName) + "ItemNumber='" + AbilityItem.ItemNumber + "', ActionBarSlot" + GetFirstFreeActionBarSlot(CharacterName) + "ItemID='" + AbilityItem.ItemID + "' WHERE CharacterName='" + CharacterName + "'";
-            Log.PrintSQLCommand(Query);
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             Command.ExecuteNonQuery();
         }
@@ -106,7 +102,6 @@ namespace Server.Database
         public static void GiveCharacterAbility(string CharacterName, ItemData AbilityItem, int ActionBarSlot)
         {
             string Query = "UPDATE actionbars SET ActionBarSlot" + ActionBarSlot + "ItemNumber='" + AbilityItem.ItemNumber + "', ActionBarSlot" + ActionBarSlot + "ItemID='" + AbilityItem.ItemID + "' WHERE CharacterName='" + CharacterName + "'";
-            Log.PrintSQLCommand(Query);
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             Command.ExecuteNonQuery();
         }
@@ -115,7 +110,6 @@ namespace Server.Database
         public static void TakeCharacterAbility(string CharacterName, int ActionBarSlot)
         {
             string Query = "UPDATE actionbars SET ActionBarSlot" + ActionBarSlot + "ItemNumber='0', ActionBarSlot" + ActionBarSlot + "ItemID='0' WHERE CharacterName='" + CharacterName + "'";
-            Log.PrintSQLCommand(Query);
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             Command.ExecuteNonQuery();
         }

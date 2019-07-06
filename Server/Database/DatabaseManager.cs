@@ -6,7 +6,6 @@
 
 using System;
 using MySql.Data.MySqlClient;
-using Server.Interface;
 
 namespace Server.Database
 {
@@ -25,7 +24,6 @@ namespace Server.Database
                 "User=" + Username + ";" +
                 "Password=" + Password + ";";
 
-            Log.PrintSQLCommand(ConnectionString);
             return ConnectionString;
         }
 

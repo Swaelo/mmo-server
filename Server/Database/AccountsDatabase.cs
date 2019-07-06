@@ -16,7 +16,6 @@ namespace Server.Database
         {
             //Define the query to search for an account with this name in the database
             string AccountQuery = "SELECT * FROM accounts WHERE Username='" + AccountName + "'";
-            Log.PrintSQLCommand(AccountQuery);
 
             //Execute the command and start reading from the accounts table
             MySqlCommand AccountCommand = new MySqlCommand(AccountQuery, DatabaseManager.DatabaseConnection);
@@ -33,7 +32,6 @@ namespace Server.Database
         public static void RegisterNewAccount(string AccountName, string AccountPassword)
         {
             string RegisterQuery = "INSERT INTO accounts(Username,Password) VALUES('" + AccountName + "','" + AccountPassword + "')";
-            Log.PrintSQLCommand(RegisterQuery);
 
             MySqlCommand RegisterCommand = new MySqlCommand(RegisterQuery, DatabaseManager.DatabaseConnection);
             RegisterCommand.ExecuteNonQuery();
@@ -45,7 +43,6 @@ namespace Server.Database
         {
             //Define the query to check this accounts login credentials
             string PasswordQuery = "SELECT * FROM accounts WHERE Username='" + AccountName + "' AND Password='" + AccountPassword + "'";
-            Log.PrintSQLCommand(PasswordQuery);
 
             //Execute this command to open up the table for this account name
             MySqlCommand PasswordCommand = new MySqlCommand(PasswordQuery, DatabaseManager.DatabaseConnection);
@@ -61,7 +58,7 @@ namespace Server.Database
                 return PasswordMatches;
             }
 
-            Log.PrintDebugMessage("AccountsDatabase.IsPasswordCorrect Error reading password, returning false.");
+            Log.Chat("AccountsDatabase.IsPasswordCorrect Error reading password, returning false.");
             return false;
         }
     }

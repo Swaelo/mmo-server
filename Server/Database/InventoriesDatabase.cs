@@ -40,11 +40,9 @@ namespace Server.Database
 
             //Extract the items information from the inventory database into the new ItemData object
             string Query = "SELECT ItemSlot" + InventorySlot + "ItemNumber FROM inventories WHERE CharacterName='" + CharacterName + "'";
-            Log.PrintSQLCommand(Query);
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             InventoryItem.ItemNumber = Convert.ToInt32(Command.ExecuteScalar());
             Query = "SELECT ItemSlot" + InventorySlot + "ItemID FROM inventories WHERE CharacterName='" + CharacterName + "'";
-            Log.PrintSQLCommand(Query);
             Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             InventoryItem.ItemID = Convert.ToInt32(Command.ExecuteScalar());
             InventoryItem.ItemEquipmentSlot = ItemInfoDatabase.GetItemSlot(InventoryItem.ItemNumber);
@@ -75,7 +73,6 @@ namespace Server.Database
         {
             //Places the new item into the first free slot in the characters inventory
             string Query = "UPDATE inventories SET ItemSlot" + GetFirstFreeInventorySlot(CharacterName) + "ItemNumber='" + NewItem.ItemNumber + "', ItemSlot" + GetFirstFreeInventorySlot(CharacterName) + "ItemID='" + NewItem.ItemID + "' WHERE CharacterName='" + CharacterName + "'";
-            Log.PrintSQLCommand(Query);
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             Command.ExecuteNonQuery();
         }
@@ -84,7 +81,6 @@ namespace Server.Database
         public static void GiveCharacterItem(string CharacterName, ItemData NewItem, int InventorySlot)
         {
             string Query = "UPDATE inventories SET ItemSlot" + InventorySlot + "ItemNumber='" + NewItem.ItemNumber + "', ItemSlot" + InventorySlot + "ItemID='" + NewItem.ItemID + "' WHERE CharacterName='" + CharacterName + "'";
-            Log.PrintSQLCommand(Query);
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             Command.ExecuteNonQuery();
         }
@@ -93,7 +89,6 @@ namespace Server.Database
         public static void RemoveCharacterItem(string CharacterName, int InventorySlot)
         {
             string Query = "UPDATE inventories SET ItemSlot" + InventorySlot + "ItemNumber='0', ItemSlot" + InventorySlot + "ItemID='0' WHERE CharacterName='" + CharacterName + "'";
-            Log.PrintSQLCommand(Query);
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             Command.ExecuteNonQuery();
         }

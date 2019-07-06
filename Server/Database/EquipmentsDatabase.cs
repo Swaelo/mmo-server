@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using MySql.Data.MySqlClient;
 using Server.GameItems;
-using Server.Interface;
 
 namespace Server.Database
 {
@@ -19,7 +18,6 @@ namespace Server.Database
         {
             //Define a new query, execute it to update the characters equipment table to contain the new item
             string Query = "UPDATE equipments SET " + NewItem.ItemEquipmentSlot.ToString() + "ItemNumber='" + NewItem.ItemNumber + "', " + NewItem.ItemEquipmentSlot.ToString() + "ItemID='" + NewItem.ItemID + "' WHERE CharacterName='" + CharacterName + "'";
-            Log.PrintSQLCommand(Query);
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             Command.ExecuteNonQuery();
         }
@@ -29,7 +27,6 @@ namespace Server.Database
         {
             //Define a new query, execute it in a command to update the characters equipment table to remove what item is in the specified equipment slot
             string Query = "UPDATE equipments SET " + EquipmentSlot.ToString() + "ItemNumber='0' WHERE Charactername='" + CharacterName + "'";
-            Log.PrintSQLCommand(Query);
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             Command.ExecuteNonQuery();
         }
@@ -43,11 +40,9 @@ namespace Server.Database
 
             //Get the ItemNumber and ItemID values from the database into the new ItemData object
             string Query = "SELECT " + EquipmentSlot.ToString() + "ItemNumber FROM equipments WHERE CharacterName='" + CharacterName + "'";
-            Log.PrintSQLCommand(Query);
             MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             EquippedItem.ItemNumber = Convert.ToInt32(Command.ExecuteScalar());
             Query = "SELECT " + EquipmentSlot.ToString() + "ItemID FROM equipments WHERE CharacterName='" + CharacterName + "'";
-            Log.PrintSQLCommand(Query);
             Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
             EquippedItem.ItemID = Convert.ToInt32(Command.ExecuteScalar());
 

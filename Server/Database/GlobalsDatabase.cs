@@ -16,7 +16,6 @@ namespace Server.Database
         public static int GetNextItemID()
         {
             string ItemIDQuery = "SELECT NextItemID FROM globals";
-            Log.PrintSQLCommand(ItemIDQuery);
             MySqlCommand ItemIDCommand = new MySqlCommand(ItemIDQuery, DatabaseManager.DatabaseConnection);
             return Convert.ToInt32(ItemIDCommand.ExecuteScalar());
         }
@@ -25,7 +24,6 @@ namespace Server.Database
         public static void SaveNextItemID(int NextItemID)
         {
             string NewItemIDQuery = "UPDATE globals SET NextItemID='" + NextItemID + "'";
-            Log.PrintSQLCommand(NewItemIDQuery);
             MySqlCommand NewItemIDCommand = new MySqlCommand(NewItemIDQuery, DatabaseManager.DatabaseConnection);
             NewItemIDCommand.ExecuteNonQuery();
         }
