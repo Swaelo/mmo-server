@@ -1,12 +1,12 @@
 ﻿// ================================================================================================================================
 // File:        BinaryConverter.cs
-// Description: Helper functions used by the WebSocketClientConnection class when reading in data sent from game clients
+// Description: Helper functions used by the ClientConnection class when reading in data sent from game clients
 // Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
 using System;
 
-namespace Server.Maths
+namespace Server.Misc
 {
     public static class BinaryConverter
     {

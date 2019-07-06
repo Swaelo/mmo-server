@@ -6,7 +6,7 @@
 
 using System.Numerics;
 
-namespace Server.Maths
+namespace Server.Misc
 {
     public static class VectorTranslate
     {
