@@ -49,6 +49,49 @@ namespace Server.Networking.PacketHandlers
             return "";
         }
 
+        //Checks if a new character name is valid or not
+        private static bool IsValidName(string CharacterName)
+        {
+            //Empty names are not allowed
+            if (CharacterName == "")
+                return false;
+
+            //Spaces are not allowed in character names
+            if (CharacterName.Contains(' '))
+                return false;
+
+            //Now just run the name through the username checker to detect any other illegal characters
+            return IsValidUsername(CharacterName);
+        }
+
+        //Returns a message explaining why a character name was rejected
+        private static string GetInvalidNameReason(string CharacterName)
+        {
+            //Check for empty name
+            if (CharacterName == "")
+                return "Empty names are not allowed";
+
+            //Check for name with spaces
+            if (CharacterName.Contains(' '))
+                return "Spaces are not allowed in character names";
+
+            //Check each character in the name individually
+            for(int i = 0; i < CharacterName.Length; i++)
+            {
+                //letters and numbers are fine
+                if (Char.IsLetter(CharacterName[i]) || Char.IsNumber(CharacterName[i]))
+                    continue;
+                //dashes, periods and underscores are allowed
+                if (CharacterName[i] == '-' || CharacterName[i] == '.' || CharacterName[i] == '_')
+                    continue;
+
+                //Absolutely any other characters are banned from being used in character names
+                return ("Cannot use '" + CharacterName[i] + "'s in character names");
+            }
+
+            return "";
+        }
+
         //Handles a users account login request
         public static void HandleAccountLoginRequest(int ClientID, ref NetworkPacket Packet)
         {
@@ -136,6 +179,14 @@ namespace Server.Networking.PacketHandlers
         {
             //Fetch the desired name for the new character from the packet data
             string CharacterName = Packet.ReadString();
+
+            //Reject the request if an illegal name was provided by the client
+            if(!IsValidName(CharacterName))
+            {
+                string Reason = GetInvalidNameReason(CharacterName);
+                AccountManagementPacketSenders.SendCreateCharacterReply(ClientID, false, Reason);
+                return;
+            }
 
             //Reject the request if this character name has already been taken by someone else
             if(!CharactersDatabase.IsCharacterNameAvailable(CharacterName))

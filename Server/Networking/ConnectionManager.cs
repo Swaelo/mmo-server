@@ -5,11 +5,9 @@
 // ================================================================================================================================
 
 using System;
-using System.Numerics;
 using System.Net;
 using System.Net.Sockets;
 using System.Collections.Generic;
-using Server.Interface;
 using Server.Networking.PacketSenders;
 using BepuPhysics;
 using Quaternion = BepuUtilities.Quaternion;
@@ -222,8 +220,6 @@ namespace Server.Networking
         //ASync event triggered when a new client has connected to the server, sets them up and stored them in the connections dictionary
         private static void NewClientConnected(IAsyncResult Result)
         {
-            Log.Chat("new client connected");
-
             //Grab the new connection into a new TcpClient object, then re-register this function again to immediatly listen for new connections again
             TcpClient NewConnection = NewClientListener.EndAcceptTcpClient(Result);
             NewClientListener.BeginAcceptTcpClient(new AsyncCallback(NewClientConnected), null);
