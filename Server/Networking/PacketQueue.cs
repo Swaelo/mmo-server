@@ -64,9 +64,13 @@ namespace Server.Networking
                 foreach (NetworkPacket Packet in PacketList)
                     TotalData += Packet.PacketData;
 
-                //If the final string actually contains some data tehn we can now transmit it to its target game client
+                //If the final string actually contains some data then we can now transmit it to its target game client
                 if (TotalData != "")
-                    ConnectionManager.ActiveConnections[OutgoingQueue.Key].SendPacket(TotalData);
+                {
+                    //Before we send the data we should first check if this client key still exists in the dictionary
+                    if(ConnectionManager.ActiveConnections.ContainsKey(OutgoingQueue.Key))
+                        ConnectionManager.ActiveConnections[OutgoingQueue.Key].SendPacket(TotalData);
+                }
             }
 
             //Now all packets have been transmitted to their clients, we want to reset the entire dictionary

@@ -148,11 +148,11 @@ namespace Server.Networking
                 //Convert the PayloadData array into an ASCII string
                 string FinalMessage = Encoding.ASCII.GetString(PayloadData);
 
-                //If the FinalMessage value comes through as "\u0003?" then the connection has been closed from the client side, so we need to check
-                //for that first before we send the message through to the packet handler
-                if(FinalMessage == "\u0003?")
-                    Log.Chat("A connection was closed by the client");
-                //If not, then we have received a normal message and it should be passed onto the packet handler to be processed accordingly
+                //If the FinalMessage value comes through as "\u0003?" then the connection has been closed from the client side, so we need to set
+                //them as dead so they get cleaned up by the simulation
+                if (FinalMessage == "\u0003?")
+                    ClientDead = true;
+                //Otherwise we just pass the message onto the packet handler as normal so it can be processed accordingly
                 else
                     PacketHandler.ReadClientPacket(NetworkID, FinalMessage);
             }

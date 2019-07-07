@@ -52,6 +52,9 @@ namespace Server.Networking
 
             //Register miscellaneous packet handers into the dictionary
             PacketHandlers.Add(ClientPacketType.StillAlive, MiscellaneousPacketHandler.HandleStillAliveAlert);
+
+            //Map player communication handlers into the dictionary
+            PacketHandlers.Add(ClientPacketType.PlayerChatMessage, PlayerCommunicationPacketHandler.HandleClientChatMessage);
         }
     }
 }

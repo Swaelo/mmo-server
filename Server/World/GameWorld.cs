@@ -64,8 +64,10 @@ namespace Server.World
             var FontContent = Content.Load<FontContent>(@"Content\Carlito-Regular.ttf");
             UIFont = new Font(Loop.Surface.Device, Loop.Surface.Context, FontContent);
 
+            //Set up the performance graph
             PerformanceGraph = new PerformanceGraph(UIFont, TimeSamples);
 
+            //Setup camera, character controller and world simulation
             SceneCamera.Position = new Vector3(6, 2.5f, -8);
             SceneCamera.Yaw = -3.14f;
             SceneCamera.Pitch = 0;
@@ -76,7 +78,7 @@ namespace Server.World
             
             //Place a ground plane to walk on
             WorldSimulation.Statics.Add(new StaticDescription(new Vector3(0), new CollidableDescription(WorldSimulation.Shapes.Add(new Box(200, 1, 200)), 0.1f)));
-
+            
             //Setup text builder for rendering UI text components
             UIText = new TextBuilder(128);
 
