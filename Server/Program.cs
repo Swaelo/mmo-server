@@ -47,14 +47,13 @@ namespace Server
             ConnectionSettings.Load("SQLConnectionSettings.xml");
 
             //Extract all the required values from the file and store each of their into their own variables
-            string ServerAddress = ConnectionSettings.DocumentElement.SelectSingleNode("/root/ServerAddress").InnerText;
             int NetworkPort = Convert.ToInt32(ConnectionSettings.DocumentElement.SelectSingleNode("/root/NetworkPort").InnerText);
             string WindowsServiceName = ConnectionSettings.DocumentElement.SelectSingleNode("/root/WindowsServiceName").InnerText;
             string Username = ConnectionSettings.DocumentElement.SelectSingleNode("/root/Username").InnerText;
             string Password = ConnectionSettings.DocumentElement.SelectSingleNode("/root/Password").InnerText;
 
             //Now all the required values have been loaded we can use those to establish our connection to the database server
-            if (!DatabaseManager.InitializeDatabaseConnection(ServerAddress, NetworkPort, WindowsServiceName, Username, Password))
+            if (!DatabaseManager.InitializeDatabaseConnection(ServerIP, NetworkPort, WindowsServiceName, Username, Password))
                 return false;
 
             //Load all the existing game items from the exported text file
@@ -65,7 +64,7 @@ namespace Server
             ConnectionManager.InitializeManager(ServerIP);
 
             //Open a new window for rendering so we can see whats going on while the server is up
-            ApplicationWindow = new Window("Swaelo Server 2.0", new Int2(1024, 768), new Int2(2050, 100), WindowMode.Windowed); // new Int2(1700, 100), WindowMode.Windowed);
+            ApplicationWindow = new Window("Swaelo Server 2.0", new Int2(1024, 768), WindowMode.Windowed); // new Int2(1700, 100), WindowMode.Windowed);
             LogicLoop = new GameLoop(ApplicationWindow);
 
             //Load in the contents needed for the scene to run
