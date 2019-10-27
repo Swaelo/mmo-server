@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <ApplicationIcon />
     <StartupObject>Server.Program</StartupObject>
@@ -46,5 +46,9 @@
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy &quot;%25(ProjectDir)SQLConnectionSettings.xml&quot; &quot;%25(ProjectDir)\bin\Debug\netcoreapp3.0\SQLConnectionSettings.xml&quot;" />
+  </Target>
 
 </Project>
