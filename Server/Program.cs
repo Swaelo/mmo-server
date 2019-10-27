@@ -14,6 +14,7 @@ using Server.World;
 using Server.Database;
 using Server.GameItems;
 using Server.Networking;
+using Server.Misc;
 
 namespace Server
 {
@@ -26,7 +27,7 @@ namespace Server
 
         static void Main(string[] args)
         {
-            string LocalIP = "192.168.1.102";
+            string LocalIP = IPAddressGetter.GetLocalIPAddress();
 
             Application = new Program();
             if (Application.StartServer(LocalIP))
