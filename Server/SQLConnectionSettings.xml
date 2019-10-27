@@ -1,7 +1,6 @@
 ﻿<root>
-  <ServerAddress>localhost</ServerAddress>
-  <NetworkPort>3306</NetworkPort>
-  <WindowsServiceName>GameServerDatabase</WindowsServiceName>
-  <Username>User</Username>
-  <Password>Pass</Password>
+  <NetworkPort>port</NetworkPort>
+  <WindowsServiceName>database</WindowsServiceName>
+  <Username>user</Username>
+  <Password>pass</Password>
 </root>
