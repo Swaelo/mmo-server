@@ -21,13 +21,13 @@ namespace Server.GameItems
         /// <param name="MasterItemListFile">Filename / pathway to the MasterItemList file to be imported, this will automatically have the project directory prepended onto it.</param>
         public static void LoadItemList(string MasterItemListFile)
         {
+            //Append the filename onto the current working directory to get the exact location of the file that we need to load
             string WorkingDirectory = Environment.CurrentDirectory;
-            string ProjectDirectory = Directory.GetParent(WorkingDirectory).Parent.FullName;
-            string FileName = ProjectDirectory +  "/../" + MasterItemListFile;
-            Console.WriteLine("loading item list from: " + FileName);
+            string FilePath = WorkingDirectory + "/" + MasterItemListFile;
 
-            //Open the export list file
-            string[] FileLines = System.IO.File.ReadAllLines(FileName);
+            //Display what filepath is being used then load that file into memory
+            Console.WriteLine("Loading item list from: " + FilePath);
+            string[] FileLines = System.IO.File.ReadAllLines(FilePath);
 
             //Loop through all the lines, processing one at a time
             foreach (string Line in FileLines)
