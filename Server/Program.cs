@@ -5,6 +5,7 @@
 // ================================================================================================================================
 
 using System;
+using System.Xml;
 using BepuUtilities;
 using ContentLoader;
 using ServerUtilities;
@@ -37,10 +38,22 @@ namespace Server
 
         private bool StartServer(string ServerIP)
         {
+            //Display a message to the console indicating the server is not being started
             Console.WriteLine("Starting server on " + ServerIP);
 
-            //Connect to the sql database server
-            if (!DatabaseManager.InitializeDatabaseConnection("localhost", 3306, "serverdatabase", "harleylaurie", "Fuckyahoo420"))
+            //Before connecting to the server we need to load the connection settings from the .xml config file, start by loading the file into memory
+            XmlDocument ConnectionSettings = new XmlDocument();
+            ConnectionSettings.Load("SQLConnectionSettings.xml");
+
+            //Extract all the required values from the file and store each of their into their own variables
+            string ServerAddress = ConnectionSettings.DocumentElement.SelectSingleNode("/root/ServerAddress").InnerText;
+            int NetworkPort = Convert.ToInt32(ConnectionSettings.DocumentElement.SelectSingleNode("/root/NetworkPort").InnerText);
+            string WindowsServiceName = ConnectionSettings.DocumentElement.SelectSingleNode("/root/WindowsServiceName").InnerText;
+            string Username = ConnectionSettings.DocumentElement.SelectSingleNode("/root/Username").InnerText;
+            string Password = ConnectionSettings.DocumentElement.SelectSingleNode("/root/Password").InnerText;
+
+            //Now all the required values have been loaded we can use those to establish our connection to the database server
+            if (!DatabaseManager.InitializeDatabaseConnection(ServerAddress, NetworkPort, WindowsServiceName, Username, Password))
                 return false;
 
             //Load all the existing game items from the exported text file
