@@ -1,3 +1,4 @@
+@RD /S /Q "%cd%\.vs"
 @RD /S /Q "%cd%\BepuPhysics\bin"
 @RD /S /Q "%cd%\BepuPhysics\obj"
 @RD /S /Q "%cd%\BepuUtilities\bin"
