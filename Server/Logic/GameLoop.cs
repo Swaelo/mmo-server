@@ -28,7 +28,7 @@ namespace Server.Logic
             Window = window;
             Input = new Input(Window, Pool);
 
-            Surface = new RenderSurface(window.Handle, window.Resolution, enableDeviceDebugLayer: true);
+            Surface = new RenderSurface(window.Handle, window.Resolution);
             Renderer = new Renderer(Surface);
             Camera = new Camera(window.Resolution.X / (float)window.Resolution.Y, (float)Math.PI / 3, .01f, 100000);
         }
