@@ -48,7 +48,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy &quot;$(ProjectDir)SQLConnectionSettings.xml&quot; &quot;$(ProjectDir)\bin\Debug\netcoreapp3.0\SQLConnectionSettings.xml&quot;" />
+    <Exec Command="if $(ConfigurationName) == Debug (&#xD;&#xA;    copy &quot;$(ProjectDir)SQLConnectionSettings.xml&quot; &quot;$(ProjectDir)\bin\Debug\netcoreapp3.0\SQLConnectionSettings.xml&quot;&#xD;&#xA;) ELSE (&#xD;&#xA;    copy &quot;$(ProjectDir)SQLConnectionSettings.xml&quot; &quot;$(ProjectDir)\bin\Release\netcoreapp3.0\SQLConnectionSettings.xml&quot;&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;if $(ConfigurationName) == Debug (&#xD;&#xA;    xcopy &quot;$(ProjectDir)Content&quot; &quot;$(ProjectDir)\bin\Debug\netcoreapp3.0\Content\&quot; /Y&#xD;&#xA;) ELSE (&#xD;&#xA;    xcopy &quot;$(ProjectDir)Content&quot; &quot;$(ProjectDir)\bin\Release\netcoreapp3.0\Content\&quot; /Y&#xD;&#xA;)" />
   </Target>
 
 </Project>
