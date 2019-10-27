@@ -48,7 +48,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy &quot;%25(ProjectDir)SQLConnectionSettings.xml&quot; &quot;%25(ProjectDir)\bin\Debug\netcoreapp3.0\SQLConnectionSettings.xml&quot;" />
+    <Exec Command="copy &quot;$(ProjectDir)SQLConnectionSettings.xml&quot; &quot;$(ProjectDir)\bin\Debug\netcoreapp3.0\SQLConnectionSettings.xml&quot;" />
   </Target>
 
 </Project>
