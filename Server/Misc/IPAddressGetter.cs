@@ -7,6 +7,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using Server.Logging;
 
 namespace Server.Misc
 {
@@ -21,7 +22,7 @@ namespace Server.Misc
                     return IP.ToString();
             }
 
-            Console.WriteLine("Error looking up local IP address, returning 127.0.0.1");
+            MessageLog.Print("Error looking up local IP address, returning 127.0.0.1");
             return "127.0.0.1";
         }
     }

@@ -15,6 +15,7 @@ using Server.Database;
 using Server.GameItems;
 using Server.Networking;
 using Server.Misc;
+using Server.Logging;
 
 namespace Server
 {
@@ -23,24 +24,29 @@ namespace Server
         public static Program Application;
         public static Window ApplicationWindow; //Window used to render whats happening in the game server to observe events
         public static GameLoop LogicLoop;       //Main update loop where all the magic happens
-        public static GameWorld World;
+        public static GameWorld World;          //Handles Physics simulations, entity AI, ingame interactions etc
 
         static void Main(string[] args)
         {
+            //Fetch the local IPv4 address of the current machine being used to host the server
             string LocalIP = IPAddressGetter.GetLocalIPAddress();
 
+            //Create an instance of Program and use that to start up the whole server application inside it
             Application = new Program();
             if (Application.StartServer(LocalIP))
             {
                 Application.RunServer();
                 Application.StopServer();
             }
+
+            //Save and close the message output .log file before the application closes completely
+            MessageLog.Close();
         }
 
         private bool StartServer(string ServerIP)
         {
             //Display a message to the console indicating the server is not being started
-            Console.WriteLine("Starting server on " + ServerIP);
+            MessageLog.Print("Starting server on " + ServerIP);
 
             //Before connecting to the server we need to load the connection settings from the .xml config file, start by loading the file into memory
             XmlDocument ConnectionSettings = new XmlDocument();
@@ -52,9 +58,13 @@ namespace Server
             string Username = ConnectionSettings.DocumentElement.SelectSingleNode("/root/Username").InnerText;
             string Password = ConnectionSettings.DocumentElement.SelectSingleNode("/root/Password").InnerText;
 
-            //Now all the required values have been loaded we can use those to establish our connection to the database server
-            if (!DatabaseManager.InitializeDatabaseConnection(ServerIP, NetworkPort, WindowsServiceName, Username, Password))
+            //Forcing server to remote connect to the database running on the dedicated server PC
+            if (!DatabaseManager.InitializeDatabaseConnection("203.221.43.175", 3306, "serverdatabase", "swaelo", "2beardmore"))
                 return false;
+
+            ////Now all the required values have been loaded we can use those to establish our connection to the database server
+            //if (!DatabaseManager.InitializeDatabaseConnection(ServerIP, NetworkPort, WindowsServiceName, Username, Password))
+            //    return false;
 
             //Load all the existing game items from the exported text file
             ItemInfoDatabase.LoadItemList("Content/MasterItemList.txt");
@@ -89,6 +99,9 @@ namespace Server
             //Free any allocated memory, clean up everything and shut down
             LogicLoop.Dispose();
             ApplicationWindow.Dispose();
+
+            //Log a message showing the server shutdown correctly
+            MessageLog.Print("Server shut down correctly");
         }
     }
 }

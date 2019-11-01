@@ -745,7 +745,7 @@ namespace Server.Logic
             }
 
             //var end = Stopwatch.GetTimestamp();
-            //Console.WriteLine($"Time (ms): {(end - start) / (1e-3 * Stopwatch.Frequency)}");
+            //MessageLog.Print($"Time (ms): {(end - start) / (1e-3 * Stopwatch.Frequency)}");
         }
 
         /// <summary>

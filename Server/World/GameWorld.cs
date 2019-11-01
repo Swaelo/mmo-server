@@ -258,9 +258,6 @@ namespace Server.World
             Renderer.Shapes.ClearInstances();
             Renderer.Lines.ClearInstances();
 
-            //Display the contents of all the message display windows to the UI
-            Log.DebugMessageWindow.RenderMessages(Renderer, UIText, UIFont, new Vector2(10, 550));
-
             //Display controls to the UI if the flag has been set
             if(ShowControls)
             {

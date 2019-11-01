@@ -7,7 +7,7 @@
 
 using System.Numerics;
 using System.Collections.Generic;
-using Server.Interface;
+using Server.Logging;
 
 namespace Server.Pathfinding
 {
@@ -48,7 +48,7 @@ namespace Server.Pathfinding
                 //If the new current node is the end node, then the pathway is complete
                 if (CurrentNode == EndNode)
                 {
-                    Log.Chat("Pathfinding.AStarSearch pathway found");
+                    MessageLog.Print("Pathfinding.AStarSearch pathway found");
                     //Start from the end node and follow its parents back all the way to the start
                     List<Vector3> Pathway = new List<Vector3>();
                     NavMeshNode CurrentStep = EndNode;
@@ -89,7 +89,7 @@ namespace Server.Pathfinding
                 }
             }
 
-            Log.Chat("Pathfinding.AStarSearch no path found");
+            MessageLog.Print("Pathfinding.AStarSearch no path found");
             return null;
         }
 
@@ -133,7 +133,7 @@ namespace Server.Pathfinding
                 //If the new current vertex is one of the vertices making up the end node, then the pathway is complete
                 if (EndNode.NodeVertices.Contains(CurrentVertex))
                 {
-                    Log.Chat("Pathfinding.AStarSearch pathway found");
+                    MessageLog.Print("Pathfinding.AStarSearch pathway found");
                     //Start from the end vertex and follow its parents back all the way to the start
                     List<Vector3> Pathway = new List<Vector3>();
                     NavMeshVertex CurrentStep = CurrentVertex;
@@ -174,7 +174,7 @@ namespace Server.Pathfinding
                 }
             }
 
-            Log.Chat("Pathfinding.AStarSearch no pathway found");
+            MessageLog.Print("Pathfinding.AStarSearch no pathway found");
             return null;
         }
     }

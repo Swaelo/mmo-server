@@ -7,7 +7,7 @@
 
 using System.Numerics;
 using System.Collections.Generic;
-using Server.Interface;
+using Server.Logging;
 
 namespace Server.Pathfinding
 {
@@ -141,7 +141,7 @@ namespace Server.Pathfinding
                     return Node;
             }
 
-            Log.Chat("Pathfinding.NavMesh this point lies completely outside of the navmesh");
+            MessageLog.Print("Pathfinding.NavMesh this point lies completely outside of the navmesh");
             return null;
         }
     }
