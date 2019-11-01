@@ -5,6 +5,7 @@
 // ================================================================================================================================
 
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -13,6 +14,7 @@ using BepuPhysics;
 using BepuPhysics.Collidables;
 using Server.Misc;
 using Server.Time;
+using Server.Logging;
 
 namespace Server.Networking
 {
@@ -44,8 +46,7 @@ namespace Server.Networking
         public BodyDescription PhysicsBody; //The world simulation physics object for this clients character controller when they are in the game world
         public int BodyHandle = -1; //The reference handle pointing to this clients world simulation physics object for this clients character controller
 
-        //Flag set by the ConnectionManager when it detects that this client has been disconnected and needs to be cleaned up
-        public bool ClientDead = false;
+        public bool ClientDead = false; //Flag set by the ConnectionManager when it detects that this client has been disconnected and needs to be cleaned up
 
         /// <summary>
         /// Constructor
@@ -82,7 +83,10 @@ namespace Server.Networking
             byte[] PacketBuffer = new byte[PacketSize];
             Array.Copy(DataBuffer, PacketBuffer, PacketSize);
             DataBuffer = new byte[NetworkConnection.Available];
-            DataStream.BeginRead(DataBuffer, 0, DataBuffer.Length, ReadPacket, null);
+
+            //Make sure the socket connection is still open before we try reading more data from the stream
+            try { DataStream.BeginRead(DataBuffer, 0, DataBuffer.Length, ReadPacket, null); }
+            catch (IOException Exception) { MessageLog.Error(Exception, "Error trying to read data from the network stream"); }
 
             //Upgrade this clients connection if it is brand new
             if (!ConnectionUpgraded)
@@ -165,8 +169,6 @@ namespace Server.Networking
             //Convert the data in the packet buffer into string format
             string PacketData = Encoding.UTF8.GetString(PacketBuffer);
 
-            Console.Write("Client Handshake Request: " + PacketData);
-
             //Make sure the new client sent a proper GET request before we complete the handshake
             if (new System.Text.RegularExpressions.Regex("^GET").IsMatch(Encoding.UTF8.GetString(PacketBuffer)))
             {
@@ -199,7 +201,7 @@ namespace Server.Networking
             //Put the network frame around the message and convert that to bytes
             byte[] PacketData = GetFrameFromString(PacketMessage);
             string PacketString = Encoding.UTF8.GetString(PacketData);
-            //Console.Write("Send: " + PacketString);
+            
             DataStream.BeginWrite(PacketData, 0, PacketData.Length, null, null);
         }
 
