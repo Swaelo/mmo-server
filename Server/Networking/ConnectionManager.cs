@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Collections.Generic;
 using Server.Networking.PacketSenders;
+using Server.Interface;
 using BepuPhysics;
 using Quaternion = BepuUtilities.Quaternion;
 
@@ -42,6 +43,8 @@ namespace Server.Networking
             //Check the status of all client connections and reset the timer whenever it reaches zero
             if(NextConnectionCheck <= 0.0f)
             {
+                Log.Chat("Checking for inactive clients...");
+                
                 //Reset the timer for checking client connections again
                 NextConnectionCheck = ConnectionCheckInterval;
 
@@ -49,6 +52,7 @@ namespace Server.Networking
                 List<ClientConnection> ClientConnections = GetAllClients();
 
                 //Loop through all of the client connections and check how long since we have last heard from each of them
+                int ClientsToRemove = 0;
                 foreach(ClientConnection ClientConnection in ClientConnections)
                 {
                     //Check how many seconds have passed since we last heard from this client
@@ -58,9 +62,15 @@ namespace Server.Networking
                     if (SecondsPassed >= ClientConnectionTimeout)
                     {
                         //Flag this client as being dead so the GameWorld simulation cleans it up when its ready to do so
+                        ClientsToRemove++;
                         ClientConnection.ClientDead = true;
                     }
                 }
+
+                if (ClientsToRemove == 0)
+                    Log.Chat("No inactive clients found.");
+                else
+                    Log.Chat(ClientsToRemove.ToString() + " inactive clients need to be cleaned up.");
             }
         }
 
