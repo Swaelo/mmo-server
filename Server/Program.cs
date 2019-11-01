@@ -62,10 +62,6 @@ namespace Server
             if (!DatabaseManager.InitializeDatabaseConnection("203.221.43.175", 3306, "serverdatabase", "swaelo", "2beardmore"))
                 return false;
 
-            ////Now all the required values have been loaded we can use those to establish our connection to the database server
-            //if (!DatabaseManager.InitializeDatabaseConnection(ServerIP, NetworkPort, WindowsServiceName, Username, Password))
-            //    return false;
-
             //Load all the existing game items from the exported text file
             ItemInfoDatabase.LoadItemList("Content/MasterItemList.txt");
             ItemManager.InitializeItemManager();
