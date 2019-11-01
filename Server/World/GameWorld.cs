@@ -44,7 +44,6 @@ namespace Server.World
         CharacterInput Character;   //The character controller used while moving around the game world with that mode
 
         private PerformanceGraph PerformanceGraph = null;    //Graph displayed to the windows UI to monitor performance metrics during the servers runtime
-        private bool ShowControls = false;  //Should the user controls be displayed on the UI
         private bool ShowConstraints = true;    //Should physics collider shapes be displayed in the servers view window
         private bool ShowContacts = false;  //Should the active physical contact points between physics objects be displayed in the servers view window
         private bool ShowBoundingBoxes = false; //Should the physical bounding box colliders edges be displayed in the servers view window
@@ -80,7 +79,7 @@ namespace Server.World
             WorldSimulation.Statics.Add(new StaticDescription(new Vector3(0), new CollidableDescription(WorldSimulation.Shapes.Add(new Box(200, 1, 200)), 0.1f)));
             
             //Setup text builder for rendering UI text components
-            UIText = new TextBuilder(128);
+            UIText = new TextBuilder(1024);
 
             //Make sure the window size is correct relative to the current resolution
             OnResize(ApplicationWindow.Resolution);
@@ -171,8 +170,8 @@ namespace Server.World
                 //Update the cameras position
                 SceneCamera.Position += CameraOffset;
 
-                //Use the mouse to turn the camera when the cursor is locked
-                if (UserInput.MouseLocked)
+                //Use the mouse to turn the camera when the RMB is held down
+                if(UserInput.IsDown(MouseButton.Right))
                 {
                     var Delta = UserInput.MouseDelta;
                     if (Delta.X != 0 || Delta.Y != 0)
@@ -206,9 +205,6 @@ namespace Server.World
                 //Toggle the mouse lock with TAB
                 if (UserControls.LockMouse.WasTriggered(UserInput))
                     UserInput.MouseLocked = !UserInput.MouseLocked;
-                //Toggle controls displayed on the UI
-                if (UserControls.ShowControls.WasTriggered(UserInput))
-                    ShowControls = !ShowControls;
                 //Toggle physical restraints display
                 if (UserControls.ShowConstraints.WasTriggered(UserInput))
                     ShowConstraints = !ShowConstraints;
@@ -258,16 +254,7 @@ namespace Server.World
             Renderer.Shapes.ClearInstances();
             Renderer.Lines.ClearInstances();
 
-            //Display controls to the UI if the flag has been set
-            if(ShowControls)
-            {
-                //Display the controls to the UI
-                float TextHeight = 16;
-                Vector2 TextPosition = new Vector2(Renderer.Surface.Resolution.X - 500, Renderer.Surface.Resolution.Y - TextHeight * 10);
-                Renderer.TextBatcher.Write(UIText.Clear().Append("Toggle character: C"), TextPosition, TextHeight, new Vector3(1), UIFont);
-                TextPosition.Y += TextHeight * 1.2f;
-                Character.RenderControls(TextPosition, TextHeight, Renderer.TextBatcher, UIText, UIFont);
-            }
+            DisplayActiveConnections(Renderer);
 
             //Update the characters camera if its active
             if (CharacterActive)
@@ -279,6 +266,31 @@ namespace Server.World
             //Render all the shapes in the scene
             Renderer.Shapes.AddInstances(WorldSimulation, ThreadDispatcher);
             Renderer.Lines.Extract(WorldSimulation.Bodies, WorldSimulation.Solver, WorldSimulation.BroadPhase, ShowConstraints, ShowContacts, ShowBoundingBoxes, ThreadDispatcher);
+        }
+
+        //Displays a list of all the active clients and their current status onto the window UI
+        private void DisplayActiveConnections(Renderer Renderer)
+        {
+            //Define the size of the font and the location where it will be rendered to
+            float TextHeight = 16;
+            Vector2 TextPosition = new Vector2(25, 25);
+
+            //Add an initial title line, display how many active connections exist. Render it to the UI and offset the position value for the next string
+            UIText.Clear().Append("--- Active Connections: " + ConnectionManager.ActiveConnections.Count.ToString() + " ---");
+            Renderer.TextBatcher.Write(UIText, TextPosition, TextHeight, new Vector3(1), UIFont);
+            TextPosition.Y += TextHeight * 1.2f;
+
+            //Loop through each of the active client connections, displaying a new line to the UI showing that clients current status
+            foreach (ClientConnection ActiveClient in ClientSubsetFinder.GetAllClients())
+            {
+                //Construct a new string containing all of this clients relevant connection status information
+                string ClientInformation = "NetworkID:" + ActiveClient.NetworkID + "   Account:" + (ActiveClient.AccountName == "" ? "N/A" : ActiveClient.AccountName) + "   Character:" +
+                    (ActiveClient.InGame ? ActiveClient.CharacterName : "N/A") + "   Location:" + (ActiveClient.InGame ? ActiveClient.CharacterPosition.ToString() : "N/A");
+
+                //Update the ConnectionsText object to contain this new ClientInformation string, render that to the UI and again offset the position value for the next client info string
+                Renderer.TextBatcher.Write(UIText.Clear().Append(ClientInformation), TextPosition, TextHeight, new Vector3(1), UIFont);
+                TextPosition.Y += TextHeight * 1.2f;
+            }
         }
     }
 }
