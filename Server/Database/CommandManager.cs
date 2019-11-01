@@ -5,6 +5,7 @@
 // ================================================================================================================================
 
 using System;
+using System.Numerics;
 using MySql.Data.MySqlClient;
 using Server.Logging;
 
@@ -65,21 +66,18 @@ namespace Server.Database
             //Ensure the command is being executed with the correct database connection being reference
             Command.Connection = DatabaseManager.DatabaseConnection;
 
-            try
-            {
-                //Open a datareader with the given command object, then check if it has any rows
-                MySqlDataReader RowReader = Command.ExecuteReader();
-                bool HasRows = RowReader.HasRows;
-                //Close the datareader and return the HasRows value
-                RowReader.Close();
-                return HasRows;
-            }
-            catch (MySqlException Exception)
-            {
-                //Add details to the output log what went wrong if we werent able to perform this search correctly
-                MessageLog.Error(Exception, Context);
-                return false;
-            }
+            //Open the data reader
+            MySqlDataReader RowReader = Command.ExecuteReader();
+            RowReader.Read();
+            bool HasRows = false;
+
+            //Try reading the values from it
+            try { HasRows = RowReader.HasRows; }
+            catch(MySqlException Exception) { MessageLog.Error(Exception, Context); }
+
+            //Close the reader and return the value
+            RowReader.Close();
+            return HasRows;
         }
 
         /// <summary>
@@ -107,6 +105,44 @@ namespace Server.Database
             }
         }
 
+        public static int ExecuteStringToInt(MySqlCommand Command, string Name, string Context = "Unknown error reading string to convert into int value")
+        {
+            //Make sure the right connection is open
+            Command.Connection = DatabaseManager.DatabaseConnection;
+
+            //Open the data reader
+            MySqlDataReader StringReader = Command.ExecuteReader();
+            StringReader.Read();
+            int IntValue = 0;
+
+            //Try reading the values from it
+            try { IntValue = Convert.ToInt32(StringReader[Name]); }
+            catch (MySqlException Exception) { MessageLog.Error(Exception, Context); }
+
+            //Close the reader and return the value
+            StringReader.Close();
+            return IntValue;
+        }
+
+        public static bool ExecuteStringToBool(MySqlCommand Command, string Name, string Context = "Unknown error reading string to convert into boolean value")
+        {
+            //Make sure the connection is open
+            Command.Connection = DatabaseManager.DatabaseConnection;
+
+            //Open the data reader
+            MySqlDataReader StringReader = Command.ExecuteReader();
+            StringReader.Read();
+            bool BooleanValue = false;
+
+            //Try reading the values from it
+            try { BooleanValue = Convert.ToBoolean(StringReader[Name]); }
+            catch (MySqlException Exception) { MessageLog.Error(Exception, Context); }
+
+            //Close the reader and return the value
+            StringReader.Close();
+            return BooleanValue;
+        }
+
         /// <summary>
         /// Returns a string value from the database using the given sql command object
         /// </summary>
@@ -119,22 +155,42 @@ namespace Server.Database
             //Ensure the command is being executed with the correct database connection being reference
             Command.Connection = DatabaseManager.DatabaseConnection;
 
+            //Open the data reader
+            MySqlDataReader StringReader = Command.ExecuteReader();
+            StringReader.Read();
+            string StringValue = "";
+
+            //try reading the values from it
+            try { StringValue = StringReader[Name].ToString(); }
+            catch (MySqlException Exception) { MessageLog.Error(Exception, Context); }
+
+            //close the reader and return the values
+            StringReader.Close();
+            return StringValue;
+        }
+
+        public static Vector3 ExecuteVector3(MySqlCommand Command, string Context = "Unknown error executing vector3 value check command")
+        {
+            //Make sure the right connection is open
+            Command.Connection = DatabaseManager.DatabaseConnection;
+
+            //Open the data reader
+            MySqlDataReader VectorReader = Command.ExecuteReader();
+            VectorReader.Read();
+            Vector3 Vector = new Vector3();
+
+            //Try reading the values from it
             try
             {
-                //Open a new data reader object, then read out and store the string value that we are looking for
-                MySqlDataReader StringReader = Command.ExecuteReader();
-                StringReader.Read();
-                string StringValue = StringReader[Name].ToString();
-                //Close the data reader object and return the string value that was extracted
-                StringReader.Close();
-                return StringValue;
+                Vector.X = Convert.ToInt64(VectorReader["XPosition"]);
+                Vector.Y = Convert.ToInt64(VectorReader["YPosition"]);
+                Vector.Z = Convert.ToInt64(VectorReader["ZPosition"]);
             }
-            catch (MySqlException Exception)
-            {
-                //Add details to the output log what went wrong if we werent able to read out this value correctly
-                MessageLog.Error(Exception, Context);
-                return "";
-            }
+            catch(MySqlException Exception) { MessageLog.Error(Exception, Context); }
+
+            //Close the reader and return the value
+            VectorReader.Close();
+            return Vector;
         }
     }
 }

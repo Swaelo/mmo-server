@@ -4,7 +4,6 @@
 // Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
-using System;
 using MySql.Data.MySqlClient;
 using Server.Logging;
 
