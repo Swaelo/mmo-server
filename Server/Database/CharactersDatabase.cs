@@ -92,6 +92,8 @@ namespace Server.Database
                 return CharacterName;
             }
 
+            //Print error and close the data reader
+            CharacterNameReader.Close();
             Log.Chat("CharactersDatabase.GetCharacterName Error reading characters name, returning empty string.");
             return "";
         }
@@ -122,6 +124,7 @@ namespace Server.Database
                 return CharacterData;
             }
 
+            CharacterDataReader.Close();
             Log.Chat("CharactersDatabase.GetCharacterData Error reading character data, returning null.");
             return null;
         }

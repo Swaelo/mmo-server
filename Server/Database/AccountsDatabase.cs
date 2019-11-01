@@ -21,9 +21,11 @@ namespace Server.Database
             MySqlCommand AccountCommand = new MySqlCommand(AccountQuery, DatabaseManager.DatabaseConnection);
             MySqlDataReader AccountReader = AccountCommand.ExecuteReader();
 
+            //Store the value if the account name exists or not and close the data reader
             bool AccountNameAvailable = !AccountReader.HasRows;
             AccountReader.Close();
 
+            //Return the final value
             return AccountNameAvailable;
         }
 
@@ -58,6 +60,8 @@ namespace Server.Database
                 return PasswordMatches;
             }
 
+            //Print error and close the data reader
+            PasswordReader.Close();
             Log.Chat("AccountsDatabase.IsPasswordCorrect Error reading password, returning false.");
             return false;
         }
