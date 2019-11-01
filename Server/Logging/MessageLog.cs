@@ -5,6 +5,7 @@
 // ================================================================================================================================
 
 using System;
+using System.IO;
 using Serilog;
 using MySql.Data.MySqlClient;
 
@@ -50,6 +51,16 @@ namespace Server.Logging
                 Initialize();
 
             //Add the error information to the log file
+            Log.Error(Error, Information);
+        }
+
+        //Overload of Error for passing in IOException
+        public static void Error(IOException Error, string Information)
+        {
+            //Setup the logger if it isnt ready yet
+            if (!LoggerInitialized)
+                Initialize();
+
             Log.Error(Error, Information);
         }
 
