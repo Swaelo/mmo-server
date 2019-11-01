@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using MySql.Data.MySqlClient;
 using Server.GameItems;
+using Server.Logging;
 
 namespace Server.Database
 {
@@ -37,16 +38,16 @@ namespace Server.Database
             //Create a new ItemData object to store the items information
             ItemData ActionBarItem = new ItemData();
 
-            //Read the items values from the database into the ActionBarItem object
-            string Query = "SELECT ActionBarSlot" + ActionBarSlot + "ItemNumber FROM actionbars WHERE CharacterName='" + CharacterName + "'";
+            //Define and execute a new query/command for checking and store the item number of what is currently stored in the given characters action bar slot
+            string ActionBarItemQuery = "SELECT ActionBarSlot" + ActionBarSlot + "ItemNumber FROM actionbars WHERE CharacterName='" + CharacterName + "'";
+            MySqlCommand ActionBarItemCommand = CommandManager.CreateCommand(ActionBarItemQuery);
+            ActionBarItem.ItemNumber = CommandManager.ExecuteScalar(ActionBarItemCommand, "Error trying to load information regarding what item is currently in slot #" + ActionBarSlot + " of " + CharacterName + "s action bar");
 
-            MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
-            ActionBarItem.ItemNumber = Convert.ToInt32(Command.ExecuteScalar());
-            Query = "SELECT ActionBarSlot" + ActionBarSlot + "ItemID FROM actionbars WHERE CharacterName='" + CharacterName + "'";
-
-            Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
-            ActionBarItem.ItemID = Convert.ToInt32(Command.ExecuteScalar());
-
+            //Do the same thing again, for reading out the items ID number value
+            string ActionBarIDQuery = "SELECT ActionBarSlot" + ActionBarSlot + "ItemID FROM actionbars WHERE CharacterName='" + CharacterName + "'";
+            MySqlCommand ActionBarIDCommand = CommandManager.CreateCommand(ActionBarIDQuery);
+            ActionBarItem.ItemID = CommandManager.ExecuteScalar(ActionBarIDCommand, "Error trying to load information regarding the items ID number currently in slot #" + ActionBarSlot + " of " + CharacterName + "s action bar");
+            
             //Return the final object containing all the action bars current data
             return ActionBarItem;
         }
@@ -92,26 +93,34 @@ namespace Server.Database
         //Equips an ability gem onto the first available slot on the characters action bar
         public static void GiveCharacterAbility(string CharacterName, ItemData AbilityItem)
         {
-            //Define/execute command to update the database placing this ability onto the characters first available action bar slot
-            string Query = "UPDATE actionbars SET ActionBarSlot" + GetFirstFreeActionBarSlot(CharacterName) + "ItemNumber='" + AbilityItem.ItemNumber + "', ActionBarSlot" + GetFirstFreeActionBarSlot(CharacterName) + "ItemID='" + AbilityItem.ItemID + "' WHERE CharacterName='" + CharacterName + "'";
-            MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
-            Command.ExecuteNonQuery();
+            //Define a query and command which we will use to place an ability onto a characters first available action bar slot
+            string GiveAbilityQuery = "UPDATE actionbars SET ActionBarSlot" + GetFirstFreeActionBarSlot(CharacterName) + "ItemNumber='" + AbilityItem.ItemNumber + "', ActionBarSlot" + GetFirstFreeActionBarSlot(CharacterName) + "ItemID='" + AbilityItem.ItemID + "' WHERE CharacterName='" + CharacterName + "'";
+            MySqlCommand GiveAbilityCommand = CommandManager.CreateCommand(GiveAbilityQuery);
+
+            //Execute the command, placing the ability onto the characters action bar
+            CommandManager.ExecuteNonQuery(GiveAbilityCommand, "Error trying to place ability onto " + CharacterName + "s first available action bar slot.");
         }
 
         //Equips an ability gem onto a specific slot of the characters action bar
         public static void GiveCharacterAbility(string CharacterName, ItemData AbilityItem, int ActionBarSlot)
         {
-            string Query = "UPDATE actionbars SET ActionBarSlot" + ActionBarSlot + "ItemNumber='" + AbilityItem.ItemNumber + "', ActionBarSlot" + ActionBarSlot + "ItemID='" + AbilityItem.ItemID + "' WHERE CharacterName='" + CharacterName + "'";
-            MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
-            Command.ExecuteNonQuery();
+            //Define a query and command which we will use to place an ability onto a specific slot of a characters action bar
+            string GiveAbilityQuery = "UPDATE actionbars SET ActionBarSlot" + ActionBarSlot + "ItemNumber='" + AbilityItem.ItemNumber + "', ActionBarSlot" + ActionBarSlot + "ItemID='" + AbilityItem.ItemID + "' WHERE CharacterName='" + CharacterName + "'";
+            MySqlCommand GiveAbilityCommand = CommandManager.CreateCommand(GiveAbilityQuery);
+
+            //Execute the command, placing the ability onto the characters action bar
+            CommandManager.ExecuteNonQuery(GiveAbilityCommand, "Error trying to place ability onto slot #" + ActionBarSlot + " of " + CharacterName + "s action bar");
         }
 
         //Removes an ability gem from a specific slot of the characters action bar
         public static void TakeCharacterAbility(string CharacterName, int ActionBarSlot)
         {
-            string Query = "UPDATE actionbars SET ActionBarSlot" + ActionBarSlot + "ItemNumber='0', ActionBarSlot" + ActionBarSlot + "ItemID='0' WHERE CharacterName='" + CharacterName + "'";
-            MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
-            Command.ExecuteNonQuery();
+            //Define a query and command which we will use to remove an ability from a specific slot on a characters action bar
+            string TakeAbilityQuery = "UPDATE actionbars SET ActionBarSlot" + ActionBarSlot + "ItemNumber='0', ActionBarSlot" + ActionBarSlot + "ItemID='0' WHERE CharacterName='" + CharacterName + "'";
+            MySqlCommand TakeAbilityCommand = CommandManager.CreateCommand(TakeAbilityQuery);
+
+            //Execute the command, removing the ability from the characters action bar
+            CommandManager.ExecuteNonQuery(TakeAbilityCommand, "Error trying to remove ability from slot #" + ActionBarSlot + " of " + CharacterName + "s action bar");
         }
     }
 }

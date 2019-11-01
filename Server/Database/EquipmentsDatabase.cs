@@ -38,13 +38,13 @@ namespace Server.Database
             ItemData EquippedItem = new ItemData();
             EquippedItem.ItemEquipmentSlot = EquipmentSlot;
 
-            //Get the ItemNumber and ItemID values from the database into the new ItemData object
-            string Query = "SELECT " + EquipmentSlot.ToString() + "ItemNumber FROM equipments WHERE CharacterName='" + CharacterName + "'";
-            MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
-            EquippedItem.ItemNumber = Convert.ToInt32(Command.ExecuteScalar());
-            Query = "SELECT " + EquipmentSlot.ToString() + "ItemID FROM equipments WHERE CharacterName='" + CharacterName + "'";
-            Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
-            EquippedItem.ItemID = Convert.ToInt32(Command.ExecuteScalar());
+            //Fetch the ItemNumber and ItemID values from the database and store these within the new ItemData object
+            string ItemNumberQuery = "SELECT " + EquipmentSlot.ToString() + "ItemNumber FROM equipments WHERE CharacterName='" + CharacterName + "'";
+            MySqlCommand ItemNumberCommand = CommandManager.CreateCommand(ItemNumberQuery);
+            EquippedItem.ItemNumber = CommandManager.ExecuteScalar(ItemNumberCommand, "Error fetching the ItemNumber value in " + CharacterName + "s " + EquipmentSlot + " equipment slot");
+            string ItemIDQuery = "SELECT " + EquipmentSlot.ToString() + "ItemID FROM equipments WHERE CharacterName='" + CharacterName + "'";
+            MySqlCommand ItemIDCommand = CommandManager.CreateCommand(ItemIDQuery);
+            EquippedItem.ItemID = CommandManager.ExecuteScalar(ItemIDCommand, "Error fetching the ItemID value in " + CharacterName + "s " + EquipmentSlot + " equipment slot");
 
             //Return the final ItemData object with all the equipped items information
             return EquippedItem;

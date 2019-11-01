@@ -15,17 +15,21 @@ namespace Server.Database
         //Queries the server to find out what the next ItemID will be for when the ItemManager next adds a new item into the game
         public static int GetNextItemID()
         {
-            string ItemIDQuery = "SELECT NextItemID FROM globals";
-            MySqlCommand ItemIDCommand = new MySqlCommand(ItemIDQuery, DatabaseManager.DatabaseConnection);
-            return Convert.ToInt32(ItemIDCommand.ExecuteScalar());
+            //Define new query/command used to fetch the NextItemID value from the globals database
+            string NextItemIDQuery = "SELECT NextItemID FROM globals";
+            MySqlCommand NextItemIDCommand = CommandManager.CreateCommand(NextItemIDQuery);
+            //Execute the command and return the value that it gives us
+            return CommandManager.ExecuteScalar(NextItemIDCommand, "Error fetching the NextItemID value from the globals database");
         }
 
         //Updates the value in the database for what the next ItemID will be for the ItemManager to add a new item into the game
         public static void SaveNextItemID(int NextItemID)
         {
-            string NewItemIDQuery = "UPDATE globals SET NextItemID='" + NextItemID + "'";
-            MySqlCommand NewItemIDCommand = new MySqlCommand(NewItemIDQuery, DatabaseManager.DatabaseConnection);
-            NewItemIDCommand.ExecuteNonQuery();
+            //Define new query/command used to update the NextItemID value in the globals database
+            string NextItemIDQuery = "UPDATE globals SET NextItemID='" + NextItemID + "'";
+            MySqlCommand NextItemIDCommand = CommandManager.CreateCommand(NextItemIDQuery);
+            //Execute the command, updating the NextItemID value inside the globals database
+            CommandManager.ExecuteNonQuery(NextItemIDCommand);
         }
     }
 }

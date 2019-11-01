@@ -38,16 +38,16 @@ namespace Server.Database
             //Create a new ItemData object to store all the data about the characters inventory slot
             ItemData InventoryItem = new ItemData();
 
-            //Extract the items information from the inventory database into the new ItemData object
-            string Query = "SELECT ItemSlot" + InventorySlot + "ItemNumber FROM inventories WHERE CharacterName='" + CharacterName + "'";
-            MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
-            InventoryItem.ItemNumber = Convert.ToInt32(Command.ExecuteScalar());
-            Query = "SELECT ItemSlot" + InventorySlot + "ItemID FROM inventories WHERE CharacterName='" + CharacterName + "'";
-            Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
-            InventoryItem.ItemID = Convert.ToInt32(Command.ExecuteScalar());
-            InventoryItem.ItemEquipmentSlot = ItemInfoDatabase.GetItemSlot(InventoryItem.ItemNumber);
+            //Define/execute some new queries/commands for extracting all info about the item in the characters target inventory slot, store it all in the InventoryItem object
+            string ItemNumberQuery = "SELECT ItemSlot" + InventorySlot + "ItemNumber FROM inventories WHERE CharacterName='" + CharacterName + "'";
+            MySqlCommand ItemNumberCommand = CommandManager.CreateCommand(ItemNumberQuery);
+            InventoryItem.ItemNumber = CommandManager.ExecuteScalar(ItemNumberCommand);
+            string ItemIDQuery = "SELECT ItemSlot" + InventorySlot + "ItemID FROM inventories WHERE CharacterName='" + CharacterName + "'";
+            MySqlCommand ItemIDCommand = CommandManager.CreateCommand(ItemIDQuery);
+            InventoryItem.ItemID = CommandManager.ExecuteScalar(ItemIDCommand);
 
-            //Return the final InventoryItem object
+            //Lastly use the item info database to find out what slot this item belongs in when being equipped, the store it in and return the final InventoryItem object
+            InventoryItem.ItemEquipmentSlot = ItemInfoDatabase.GetItemSlot(InventoryItem.ItemNumber);
             return InventoryItem;
         }
 
@@ -71,26 +71,28 @@ namespace Server.Database
         //Places an item into the first available slot in a characters inventory
         public static void GiveCharacterItem(string CharacterName, ItemData NewItem)
         {
-            //Places the new item into the first free slot in the characters inventory
-            string Query = "UPDATE inventories SET ItemSlot" + GetFirstFreeInventorySlot(CharacterName) + "ItemNumber='" + NewItem.ItemNumber + "', ItemSlot" + GetFirstFreeInventorySlot(CharacterName) + "ItemID='" + NewItem.ItemID + "' WHERE CharacterName='" + CharacterName + "'";
-            MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
-            Command.ExecuteNonQuery();
+            //Define/Execute new query/command for storing this new item into the characters first available inventory slot
+            string GiveItemQuery = "UPDATE inventories SET ItemSlot" + GetFirstFreeInventorySlot(CharacterName) + "ItemNumber='" + NewItem.ItemNumber + "', ItemSlot" + GetFirstFreeInventorySlot(CharacterName) + "ItemID='" + NewItem.ItemID + "' WHERE CharacterName='" + CharacterName + "'";
+            MySqlCommand GiveItemCommand = CommandManager.CreateCommand(GiveItemQuery);
+            CommandManager.ExecuteNonQuery(GiveItemCommand);
         }
 
         //Places an item into a specific slot of a characters inventory
         public static void GiveCharacterItem(string CharacterName, ItemData NewItem, int InventorySlot)
         {
-            string Query = "UPDATE inventories SET ItemSlot" + InventorySlot + "ItemNumber='" + NewItem.ItemNumber + "', ItemSlot" + InventorySlot + "ItemID='" + NewItem.ItemID + "' WHERE CharacterName='" + CharacterName + "'";
-            MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
-            Command.ExecuteNonQuery();
+            //Define/Execute new Query/Command for storing this item into the characters specific inventory slot
+            string GiveItemQuery = "UPDATE inventories SET ItemSlot" + InventorySlot + "ItemNumber='" + NewItem.ItemNumber + "', ItemSlot" + InventorySlot + "ItemID='" + NewItem.ItemID + "' WHERE CharacterName='" + CharacterName + "'";
+            MySqlCommand GiveItemCommand = CommandManager.CreateCommand(GiveItemQuery);
+            CommandManager.ExecuteNonQuery(GiveItemCommand);
         }
 
         //Removes an item from a characters inventory
         public static void RemoveCharacterItem(string CharacterName, int InventorySlot)
         {
-            string Query = "UPDATE inventories SET ItemSlot" + InventorySlot + "ItemNumber='0', ItemSlot" + InventorySlot + "ItemID='0' WHERE CharacterName='" + CharacterName + "'";
-            MySqlCommand Command = new MySqlCommand(Query, DatabaseManager.DatabaseConnection);
-            Command.ExecuteNonQuery();
+            //Define/Execute new Query/Command for removing an item from the characters inventory
+            string TakeItemQuery = "UPDATE inventories SET ItemSlot" + InventorySlot + "ItemNumber='0', ItemSlot" + InventorySlot + "ItemID='0' WHERE CharacterName='" + CharacterName + "'";
+            MySqlCommand TakeItemCommand = CommandManager.CreateCommand(TakeItemQuery);
+            CommandManager.ExecuteNonQuery(TakeItemCommand);
         }
 
         //Moves an item from one inventory slot to another

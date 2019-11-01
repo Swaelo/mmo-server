@@ -7,7 +7,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using Server.Interface;
+using Server.Logging;
 
 namespace Server.GameItems
 {
@@ -26,7 +26,7 @@ namespace Server.GameItems
             string FilePath = WorkingDirectory + "/" + MasterItemListFile;
 
             //Display what filepath is being used then load that file into memory
-            Console.WriteLine("Loading item list from: " + FilePath);
+            MessageLog.Print("Loading item list from: " + FilePath);
             string[] FileLines = System.IO.File.ReadAllLines(FilePath);
 
             //Loop through all the lines, processing one at a time
@@ -48,7 +48,7 @@ namespace Server.GameItems
             }
 
             //Print a message to verify all items information was loaded from the file
-            Log.Chat(ItemInfoList.Count + " items information was loaded after processing " + FileLines.Length + " lines of the ItemList file.");
+            MessageLog.Print(ItemInfoList.Count + " items information was loaded after processing " + FileLines.Length + " lines of the ItemList file.");
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace Server.GameItems
         {
             if (!ItemInfoList.ContainsKey(ItemNumber))
             {
-                Log.Chat("ItemInfoDatabase.GetItemInfo No item exists in the database with number " + ItemNumber + ". Returning null");
+                MessageLog.Print("ItemInfoDatabase.GetItemInfo No item exists in the database with number " + ItemNumber + ". Returning null");
                 return null;
             }
 

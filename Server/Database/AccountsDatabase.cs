@@ -5,7 +5,7 @@
 // ================================================================================================================================
 
 using MySql.Data.MySqlClient;
-using Server.Interface;
+using Server.Logging;
 
 namespace Server.Database
 {
@@ -14,56 +14,35 @@ namespace Server.Database
         //Checks if the given account name is available for use or if its already been taken by someone else
         public static bool IsAccountNameAvailable(string AccountName)
         {
-            //Define the query to search for an account with this name in the database
+            //Define a new query for searching the database for the given account name, then use it to create a new command object
             string AccountQuery = "SELECT * FROM accounts WHERE Username='" + AccountName + "'";
+            MySqlCommand AccountCommand = CommandManager.CreateCommand(AccountQuery);
 
-            //Execute the command and start reading from the accounts table
-            MySqlCommand AccountCommand = new MySqlCommand(AccountQuery, DatabaseManager.DatabaseConnection);
-            MySqlDataReader AccountReader = AccountCommand.ExecuteReader();
-
-            //Store the value if the account name exists or not and close the data reader
-            bool AccountNameAvailable = !AccountReader.HasRows;
-            AccountReader.Close();
-
-            //Return the final value
-            return AccountNameAvailable;
+            //Execute the newly created command to check if this account name is still available or not
+            return !CommandManager.ExecuteRowCheck(AccountCommand, "Error checking if the account name " + AccountName + " is still available.");
         }
 
         //Saves a brand new user account into the database
         //NOTE: Assumes this account doesnt already exist and the login credentials provided are valid
         public static void RegisterNewAccount(string AccountName, string AccountPassword)
         {
+            //Define a new query for registering a new account into the database with the given username and password, then create a new command object with it
             string RegisterQuery = "INSERT INTO accounts(Username,Password) VALUES('" + AccountName + "','" + AccountPassword + "')";
-
-            MySqlCommand RegisterCommand = new MySqlCommand(RegisterQuery, DatabaseManager.DatabaseConnection);
-            RegisterCommand.ExecuteNonQuery();
+            MySqlCommand RegisterCommand = CommandManager.CreateCommand(RegisterQuery);
+            //Execute the newly created command
+            CommandManager.ExecuteNonQuery(RegisterCommand, "Error trying to register a new account into the database, username: " + AccountName + " password: " + AccountPassword);
         }
 
         //Checks if the account name and password provided are valid login credentials
         //NOTE: Assumes this account already exists
         public static bool IsPasswordCorrect(string AccountName, string AccountPassword)
         {
-            //Define the query to check this accounts login credentials
+            //Define a new query for checking if this user has provided the correct password, use it to create a new command
             string PasswordQuery = "SELECT * FROM accounts WHERE Username='" + AccountName + "' AND Password='" + AccountPassword + "'";
+            MySqlCommand PasswordCommand = CommandManager.CreateCommand(PasswordQuery);
 
-            //Execute this command to open up the table for this account name
-            MySqlCommand PasswordCommand = new MySqlCommand(PasswordQuery, DatabaseManager.DatabaseConnection);
-            MySqlDataReader PasswordReader = PasswordCommand.ExecuteReader();
-
-            //Read the table to check if the password provided is correct
-            if(PasswordReader.Read())
-            {
-                bool PasswordMatches = PasswordReader.HasRows;
-                PasswordReader.Close();
-
-                //Return the final value
-                return PasswordMatches;
-            }
-
-            //Print error and close the data reader
-            PasswordReader.Close();
-            Log.Chat("AccountsDatabase.IsPasswordCorrect Error reading password, returning false.");
-            return false;
+            //Execute the newly created command to check if the given password is correct or not
+            return CommandManager.ExecuteRowCheck(PasswordCommand, "Error checking if " + AccountPassword + " is the correct password for the account " + AccountName);
         }
     }
 }

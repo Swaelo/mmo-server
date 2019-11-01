@@ -6,6 +6,7 @@
 
 using System;
 using MySql.Data.MySqlClient;
+using Server.Logging;
 
 namespace Server.Database
 {
@@ -30,20 +31,25 @@ namespace Server.Database
         //Initializes the connection to the database server
         public static bool InitializeDatabaseConnection(string ServerIP = "localhost", int ServerPort = 3306, string Database = "", string Username = "root", string Password = "")
         {
-            //Open connection to the database server
-            DatabaseConnection = new MySqlConnection(CreateConnectionString(ServerIP, ServerPort, Username, Password));
+            //Create the new connection string we will use to establish a connection to the database server
+            string ConnectionString = CreateConnectionString(ServerIP, ServerPort, Username, Password);
+            DatabaseConnection = new MySqlConnection(ConnectionString);
             DatabaseConnection.Open();
 
-            //Check if the database connection failed to connect
+            //Check to make sure we didnt fail to connect to the database
             if(DatabaseConnection.State != System.Data.ConnectionState.Open)
             {
-                Console.WriteLine("Failed to connect to the SQL server, shutting down.");
+                MessageLog.Print("ERROR: Failed to connect to the MySQL server, server cannot function without it.");
                 return false;
             }
 
-            //Tell the server which database we want to use
-            MySqlCommand DatabaseCommand = new MySqlCommand("USE " + Database, DatabaseConnection);
-            DatabaseCommand.ExecuteNonQuery();
+            //Define/Execute a Query/Command telling the server which database we want to be using
+            string DatabaseQuery = "USE " + Database;
+            MySqlCommand DatabaseCommand = CommandManager.CreateCommand(DatabaseQuery);
+            CommandManager.ExecuteNonQuery(DatabaseCommand);
+
+            //Print a message showing that the SQL server connection has been opened correctly
+            MessageLog.Print("MySQL Server Connection Established");
             return true;
         }
     }
