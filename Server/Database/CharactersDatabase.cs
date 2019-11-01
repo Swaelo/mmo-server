@@ -4,11 +4,9 @@
 // Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
-using System;
 using System.Numerics;
 using MySql.Data.MySqlClient;
 using Server.Data;
-using Server.Logging;
 
 namespace Server.Database
 {
@@ -87,32 +85,24 @@ namespace Server.Database
         //Loads all of a characters information from the database
         public static CharacterData GetCharacterData(string CharacterName)
         {
-            //Create a new CharacterData object to store all the data we are going to retrieve from the database
+            //Create a new CharacterData object which will store all the data we read out from the database
             CharacterData CharacterData = new CharacterData();
 
-            //First open up this characters table and start reading all the data from it
+            //Open up this characters table in the database and start reading data from it
             string CharacterDataQuery = "SELECT * FROM characters WHERE CharacterName='" + CharacterName + "'";
-            MySqlCommand CharacterDataCommand = new MySqlCommand(CharacterDataQuery, DatabaseManager.DatabaseConnection);
-            MySqlDataReader CharacterDataReader = CharacterDataCommand.ExecuteReader();
-            if(CharacterDataReader.Read())
-            {
-                //Extract and store all of this characters information into the new CharacterData object
-                CharacterData.Account = CharacterDataReader["OwnerAccountName"].ToString();
-                CharacterData.Position = new Vector3(Convert.ToInt64(CharacterDataReader["XPosition"]), Convert.ToInt64(CharacterDataReader["YPosition"]), Convert.ToInt64(CharacterDataReader["ZPosition"]));
-                CharacterData.Name = CharacterName;
-                CharacterData.Experience = Convert.ToInt32(CharacterDataReader["ExperiencePoints"]);
-                CharacterData.ExperienceToLevel = Convert.ToInt32(CharacterDataReader["ExperienceToLevel"]);
-                CharacterData.Level = Convert.ToInt32(CharacterDataReader["Level"]);
-                CharacterData.IsMale = Convert.ToBoolean(CharacterDataReader["IsMale"]);
+            MySqlCommand CharacterDataCommand = CommandManager.CreateCommand(CharacterDataQuery);
 
-                //Return the final CharacterData object which has all the relevant information stored within
-                CharacterDataReader.Close();
-                return CharacterData;
-            }
+            //Extract each piece of information that we need from the database, storing all of it into the CharacterData object
+            CharacterData.Account = CommandManager.ExecuteString(CharacterDataCommand, "OwnerAccountName", "Error reading " + CharacterName + "s OwnerAccountName");
+            CharacterData.Position = CommandManager.ExecuteVector3(CharacterDataCommand, "Error extracting " + CharacterName + "s vector3 location value from the database");
+            CharacterData.Name = CharacterName;
+            CharacterData.Experience = CommandManager.ExecuteStringToInt(CharacterDataCommand, "ExperiencePoints", "Error extracting " + CharacterName + "s Xp Point Value from the database");
+            CharacterData.ExperienceToLevel = CommandManager.ExecuteStringToInt(CharacterDataCommand, "ExperienceToLevel", "Error extracting " + CharacterName + "s XP To Level value from the database");
+            CharacterData.Level = CommandManager.ExecuteStringToInt(CharacterDataCommand, "Level", "Error extracting " + CharacterName + "s Level from the database");
+            CharacterData.IsMale = CommandManager.ExecuteStringToBool(CharacterDataCommand, "IsMale", "Error extracting " + CharacterName + "s gender value from the database");
 
-            CharacterDataReader.Close();
-            MessageLog.Print("CharactersDatabase.GetCharacterData Error reading character data, returning null.");
-            return null;
+            //Return the final CharacterData object that has now been filled with all the data weve been looking for
+            return CharacterData;
         }
 
         //Backs up the location of a player character into the database

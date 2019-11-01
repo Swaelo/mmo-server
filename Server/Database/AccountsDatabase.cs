@@ -5,7 +5,6 @@
 // ================================================================================================================================
 
 using MySql.Data.MySqlClient;
-using Server.Logging;
 
 namespace Server.Database
 {
@@ -17,7 +16,6 @@ namespace Server.Database
             //Define a new query for searching the database for the given account name, then use it to create a new command object
             string AccountQuery = "SELECT * FROM accounts WHERE Username='" + AccountName + "'";
             MySqlCommand AccountCommand = CommandManager.CreateCommand(AccountQuery);
-
             //Execute the newly created command to check if this account name is still available or not
             return !CommandManager.ExecuteRowCheck(AccountCommand, "Error checking if the account name " + AccountName + " is still available.");
         }
@@ -40,7 +38,6 @@ namespace Server.Database
             //Define a new query for checking if this user has provided the correct password, use it to create a new command
             string PasswordQuery = "SELECT * FROM accounts WHERE Username='" + AccountName + "' AND Password='" + AccountPassword + "'";
             MySqlCommand PasswordCommand = CommandManager.CreateCommand(PasswordQuery);
-
             //Execute the newly created command to check if the given password is correct or not
             return CommandManager.ExecuteRowCheck(PasswordCommand, "Error checking if " + AccountPassword + " is the correct password for the account " + AccountName);
         }
