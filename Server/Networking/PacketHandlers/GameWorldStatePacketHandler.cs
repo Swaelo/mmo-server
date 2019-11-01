@@ -4,9 +4,10 @@
 // Author:	    Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
-using System;
 using System.Numerics;
-using System.Collections.Generic;
+using Server.Logging;
+using Server.Database;
+using Server.Data;
 using Server.Networking.PacketSenders;
 using BepuPhysics;
 using BepuPhysics.Collidables;
@@ -19,20 +20,19 @@ namespace Server.Networking.PacketHandlers
         //When a client wants to enter the game world, we need to send them a bunch of information to set up their game world before they can enter
         public static void HandleEnterWorldRequest(int ClientID, ref NetworkPacket Packet)
         {
-            //Read the name of the character this user wants to enter into the world with
+            //Read the characters name the player is going to use, use it to fetch the rest of the characters data from the database
             string CharacterName = Packet.ReadString();
+            CharacterData CharacterData = CharactersDatabase.GetCharacterData(CharacterName);
 
-            //Store the name of the character the client is playing with in their ClientConnection object
-            ConnectionManager.ActiveConnections[ClientID].CharacterName = CharacterName;
+            //Fetch this clients ClientConnection object and update it with the info from CharacterData that we retrieved
+            ClientConnection Client = ConnectionManager.ActiveConnections[ClientID];
+            Client.CharacterName = CharacterName;
+            Client.CharacterPosition = CharacterData.Position;
 
-            //First need to send this client a list of all other players already in the game
-            //a list of all entities active in the game, and a list of all active game items
+            //Send the clients lists of other players, AI entities, item pickups, inventory contents, equipped items and socketed actionbar abilities
             GameWorldStatePacketSender.SendActivePlayerList(ClientID);
             GameWorldStatePacketSender.SendActiveEntityList(ClientID);
             GameWorldStatePacketSender.SendActiveItemList(ClientID);
-
-            //Next we need to send through the contents of their characters inventory, whatever
-            //items they have currently equipped, and what abilities are on their action bar
             GameWorldStatePacketSender.SendInventoryContents(ClientID, CharacterName);
             GameWorldStatePacketSender.SendEquippedItems(ClientID, CharacterName);
             GameWorldStatePacketSender.SendSocketedAbilities(ClientID, CharacterName);
@@ -41,27 +41,28 @@ namespace Server.Networking.PacketHandlers
         //When a client has finished receiving all the setup information they will let us know when they are entering into the game world finally
         public static void HandleNewPlayerReady(int ClientID, ref NetworkPacket Packet)
         {
-            //Get this clients information and update them as being ingame
+            //Get this clients information and flag them as being ingame
             ClientConnection Client = ConnectionManager.ActiveConnections[ClientID];
             Client.InGame = true;
 
-            //Add a new collider into the physics scene to represent where this client is located
+            //Add a new collider into the physics scene to represent where this client is located in the game world
             Simulation World = Program.World.WorldSimulation;
             Client.PhysicsShape = new Capsule(0.5f, 1);
             Client.ShapeIndex = World.Shapes.Add(Client.PhysicsShape);
             Client.PhysicsDescription = new CollidableDescription(Client.ShapeIndex, 0.1f);
             Client.PhysicsShape.ComputeInertia(1, out var Inertia);
             Vector3 SpawnLocation = new Vector3(Client.CharacterPosition.X, Client.CharacterPosition.Y + 2, Client.CharacterPosition.Z);
-            Client.ShapePose =  new RigidPose(SpawnLocation, Quaternion.Identity);
+            Client.ShapePose = new RigidPose(SpawnLocation, Quaternion.Identity);
             Client.ActivityDescription = new BodyActivityDescription(0.01f);
             Client.PhysicsBody = BodyDescription.CreateDynamic(Client.ShapePose, Inertia, Client.PhysicsDescription, Client.ActivityDescription);
             Client.BodyHandle = World.Bodies.Add(Client.PhysicsBody);
 
-            //Get the current list of all the other game clients who are already ingame
-            List<ClientConnection> OtherClients = ConnectionManager.GetInGameClientsExceptFor(ClientID);
-            //Tell all of these other clients to spawn this new character into their game worlds
-            foreach (ClientConnection OtherClient in OtherClients)
+            //Tell all other ingame clients they need to spawn this new player into their game worlds
+            foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(ClientID))
                 PlayerManagementPacketSender.SendAddOtherPlayer(OtherClient.NetworkID, Client.CharacterName, Client.CharacterPosition);
+
+            //Display a message showing that the users character has been spawned into the game world
+            MessageLog.Print(Client.CharacterName + " has entered into the game world at location " + Client.CharacterPosition.ToString());
         }
     }
 }

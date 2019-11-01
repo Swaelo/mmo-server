@@ -20,7 +20,7 @@ namespace Server.Networking.PacketHandlers
             string ChatMessage = Packet.ReadString();
 
             //Get the list of all the other game clients who are already ingame
-            List<ClientConnection> OtherClients = ConnectionManager.GetInGameClientsExceptFor(ClientID);
+            List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(ClientID);
 
             //Pass this chat message on to all the other clients that are ingame
             foreach (ClientConnection OtherClient in OtherClients)

@@ -6,6 +6,7 @@
 
 using System;
 using Server.Database;
+using Server.Logging;
 using Server.Networking.PacketSenders;
 
 namespace Server.Networking.PacketHandlers
@@ -115,15 +116,16 @@ namespace Server.Networking.PacketHandlers
             }
 
             //Make sure they have provided a matching username and password
-            if(!AccountsDatabase.IsPasswordCorrect(Username, Password))
+            if (!AccountsDatabase.IsPasswordCorrect(Username, Password))
             {
                 AccountManagementPacketSenders.SendAccountLoginReply(ClientID, false, "The password you entered was incorrect.");
                 return;
             }
 
-            //If everything all looks good, then we will grant the users account login request
+            //Everything looks good, grant the users account login request and display message showing the account has been logged into
             ConnectionManager.ActiveConnections[ClientID].AccountName = Username;
             AccountManagementPacketSenders.SendAccountLoginReply(ClientID, true, "Login request granted.");
+            MessageLog.Print(Username + " has logged in.");
         }
 
         //Handles a users account logout notification

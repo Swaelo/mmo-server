@@ -27,7 +27,7 @@ namespace Server.Networking.PacketHandlers
             Client.NewPosition = CharacterPosition;
 
             //Get a list of all the other ingame clients so we can share this clients new character position with them
-            List<ClientConnection> OtherInGameClients = ConnectionManager.GetInGameClientsExceptFor(ClientID);
+            List<ClientConnection> OtherInGameClients = ClientSubsetFinder.GetInGameClientsExceptFor(ClientID);
 
             //Loop through all of these other ingame clients, sending each of them this clients updated player location
             foreach(ClientConnection OtherClient in OtherInGameClients)

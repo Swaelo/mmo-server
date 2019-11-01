@@ -14,14 +14,14 @@ namespace Server.Networking.PacketSenders
 {
     public static class GameWorldStatePacketSender
     {
-        //Tells a client where all the other plaeyrs are in the world so they can be spawned in before they can enter the world
+        //Tells a client where all the other players are in the world so they can be spawned in before they can enter the world
         public static void SendActivePlayerList(int ClientID)
         {
             //Create a new NetworkPacket object to store the data for this active player list
             NetworkPacket Packet = new NetworkPacket();
 
             //Grab the list of all the other active game clients
-            List<ClientConnection> OtherClients = ConnectionManager.GetInGameClientsExceptFor(ClientID);
+            List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(ClientID);
 
             //Write the relevant data values into the packet data
             Packet.WriteType(ServerPacketType.ActivePlayerList);
