@@ -53,5 +53,13 @@ namespace Server.Networking.PacketSenders
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
         }
+
+        //Tells a client they have been added into the game world physics simulation and they may now start playing
+        public static void SendPlayerBegin(int ClientID)
+        {
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ServerPacketType.PlayerBegin);
+            PacketQueue.QueuePacket(ClientID, Packet);
+        }
     }
 }

@@ -145,5 +145,22 @@ namespace Server.Networking
             //Return the final list of all the other ingame clients
             return InGameClients;
         }
+
+        //Returns a list of all clients who have their WaitingToEnter flag set
+        public static List<ClientConnection> GetClientsReadyToEnter()
+        {
+            //Create a new list to store the client who are ready
+            List<ClientConnection> ReadyToEnterClients = new List<ClientConnection>();
+
+            //Loop through the entire list of clients, finding which ones are ready and adding those ones to the list
+            foreach(KeyValuePair<int, ClientConnection> Client in ConnectionManager.ActiveConnections)
+            {
+                if (Client.Value.WaitingToEnter)
+                    ReadyToEnterClients.Add(Client.Value);
+            }
+
+            //Return the final list of all the clients ready to enter the game
+            return ReadyToEnterClients;
+        }
     }
 }

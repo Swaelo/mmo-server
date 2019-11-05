@@ -29,7 +29,8 @@ namespace Server.Networking
         public PointInTime LastCommunication;   //The exact moment we last had communications with this client connection
 
         //Account / Character settings
-        public bool InGame = false; //Tracks if each client is actually in the game world with one of their characters
+        public bool WaitingToEnter = false; //Set when client is ready to enter the game, any with this flag set are added into the physics scene at the start of each update
+        public bool InGame = false; //Tracks if each client is actually in the game world with one of their characters, flagged after we have spawned them into the physics scene
         public string AccountName = "";  //The account this user is currently logged into
         public string CharacterName = "";    //The name of the character this user is currently playing with
         public Vector3 CharacterPosition = Vector3.Zero;   //The world position of the character this user is currently playing with
@@ -201,8 +202,15 @@ namespace Server.Networking
             //Put the network frame around the message and convert that to bytes
             byte[] PacketData = GetFrameFromString(PacketMessage);
             string PacketString = Encoding.UTF8.GetString(PacketData);
-            
-            DataStream.BeginWrite(PacketData, 0, PacketData.Length, null, null);
+
+            //Make sure the connection to this client is still open before we begin writing data to their stream
+            try { DataStream.BeginWrite(PacketData, 0, PacketData.Length, null, null); }
+            catch (IOException Exception)
+            {
+                //Catch IO Exception caused from trying to send packet to a dead client connection, mark them as needing to be cleaned up
+                MessageLog.Error(Exception, "Error sending packet data to client #" + NetworkID + ", their connection has been lost.");
+                ClientDead = true;
+            }
         }
 
         //Frames the message correctly so it can be sent to the client

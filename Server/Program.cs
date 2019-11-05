@@ -11,7 +11,6 @@ using ContentLoader;
 using ServerUtilities;
 using Server.Logic;
 using Server.World;
-using Server.Database;
 using Server.GameItems;
 using Server.Networking;
 using Server.Misc;
@@ -57,10 +56,6 @@ namespace Server
             string WindowsServiceName = ConnectionSettings.DocumentElement.SelectSingleNode("/root/WindowsServiceName").InnerText;
             string Username = ConnectionSettings.DocumentElement.SelectSingleNode("/root/Username").InnerText;
             string Password = ConnectionSettings.DocumentElement.SelectSingleNode("/root/Password").InnerText;
-
-            //Forcing server to remote connect to the database running on the dedicated server PC
-            if (!DatabaseManager.InitializeDatabaseConnection("203.221.43.175", 3306, "serverdatabase", "swaelo", "2beardmore"))
-                return false;
 
             //Load all the existing game items from the exported text file
             ItemInfoDatabase.LoadItemList("Content/MasterItemList.txt");

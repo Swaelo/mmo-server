@@ -6,20 +6,24 @@
 
 using System;
 using System.Numerics;
+using System.Collections.Generic;
 using BepuPhysics;
 using BepuPhysics.Collidables;
 using BepuUtilities;
 using BepuUtilities.Memory;
+using Quaternion = BepuUtilities.Quaternion;
 using OpenTK.Input;
 using ContentLoader;
 using ContentRenderer;
 using ContentRenderer.UI;
 using ServerUtilities;
+using Server.Logging;
 using Server.Logic;
 using Server.Interface;
 using Server.GameItems;
 using Server.Networking;
 using Server.Enums;
+using Server.Networking.PacketSenders;
 
 namespace Server.World
 {
@@ -240,6 +244,9 @@ namespace Server.World
             //Update the positions of any character colliders who have sent us a new position update since the last world update
             ConnectionManager.UpdateClientPositions(WorldSimulation);
 
+            //Add any new clients characters into the game world who have recently logged in
+            AddNewClients();
+
             //PacketQueue will automatically transmit all the queued outgoing packets to their target clients each communication interval
             PacketQueue.UpdateQueue(DeltaTime);
 
@@ -290,6 +297,39 @@ namespace Server.World
                 //Update the ConnectionsText object to contain this new ClientInformation string, render that to the UI and again offset the position value for the next client info string
                 Renderer.TextBatcher.Write(UIText.Clear().Append(ClientInformation), TextPosition, TextHeight, new Vector3(1), UIFont);
                 TextPosition.Y += TextHeight * 1.2f;
+            }
+        }
+
+        //Adds any clients character into the game world who have just logged in and are waiting to be added before they are allowed to start playing
+        private void AddNewClients()
+        {
+            //Fetch any clients that are waiting to be entered into the game world, add them into the physics scene then tell them they can start playing
+            foreach (ClientConnection ClientToAdd in ClientSubsetFinder.GetClientsReadyToEnter())
+            {
+                //Add a new collider into the physics scene to represent where this clients player character is located in the game world
+                ClientToAdd.PhysicsShape = new Capsule(0.5f, 1);
+                ClientToAdd.ShapeIndex = WorldSimulation.Shapes.Add(ClientToAdd.PhysicsShape);
+                ClientToAdd.PhysicsDescription = new CollidableDescription(ClientToAdd.ShapeIndex, 0.1f);
+                ClientToAdd.PhysicsShape.ComputeInertia(1, out var Inertia);
+                Vector3 SpawnLocation = new Vector3(ClientToAdd.CharacterPosition.X, ClientToAdd.CharacterPosition.Y + 2, ClientToAdd.CharacterPosition.Z);
+                ClientToAdd.ShapePose = new RigidPose(SpawnLocation, Quaternion.Identity);
+                ClientToAdd.ActivityDescription = new BodyActivityDescription(0.01f);
+                ClientToAdd.PhysicsBody = BodyDescription.CreateDynamic(ClientToAdd.ShapePose, Inertia, ClientToAdd.PhysicsDescription, ClientToAdd.ActivityDescription);
+                ClientToAdd.BodyHandle = WorldSimulation.Bodies.Add(ClientToAdd.PhysicsBody);
+
+                //Set this clients flags so they are now known to be ingame, and no longer waiting to be added
+                ClientToAdd.WaitingToEnter = false;
+                ClientToAdd.InGame = true;
+
+                //Tell this client they have been added into the game world and they may now start playing
+                PlayerManagementPacketSender.SendPlayerBegin(ClientToAdd.NetworkID);
+
+                //Tell all other ingame clients they need to have this new player spawned into the game worlds
+                foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(ClientToAdd.NetworkID))
+                    PlayerManagementPacketSender.SendAddOtherPlayer(OtherClient.NetworkID, ClientToAdd.CharacterName, ClientToAdd.CharacterPosition);
+
+                //Display a message showing that the clients character has been spawned into the game world
+                MessageLog.Print(ClientToAdd.CharacterName + " has entered into the game world at location " + ClientToAdd.CharacterPosition.ToString());
             }
         }
     }
