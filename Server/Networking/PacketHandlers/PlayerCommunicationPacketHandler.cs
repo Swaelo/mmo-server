@@ -5,6 +5,7 @@
 // ================================================================================================================================
 
 using System.Collections.Generic;
+using Server.Logging;
 using Server.Networking.PacketSenders;
 
 namespace Server.Networking.PacketHandlers
@@ -13,8 +14,15 @@ namespace Server.Networking.PacketHandlers
     {
         public static void HandleClientChatMessage(int ClientID, ref NetworkPacket Packet)
         {
-            //Get this clients information who send us this chat message
-            ClientConnection Client = ConnectionManager.ActiveConnections[ClientID];
+            CommunicationLog.LogIn(ClientID + " chat message");
+
+            //Fetch this ClientConnection and make sure they were able to be found
+            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            if (Client == null)
+            {
+                MessageLog.Print("ERROR: Client not found.");
+                return;
+            }
 
             //Extract the message content from the network packet
             string ChatMessage = Packet.ReadString();

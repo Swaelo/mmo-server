@@ -23,8 +23,11 @@ namespace Server.Misc
 
             //Extract each of the requested bytes, storing each of them into the new array
             int CurrentIndex = StartIndex;
-            for (int i = 0; i < ByteCount; i++)
-                ByteValues[i] = ByteArray[CurrentIndex++];
+            for(int i = 0; i < ByteCount; i++)
+            {
+                ByteValues[i] = ByteArray[CurrentIndex];
+                CurrentIndex += 1;
+            }
 
             //Return the array of requested byte values
             return ByteValues;

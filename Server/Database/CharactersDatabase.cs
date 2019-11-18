@@ -7,6 +7,8 @@
 using System.Numerics;
 using MySql.Data.MySqlClient;
 using Server.Data;
+using Server.Logging;
+using Quaternion = BepuUtilities.Quaternion;
 
 namespace Server.Database
 {
@@ -76,7 +78,11 @@ namespace Server.Database
             string CharacterDataQuery = "SELECT * FROM characters WHERE CharacterName='" + CharacterName + "'";
             CharacterData.Account = CommandManager.ReadStringValue(CharacterDataQuery, "OwnerAccountName", "Reading " + CharacterName + "s OwnerAccountName");
             CharacterData.Position = CommandManager.ReadVectorValue(CharacterDataQuery, "Reading " + CharacterName + "s world location values");
+            CharacterData.Rotation = CommandManager.ReadQuaternionValue(CharacterDataQuery, "Reading " + CharacterName + "s world rotation values");
             CharacterData.Name = CharacterName;
+            CharacterData.CameraZoom = CommandManager.ReadFloatValue(CharacterDataQuery, "CameraZoom", "Reading " + CharacterName + "s camera zoom distance value");
+            CharacterData.CameraXRotation = CommandManager.ReadFloatValue(CharacterDataQuery, "CameraXRotation", "Reading " + CharacterName + "s camera X rotation value");
+            CharacterData.CameraYRotation = CommandManager.ReadFloatValue(CharacterDataQuery, "CameraYRotation", "Reading " + CharacterName + "s camera Y rotation value");
             CharacterData.Experience = CommandManager.ReadIntegerValue(CharacterDataQuery, "ExperiencePoints", "Reading " + CharacterName + "s ExperiencePoints value");
             CharacterData.ExperienceToLevel = CommandManager.ReadIntegerValue(CharacterDataQuery, "ExperienceToLevel", "Reading " + CharacterName + "s ExperienceToLevel value");
             CharacterData.Level = CommandManager.ReadIntegerValue(CharacterDataQuery, "Level", "Reading " + CharacterName + "s Level value");
@@ -86,12 +92,17 @@ namespace Server.Database
             return CharacterData;
         }
 
-        //Backs up the location of a player character into the database
-        public static void SaveCharacterLocation(string CharacterName, Vector3 CharacterLocation)
+        //Backs up the position/rotation values of a players character into the database
+        public static void SaveCharacterValues(string CharacterName, Vector3 CharacterPosition, Quaternion CharacterRotation, float CameraZoom, float CameraXRotation, float CameraYRotation)
         {
-            //Define a new query/command to store the characters updated position values into the database
-            string CharacterLocationQuery = "UPDATE characters SET XPosition='" + CharacterLocation.X + "', YPosition='" + CharacterLocation.Y + "', ZPosition='" + CharacterLocation.Z + "' WHERE CharacterName='" + CharacterName + "'";
-            CommandManager.ExecuteNonQuery(CharacterLocationQuery, "Backing up " + CharacterName + "s world position values");
+            //Define a new query/command to store the characters updated position/rotation and camera zoom/rotation values into the database
+            string CharacterValueQuery = "UPDATE characters SET XPosition='" + CharacterPosition.X + "', YPosition='" + CharacterPosition.Y + "', ZPosition='" + CharacterPosition.Z +
+                "', XRotation='" + CharacterRotation.X + "', YRotation='" + CharacterRotation.Y + "', ZRotation='" + CharacterRotation.Z + "', WRotation='" + CharacterRotation.W +
+                "', CameraZoom='" + CameraZoom + "', CameraXRotation='" + CameraXRotation + "', CameraYRotation='" + CameraYRotation +
+                "' WHERE CharacterName='" + CharacterName + "'";
+
+            //Use the command manager to execute the query updating the values into the database
+            CommandManager.ExecuteNonQuery(CharacterValueQuery, "Backing up " + CharacterName + "s world position/rotation and camera zoom/rotation values");
         }
     }
 }

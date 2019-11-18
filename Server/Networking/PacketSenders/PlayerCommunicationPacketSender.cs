@@ -4,6 +4,8 @@
 // Author:	    Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
+using Server.Logging;
+
 namespace Server.Networking.PacketSenders
 {
     public static class PlayerCommunicationPacketSender
@@ -11,6 +13,8 @@ namespace Server.Networking.PacketSenders
         //Sends a chat message out to be displayed in a client chat window
         public static void SendChatMessage(int ClientID, string Sender, string Message)
         {
+            CommunicationLog.LogOut(ClientID + " player chat message");
+
             //Create a new NetworkPacket to store the data for this chat message
             NetworkPacket Packet = new NetworkPacket();
 

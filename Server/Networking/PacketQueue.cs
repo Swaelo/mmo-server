@@ -5,13 +5,14 @@
 // ================================================================================================================================
 
 using System.Collections.Generic;
+using Server.Logging;
 
 namespace Server.Networking
 {
     public static class PacketQueue
     {
-        private static float CommunicationInterval = 1.0f; //How often the outgoing packets list will be emptied and transmitted to the target game 
-        private static float NextCommunication = 1.0f; //time remaining before the next communication interval occurs
+        private static float CommunicationInterval = 0.1f; //How often the outgoing packets list will be emptied and transmitted to the target game 
+        private static float NextCommunication = 0.1f; //time remaining before the next communication interval occurs
         private static Dictionary<int, List<NetworkPacket>> OutgoingPackets = new Dictionary<int, List<NetworkPacket>>();   //List of outgoing packets for each of the current client connections, each mapped to their network ID
 
         //Adds a network packet onto one of the clients outgoing packet queues
@@ -67,9 +68,16 @@ namespace Server.Networking
                 //If the final string actually contains some data then we can now transmit it to its target game client
                 if (TotalData != "")
                 {
-                    //Before we send the data we should first check if this client key still exists in the dictionary
-                    if(ConnectionManager.ActiveConnections.ContainsKey(OutgoingQueue.Key))
-                        ConnectionManager.ActiveConnections[OutgoingQueue.Key].SendPacket(TotalData);
+                    //Fetch the ClientConnection and make sure we could find them
+                    ClientConnection Client = ConnectionManager.GetClientConnection(OutgoingQueue.Key);
+                    if(Client == null)
+                    {
+                        MessageLog.Print("ERROR: Client not found.");
+                        continue;
+                    }
+
+                    //Send the data to the client
+                    Client.SendPacket(TotalData);
                 }
             }
 

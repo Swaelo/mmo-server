@@ -19,6 +19,7 @@ using ContentRenderer.UI;
 using ServerUtilities;
 using Server.Logging;
 using Server.Logic;
+using Server.Database;
 using Server.Interface;
 using Server.GameItems;
 using Server.Networking;
@@ -40,7 +41,13 @@ namespace Server.World
         private ContentArchive Content = null;  //Assets used during the servers runtime
         private SimulationTimeSamples TimeSamples = null;   //Timesamples used to evaluate and display performance metric on the graph during runtime
         private Font UIFont = null; //Font type used to draw strings to the application window
-        private TextBuilder UIText; //Used to create our Font for drawing strings to the UI
+        private TextBuilder UIText; //For drawing the performance graph info to the UI
+        private TextBuilder LogText;    //For drawing debug log messages to the UI
+        private TextBuilder PacketsOutText; //For drawing outgoing packet messages to the UI
+        private TextBuilder PacketsInText;  //For drawing incoming packet messages to the UI
+        private TextBuilder ActiveClientsText; //For showing how many client connections are currently active on the UI
+        private float UITextSize = 16;  //Size of the font used to display messages to the UI
+        private Vector3 UITextColor = new Vector3(1);
 
         CameraMoveSpeedState CameraSpeedState = CameraMoveSpeedState.Regular;   //The current speed value being used by the scene camera while monitoring the game world during runtime
         CharacterControllers Characters;    //Set of characters currently active in the game world
@@ -84,6 +91,10 @@ namespace Server.World
             
             //Setup text builder for rendering UI text components
             UIText = new TextBuilder(1024);
+            LogText = new TextBuilder(2048);
+            PacketsInText = new TextBuilder(1024);
+            PacketsOutText = new TextBuilder(1024);
+            ActiveClientsText = new TextBuilder(512);
 
             //Make sure the window size is correct relative to the current resolution
             OnResize(ApplicationWindow.Resolution);
@@ -103,6 +114,11 @@ namespace Server.World
                 //Close down the server when escape key is pressed
                 if (UserControls.Exit.WasTriggered(UserInput))
                 {
+                    //The location/rotation of every character currently logged into the game world needs to be backed up into the database before the server is shut down
+                    List<ClientConnection> ActiveClients = ClientSubsetFinder.GetInGameClients();
+                    foreach (ClientConnection ActiveClient in ActiveClients)
+                        CharactersDatabase.SaveCharacterValues(ActiveClient.CharacterName, ActiveClient.CharacterPosition, ActiveClient.CharacterRotation, ActiveClient.CameraZoom, ActiveClient.CameraXRotation, ActiveClient.CameraYRotation);
+
                     ApplicationWindow.Close();
                     return;
                 }
@@ -261,7 +277,8 @@ namespace Server.World
             Renderer.Shapes.ClearInstances();
             Renderer.Lines.ClearInstances();
 
-            DisplayActiveConnections(Renderer);
+            //Draws various text message windows to the UI displaying a range of useful information
+            RenderUI(Renderer);
 
             //Update the characters camera if its active
             if (CharacterActive)
@@ -275,29 +292,36 @@ namespace Server.World
             Renderer.Lines.Extract(WorldSimulation.Bodies, WorldSimulation.Solver, WorldSimulation.BroadPhase, ShowConstraints, ShowContacts, ShowBoundingBoxes, ThreadDispatcher);
         }
 
-        //Displays a list of all the active clients and their current status onto the window UI
-        private void DisplayActiveConnections(Renderer Renderer)
+        private void RenderUI(Renderer Renderer)
         {
-            //Define the size of the font and the location where it will be rendered to
-            float TextHeight = 16;
-            Vector2 TextPosition = new Vector2(25, 25);
+            //Define the locations where each message log will start rendering its messages/information to
+            Vector2 LogMsgPos = new Vector2(10, 750); //Bottom-Left Corner = Debug Log
+            Vector2 PacketOutPos = new Vector2(800, 750); //Bottom-Right Corner = Outgoing Packets
+            Vector2 PacketInPos = new Vector2(550, 750);    //Bottom-Middle = Incoming Packets
 
-            //Add an initial title line, display how many active connections exist. Render it to the UI and offset the position value for the next string
-            UIText.Clear().Append("--- Active Connections: " + ConnectionManager.ActiveConnections.Count.ToString() + " ---");
-            Renderer.TextBatcher.Write(UIText, TextPosition, TextHeight, new Vector3(1), UIFont);
-            TextPosition.Y += TextHeight * 1.2f;
+            //Get the lists of messages to be displayed in each of the message windows
+            string[] LogMsgs = MessageLog.GetMessages();
+            string[] PacketOutMsgs = CommunicationLog.GetOutgoingMessages();
+            string[] PacketInMsgs = CommunicationLog.GetIncomingMessages();
 
-            //Loop through each of the active client connections, displaying a new line to the UI showing that clients current status
-            foreach (ClientConnection ActiveClient in ClientSubsetFinder.GetAllClients())
+            //Loop through to display the maximum 10 lines of information from each message log to be displayed
+            for(int i = 0; i < 10; i++)
             {
-                //Construct a new string containing all of this clients relevant connection status information
-                string ClientInformation = "NetworkID:" + ActiveClient.NetworkID + "   Account:" + (ActiveClient.AccountName == "" ? "N/A" : ActiveClient.AccountName) + "   Character:" +
-                    (ActiveClient.InGame ? ActiveClient.CharacterName : "N/A") + "   Location:" + (ActiveClient.InGame ? ActiveClient.CharacterPosition.ToString() : "N/A");
+                //Draw the next line for each message window
+                Renderer.TextBatcher.Write(LogText.Clear().Append(LogMsgs[i]), LogMsgPos, UITextSize, UITextColor, UIFont);
+                Renderer.TextBatcher.Write(PacketsOutText.Clear().Append(PacketOutMsgs[i]), PacketOutPos, UITextSize, UITextColor, UIFont);
+                Renderer.TextBatcher.Write(PacketsInText.Clear().Append(PacketInMsgs[i]), PacketInPos, UITextSize, UITextColor, UIFont);
 
-                //Update the ConnectionsText object to contain this new ClientInformation string, render that to the UI and again offset the position value for the next client info string
-                Renderer.TextBatcher.Write(UIText.Clear().Append(ClientInformation), TextPosition, TextHeight, new Vector3(1), UIFont);
-                TextPosition.Y += TextHeight * 1.2f;
+                //Offset the Y position values so the next lines of each window are rendered in the correct locations
+                LogMsgPos.Y -= UITextSize * 1.2f;
+                PacketOutPos.Y -= UITextSize * 1.2f;
+                PacketInPos.Y -= UITextSize * 1.2f;
             }
+
+            //Finally, in the bottom-right corner, display how many clients are currently connected to the server
+            Vector2 ActiveClientsPos = new Vector2(10, 25); //Top-Left Corner = Player Count
+            int ActiveConnections = ConnectionManager.GetClientConnections().Count;
+            Renderer.TextBatcher.Write(ActiveClientsText.Clear().Append("Clients Connected: " + ActiveConnections.ToString()), ActiveClientsPos, UITextSize, UITextColor, UIFont);
         }
 
         //Adds any clients character into the game world who have just logged in and are waiting to be added before they are allowed to start playing
@@ -326,10 +350,10 @@ namespace Server.World
 
                 //Tell all other ingame clients they need to have this new player spawned into the game worlds
                 foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(ClientToAdd.NetworkID))
-                    PlayerManagementPacketSender.SendAddOtherPlayer(OtherClient.NetworkID, ClientToAdd.CharacterName, ClientToAdd.CharacterPosition);
+                    PlayerManagementPacketSender.SendAddOtherPlayer(OtherClient.NetworkID, ClientToAdd.CharacterName, ClientToAdd.CharacterPosition, ClientToAdd.CharacterRotation);
 
                 //Display a message showing that the clients character has been spawned into the game world
-                MessageLog.Print(ClientToAdd.CharacterName + " has entered into the game world at location " + ClientToAdd.CharacterPosition.ToString());
+                MessageLog.Print(ClientToAdd.CharacterName + " has entered into the game world");
             }
         }
     }

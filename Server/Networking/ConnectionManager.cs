@@ -19,7 +19,7 @@ namespace Server.Networking
     public static class ConnectionManager
     {
         public static TcpListener NewClientListener;    //Receives new incoming client connections
-        public static Dictionary<int, ClientConnection> ActiveConnections = new Dictionary<int, ClientConnection>();    //Each active client connection mapped to their network ID
+        private static Dictionary<int, ClientConnection> ActiveConnections = new Dictionary<int, ClientConnection>();    //Each active client connection mapped to their network ID
 
         public static float ConnectionCheckInterval = 2.5f; //How often to check for dead client connections
         public static float NextConnectionCheck = 2.5f; //How long until we need to check for dead client connections again
@@ -33,6 +33,24 @@ namespace Server.Networking
             NewClientListener = new TcpListener(IPAddress.Parse(ServerIP), 5500);
             NewClientListener.Start();
             NewClientListener.BeginAcceptTcpClient(new AsyncCallback(NewClientConnected), null);
+        }
+
+        //Returns the entire list of ClientConnections
+        public static List<ClientConnection> GetClientConnections()
+        {
+            List<ClientConnection> ClientConnections = new List<ClientConnection>();
+            foreach (KeyValuePair<int, ClientConnection> ClientConnection in ActiveConnections)
+                ClientConnections.Add(ClientConnection.Value);
+            return ClientConnections;
+        }
+
+        //Returns a ClientConnection from its NetworkID
+        public static ClientConnection GetClientConnection (int ClientID)
+        {
+            //Return null if theres no client with this ID number
+            if (!ActiveConnections.ContainsKey(ClientID))
+                return null;
+            return ActiveConnections[ClientID];
         }
 
         //ASync event triggered when a new client has connected to the server, sets them up and stored them in the connections dictionary
@@ -90,11 +108,13 @@ namespace Server.Networking
             //Loop through all of the dead clients who need to be cleaned up
             foreach(ClientConnection DeadClient in DeadClients)
             {
+                MessageLog.Print(DeadClient.NetworkID + " client connection was cleaned up");
+
                 //Check each DeadClient to see if they have one of their characters currently active in the game world
                 if(DeadClient.InGame)
                 {
-                    //Save this characters location into the database
-                    CharactersDatabase.SaveCharacterLocation(DeadClient.CharacterName, DeadClient.CharacterPosition);
+                    //Save this characters values into the database
+                    CharactersDatabase.SaveCharacterValues(DeadClient.CharacterName, DeadClient.CharacterPosition, DeadClient.CharacterRotation, DeadClient.CameraZoom, DeadClient.CameraXRotation, DeadClient.CameraYRotation);
 
                     //Remove the characters body from the servers world physics simulation
                     WorldSimulation.Bodies.Remove(DeadClient.BodyHandle);
@@ -130,19 +150,16 @@ namespace Server.Networking
             //Loop through them all so we can apply their new position values to their physics objects in the world simulation
             foreach(ClientConnection UpdatedClient in UpdatedClients)
             {
-                //Store the clients new position value in their ClientConnection object
-                UpdatedClient.CharacterPosition = UpdatedClient.NewPosition;
                 //Use the NewPosition value to reassign a new ShapePose for the clients physics body
-                UpdatedClient.ShapePose = new RigidPose(UpdatedClient.CharacterPosition, Quaternion.Identity);
+                UpdatedClient.ShapePose = new RigidPose(UpdatedClient.CharacterPosition, UpdatedClient.CharacterRotation);
                 //Calculate a new Inertia value for the clients physics body
                 UpdatedClient.PhysicsShape.ComputeInertia(1, out var Inertia);
                 //Use the new ShapePose and Inertia values to assign a new BodyDescription to the client
                 UpdatedClient.PhysicsBody = BodyDescription.CreateDynamic(UpdatedClient.ShapePose, Inertia, UpdatedClient.PhysicsDescription, UpdatedClient.ActivityDescription);
                 //Apply this new body description to the clients physics body inside the gameworld physics simulation
                 World.Bodies.ApplyDescription(UpdatedClient.BodyHandle, ref UpdatedClient.PhysicsBody);
-
                 //Reset the clients updated position flag now that their physics body has been moved to the new position
-                UpdatedClient.NewPositionReceived = false;
+                UpdatedClient.NewPosition = false;
             }
         }
         

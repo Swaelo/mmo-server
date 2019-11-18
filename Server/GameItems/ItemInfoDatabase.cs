@@ -26,7 +26,6 @@ namespace Server.GameItems
             string FilePath = WorkingDirectory + "/" + MasterItemListFile;
 
             //Display what filepath is being used then load that file into memory
-            MessageLog.Print("Loading item list from: " + FilePath);
             string[] FileLines = System.IO.File.ReadAllLines(FilePath);
 
             //Loop through all the lines, processing one at a time
@@ -46,9 +45,6 @@ namespace Server.GameItems
                 //Store the new item definition into the dictionary with all the others
                 ItemInfoList.Add(NewItem.ItemNumber, NewItem);
             }
-
-            //Print a message to verify all items information was loaded from the file
-            MessageLog.Print(ItemInfoList.Count + " items information was loaded after processing " + FileLines.Length + " lines of the ItemList file.");
         }
 
         /// <summary>

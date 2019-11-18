@@ -20,6 +20,16 @@ namespace Server.Misc
             return Convert.ToInt32(BinaryString, 2);
         }
 
+        public static UInt16 BinaryStringToUInt16(string BinaryString)
+        {
+            return Convert.ToUInt16(BinaryString, 2);
+        }
+
+        public static UInt64 BinaryStringToUInt64(string BinaryString)
+        {
+            return Convert.ToUInt64(BinaryString, 64);
+        }
+
         /// <summary>
         /// Converts an array of bit values into a binary string
         /// </summary>

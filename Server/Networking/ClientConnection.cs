@@ -15,6 +15,8 @@ using BepuPhysics.Collidables;
 using Server.Misc;
 using Server.Time;
 using Server.Logging;
+using Server.Enums;
+using Quaternion = BepuUtilities.Quaternion;
 
 namespace Server.Networking
 {
@@ -34,9 +36,14 @@ namespace Server.Networking
         public string AccountName = "";  //The account this user is currently logged into
         public string CharacterName = "";    //The name of the character this user is currently playing with
         public Vector3 CharacterPosition = Vector3.Zero;   //The world position of the character this user is currently playing with
-        public Quaternion CharacterRotation;    //Current rotation of the character this user is currently playing with
-        public bool NewPositionReceived = false;    //Flag set when a new updated position value has been recieved from the game client
-        public Vector3 NewPosition = Vector3.Zero;  //New updated position value sent to use from the game client
+        public Vector3 CharacterMovement = Vector3.Zero;
+        public Quaternion CharacterRotation = Quaternion.Identity;    //Current rotation of the character this user is currently playing with
+        public bool NewPosition = false;    //Set when clients send us a new location value so we know to update them in the physics scene
+
+        //Players camera zoom distance / rotation settings
+        public float CameraZoom = 0f;
+        public float CameraXRotation = 0f;
+        public float CameraYRotation = 0f;
 
         //Physics settings
         public Capsule PhysicsShape;    //The character collider physics shape objeect in the world simulation
@@ -84,10 +91,7 @@ namespace Server.Networking
             byte[] PacketBuffer = new byte[PacketSize];
             Array.Copy(DataBuffer, PacketBuffer, PacketSize);
             DataBuffer = new byte[NetworkConnection.Available];
-
-            //Make sure the socket connection is still open before we try reading more data from the stream
-            try { DataStream.BeginRead(DataBuffer, 0, DataBuffer.Length, ReadPacket, null); }
-            catch (IOException Exception) { MessageLog.Error(Exception, "Error trying to read data from the network stream"); }
+            DataStream.BeginRead(DataBuffer, 0, DataBuffer.Length, ReadPacket, null);
 
             //Upgrade this clients connection if it is brand new
             if (!ConnectionUpgraded)
@@ -119,24 +123,25 @@ namespace Server.Networking
                 int DecodingMaskIndex = 2;
                 int PayloadDataIndex = 6;
 
-                //With a length between 0-125 we continue as normal
-                //With a length equal to 126, we read bytes 3-4 to find the actual length
+                //PayloadLength between 0-125 represents the actual length value
+                //With a length equal to 126, we read bytes 2-3 to find the length value
                 if (PayloadLength == 126)
                 {
-                    byte[] PayloadBytes = DataExtractor.ReadBytes(PacketBuffer, 3, 4);
-                    PayloadBinary = BinaryConverter.ByteArrayToBinaryString(PayloadBytes);
+                    //Bytes 2 and 3 interpreted as 16bit unsigned integer give the PayloadLength
+                    byte[] LengthBytes = DataExtractor.ReadBytes(PacketBuffer, 2, 3);
+                    PayloadBinary = BinaryConverter.ByteArrayToBinaryString(LengthBytes);
                     PayloadLength = BinaryConverter.BinaryStringToDecimal(PayloadBinary);
                     //Increment the DecodingMask and PayloadData indices by 2, as 3,4 contained the payload length
                     DecodingMaskIndex += 2;
                     PayloadDataIndex += 2;
                 }
-                //With a length equal to 127, we read bytes 3-10 to find the actual length
-                else if (PayloadLength == 127)
+                //Write a length equal to 127, we read bytes 2-9 to find the length value
+                else if(PayloadLength == 127)
                 {
-                    byte[] PayloadBytes = DataExtractor.ReadBytes(PacketBuffer, 3, 10);
-                    PayloadBinary = BinaryConverter.ByteArrayToBinaryString(PayloadBytes);
+                    //Bytes 2-9 interpreted as a 64bit unsigned integer give the PayloadLength
+                    byte[] LengthBytes = DataExtractor.ReadBytes(PacketBuffer, 2, 9);
+                    PayloadBinary = BinaryConverter.ByteArrayToBinaryString(LengthBytes);
                     PayloadLength = BinaryConverter.BinaryStringToDecimal(PayloadBinary);
-                    //Increment the DecodingMask and PayloadData indices by 8, as bytes 3-10 contained the payload length
                     DecodingMaskIndex += 8;
                     PayloadDataIndex += 8;
                 }

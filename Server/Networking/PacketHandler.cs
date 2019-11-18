@@ -5,6 +5,7 @@
 // ================================================================================================================================
 
 using System.Collections.Generic;
+using Server.Logging;
 using Server.Networking.PacketHandlers;
 
 namespace Server.Networking
@@ -47,14 +48,18 @@ namespace Server.Networking
             PacketHandlers.Add(ClientPacketType.EnterWorldRequest, GameWorldStatePacketHandler.HandleEnterWorldRequest);
             PacketHandlers.Add(ClientPacketType.NewPlayerReady, GameWorldStatePacketHandler.HandleNewPlayerReady);
 
-            //Register player management handlers into the dictionary
-            PacketHandlers.Add(ClientPacketType.PlayerUpdate, PlayerManagementPacketHandler.HandlePlayerUpdate);
+            //Register functions for handling players Position/Rotation/Movement value updates
+            PacketHandlers.Add(ClientPacketType.CharacterPositionUpdate, PlayerManagementPacketHandler.HandlePositionUpdate);
+            PacketHandlers.Add(ClientPacketType.CharacterRotationUpdate, PlayerManagementPacketHandler.HandleRotationUpdate);
+            PacketHandlers.Add(ClientPacketType.CharacterMovementUpdate, PlayerManagementPacketHandler.HandleMovementUpdate);
 
             //Register miscellaneous packet handers into the dictionary
             PacketHandlers.Add(ClientPacketType.StillAlive, MiscellaneousPacketHandler.HandleStillAliveAlert);
 
             //Map player communication handlers into the dictionary
             PacketHandlers.Add(ClientPacketType.PlayerChatMessage, PlayerCommunicationPacketHandler.HandleClientChatMessage);
+
+            PacketHandlers.Add(ClientPacketType.CameraSettings, PlayerManagementPacketHandler.HandlePlayerCameraUpdate);
         }
     }
 }

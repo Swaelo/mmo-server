@@ -14,12 +14,18 @@ namespace Server.Logging
     public class MessageLog
     {
         private static bool LoggerInitialized = false;  //Tracks whether the message logger has been setup yet or not
+        private static string[] LogMessages; //The last 10 messages which have been sent to the log
 
         //Initializes the Logger object with a new .log output file
         private static void Initialize()
         {
             //Use the current system time to create a new filename where debug/crash messages will be saved to for this lifetime of the application
             string LogFileName = "logs//ServerLog" + DateTime.Now.ToString("dd-MM-yyyy-h-mm-tt") + ".txt";
+
+            //Set LogMessages as a list of 10 empty strings
+            LogMessages = new string[10];
+            for (int i = 0; i < 10; i++)
+                LogMessages[i] = "";
 
             //Initialize the Logger object with this new filename
             Log.Logger = new LoggerConfiguration()
@@ -32,12 +38,36 @@ namespace Server.Logging
             LoggerInitialized = true;
         }
 
+        //Moves everything in LogMessages back 1 line, then stores the new message at the front
+        private static void StoreMessage(string Message)
+        {
+            //Move all the previous messages back 1 line
+            for (int i = 9; i > 0; i--)
+                LogMessages[i] = LogMessages[i - 1];
+
+            //Store new message in the first line
+            LogMessages[0] = Message;
+        }
+
+        //Returns the current list of the 10 previous message to have been sent to the log
+        public static string[] GetMessages()
+        {
+            //If the logger has yet to be initialized we need to set it up first
+            if (!LoggerInitialized)
+                Initialize();
+
+            return LogMessages;
+        }
+
         //Outputs a new to the console window, and also saves the message into the active .log output file
         public static void Print(string Message)
         {
             //If the logger has yet to be initialized we need to set it up first
             if (!LoggerInitialized)
                 Initialize();
+
+            //Store the message for window rendering
+            StoreMessage(Message);
 
             //The logger is now setup (or already has been previously), now we just add the new message to it
             Log.Debug(Message);
@@ -50,6 +80,9 @@ namespace Server.Logging
             if (!LoggerInitialized)
                 Initialize();
 
+            //Store the message for window rendering
+            StoreMessage(Error.Message + " " + Information);
+
             //Add the error information to the log file
             Log.Error(Error, Information);
         }
@@ -60,6 +93,20 @@ namespace Server.Logging
             //Setup the logger if it isnt ready yet
             if (!LoggerInitialized)
                 Initialize();
+
+            //Store the message for window rendering
+            StoreMessage(Error.Message + " " + Information);
+
+            Log.Error(Error, Information);
+        }
+
+        //Overload of Error for passing in IndexOutOfRangeException
+        public static void Error(IndexOutOfRangeException Error, string Information)
+        {
+            if (!LoggerInitialized)
+                Initialize();
+
+            StoreMessage(Error.Message + " " + Information);
 
             Log.Error(Error, Information);
         }

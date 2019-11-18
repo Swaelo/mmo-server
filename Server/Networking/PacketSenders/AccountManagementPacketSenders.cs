@@ -6,6 +6,7 @@
 
 using Server.Data;
 using Server.Database;
+using Server.Logging;
 
 namespace Server.Networking.PacketSenders
 {
@@ -19,6 +20,8 @@ namespace Server.Networking.PacketSenders
         /// <param name="ReplyMessage">Details what happened if the request was denied</param>
         public static void SendAccountLoginReply(int ClientID, bool LoginSuccess, string ReplyMessage)
         {
+            CommunicationLog.LogOut(ClientID + " account login reply");
+
             //Create a new NetworkPacket object to store the data for this account login reply
             NetworkPacket Packet = new NetworkPacket();
 
@@ -39,6 +42,8 @@ namespace Server.Networking.PacketSenders
         /// <param name="ReplyMessage">What went wrong if the request was denied</param>
         public static void SendAccountRegistrationReply(int ClientID, bool RegistrationSuccess, string ReplyMessage)
         {
+            CommunicationLog.LogOut(ClientID + " account registration reply");
+
             //Create a new NetworkPacket object to store the data for this account login reply
             NetworkPacket Packet = new NetworkPacket();
 
@@ -58,27 +63,33 @@ namespace Server.Networking.PacketSenders
         /// <param name="AccountName">The account the client is logged into</param>
         public static void SendCharacterDataReply(int ClientID, string AccountName)
         {
+            CommunicationLog.LogOut(ClientID + " character data reply");
+
             //Create a new NetworkPacket object to store the data for this account login reply
             NetworkPacket Packet = new NetworkPacket();
 
-            //Write the relevant data values into the packet data
+            //Write the packet type and number of existing characters this user currently has
             Packet.WriteType(ServerPacketType.CharacterDataReply);
             int CharacterCount = CharactersDatabase.GetCharacterCount(AccountName);
             Packet.WriteInt(CharacterCount);
 
-            //Loop through and write each characters information into the packet data
+            //Loop through all of their characters and write each ones information into the packet data
             for(int i = 0; i < CharacterCount; i++)
             {
-                //Grab the data values for the next character in this clients account
+                //Get each characters name from the database, then use that to fetch the rest of that characters data from the database also
                 string CharacterName = CharactersDatabase.GetCharacterName(AccountName, i + 1);
                 CharacterData CharacterData = CharactersDatabase.GetCharacterData(CharacterName);
 
                 //Write all of this characters information into the packet data
                 Packet.WriteString(CharacterName);
                 Packet.WriteVector3(CharacterData.Position);
+                Packet.WriteQuaternion(CharacterData.Rotation);
+                Packet.WriteFloat(CharacterData.CameraZoom);
+                Packet.WriteFloat(CharacterData.CameraXRotation);
+                Packet.WriteFloat(CharacterData.CameraYRotation);
             }
 
-            //Add this packet to the target clients outgoing packet queue
+            //Add this to the packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
         }
 
@@ -90,6 +101,8 @@ namespace Server.Networking.PacketSenders
         /// <param name="ReplyMessage">What went wrong if the request was denied</param>
         public static void SendCreateCharacterReply(int ClientID, bool CreationSuccess, string ReplyMessage)
         {
+            CommunicationLog.LogOut(ClientID + " character creation reply");
+
             //Create a new NetworkPacket object to store the data for this account login reply
             NetworkPacket Packet = new NetworkPacket();
 

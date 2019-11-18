@@ -16,12 +16,12 @@ namespace Server.Networking
             //Create a new list to store all the dead clients in
             List<ClientConnection> UpdatedClients = new List<ClientConnection>();
 
-            //Loop through the entire dictionary of client connections
-            foreach (KeyValuePair<int, ClientConnection> Connection in ConnectionManager.ActiveConnections)
+            //Fetch the entire list of current client connections and loop through them all
+            List<ClientConnection> ClientConnections = ConnectionManager.GetClientConnections();
+            foreach(ClientConnection ClientConnection in ClientConnections)
             {
-                //Add them to the list if they have been flagged as having a new position value
-                if (Connection.Value.NewPositionReceived)
-                    UpdatedClients.Add(Connection.Value);
+                if (ClientConnection.NewPosition)
+                    UpdatedClients.Add(ClientConnection);
             }
 
             //Return the final list of all the dead clients
@@ -34,12 +34,13 @@ namespace Server.Networking
             //Create a new list to store all the dead clients in
             List<ClientConnection> DeadClients = new List<ClientConnection>();
 
-            //Loop through the entire dictionary of client connections
-            foreach (KeyValuePair<int, ClientConnection> Connection in ConnectionManager.ActiveConnections)
+            //Fetch the entire list of current clients and loop through them all
+            List<ClientConnection> ClientConnections = ConnectionManager.GetClientConnections();
+            foreach(ClientConnection ClientConnection in ClientConnections)
             {
                 //Add them to the list if they have been flagged as dead
-                if (Connection.Value.ClientDead)
-                    DeadClients.Add(Connection.Value);
+                if (ClientConnection.ClientDead)
+                    DeadClients.Add(ClientConnection);
             }
 
             //Return the final list of all the dead clients
@@ -52,30 +53,17 @@ namespace Server.Networking
             //Create a new list to store all the living client connections
             List<ClientConnection> LivingClients = new List<ClientConnection>();
 
-            //Loop through the entire dictionary of active client connections
-            foreach (KeyValuePair<int, ClientConnection> Connection in ConnectionManager.ActiveConnections)
+            //Fetch the entire list of current clients and loop through them all
+            List<ClientConnection> ClientConnections = ConnectionManager.GetClientConnections();
+            foreach (ClientConnection ClientConnection in ClientConnections)
             {
                 //Add them to the list if they have not been flagged as dead
-                if (!Connection.Value.ClientDead)
-                    LivingClients.Add(Connection.Value);
+                if (!ClientConnection.ClientDead)
+                    LivingClients.Add(ClientConnection);
             }
 
             //Return the final list of all the living clients
             return LivingClients;
-        }
-        
-        //Returns all of the active client connections in a List format
-        public static List<ClientConnection> GetAllClients()
-        {
-            //Create a new list to place all the clients into after taking them from the dictionary
-            List<ClientConnection> Clients = new List<ClientConnection>();
-
-            //Loop through the entire dictionary, placing each client object into the new list
-            foreach (KeyValuePair<int, ClientConnection> Connection in ConnectionManager.ActiveConnections)
-                Clients.Add(Connection.Value);
-
-            //Return the final list of clients
-            return Clients;
         }
 
         //Returns all of the active client connections except for 1 with the matching ClientID that is provided
@@ -84,10 +72,14 @@ namespace Server.Networking
             //Create a new list to place all the clients into after taking them from the dictionary
             List<ClientConnection> OtherClients = new List<ClientConnection>();
 
-            //Loop through the entire dictionary, placing each client that doesnt have the matching ID into the List
-            foreach (KeyValuePair<int, ClientConnection> Connection in ConnectionManager.ActiveConnections)
-                if (Connection.Key != ClientID)
-                    OtherClients.Add(Connection.Value);
+            //Fetch the entire list of current clients and loop through them all
+            List<ClientConnection> ClientConnections = ConnectionManager.GetClientConnections();
+            foreach (ClientConnection ClientConnection in ClientConnections)
+            {
+                //Add them to the list if they arent the one we dont want
+                if (ClientConnection.NetworkID != ClientID)
+                    OtherClients.Add(ClientConnection);
+            }
 
             //Return the final list of clients
             return OtherClients;
@@ -99,12 +91,13 @@ namespace Server.Networking
             //Create a new list to palce all the ingame clients into
             List<ClientConnection> InGameClients = new List<ClientConnection>();
 
-            //Loop through the entire dictionary of client connections
-            foreach (KeyValuePair<int, ClientConnection> Connection in ConnectionManager.ActiveConnections)
+            //Fetch the entire list of current clients and loop through them all
+            List<ClientConnection> ClientConnections = ConnectionManager.GetClientConnections();
+            foreach (ClientConnection ClientConnection in ClientConnections)
             {
-                //Add any clients who are ingame to the list
-                if (Connection.Value.InGame)
-                    InGameClients.Add(Connection.Value);
+                //Add them to the list if they are ingame
+                if (ClientConnection.InGame)
+                    InGameClients.Add(ClientConnection);
             }
 
             //Return the final list of InGame Clients
@@ -117,12 +110,13 @@ namespace Server.Networking
             //Create a list to store all the clients who are not ingame
             List<ClientConnection> NotInGameClients = new List<ClientConnection>();
 
-            //Loop through the entire list of active client connections
-            foreach (KeyValuePair<int, ClientConnection> Connection in ConnectionManager.ActiveConnections)
+            //Fetch the entire list of current clients and loop through them all
+            List<ClientConnection> ClientConnections = ConnectionManager.GetClientConnections();
+            foreach (ClientConnection ClientConnection in ClientConnections)
             {
-                //Add any clients not ingame to the list
-                if (!Connection.Value.InGame)
-                    NotInGameClients.Add(Connection.Value);
+                //Add them to the list if they are in the menu
+                if (!ClientConnection.InGame)
+                    NotInGameClients.Add(ClientConnection);
             }
 
             //Return the final list of non ingame clients
@@ -135,8 +129,8 @@ namespace Server.Networking
             //Start by getting the complete list of ingame clients
             List<ClientConnection> InGameClients = GetInGameClients();
 
-            //Get the ClientConnection that needs to be removed from the list before we return it
-            ClientConnection ExceptFor = ConnectionManager.ActiveConnections[ClientID];
+            //Get the ClientConnection that we dont want in this list
+            ClientConnection ExceptFor = ConnectionManager.GetClientConnection(ClientID);
 
             //Remove the excepted client from the list if its in there
             if (InGameClients.Contains(ExceptFor))
@@ -152,11 +146,13 @@ namespace Server.Networking
             //Create a new list to store the client who are ready
             List<ClientConnection> ReadyToEnterClients = new List<ClientConnection>();
 
-            //Loop through the entire list of clients, finding which ones are ready and adding those ones to the list
-            foreach(KeyValuePair<int, ClientConnection> Client in ConnectionManager.ActiveConnections)
+            //Fetch the entire list of current clients and loop through them all
+            List<ClientConnection> ClientConnections = ConnectionManager.GetClientConnections();
+            foreach (ClientConnection ClientConnection in ClientConnections)
             {
-                if (Client.Value.WaitingToEnter)
-                    ReadyToEnterClients.Add(Client.Value);
+                //Add them to the list if they are ready to enter the game
+                if (ClientConnection.WaitingToEnter)
+                    ReadyToEnterClients.Add(ClientConnection);
             }
 
             //Return the final list of all the clients ready to enter the game

@@ -9,6 +9,7 @@ using Server.Entities;
 using Server.Misc;
 using Server.GameItems;
 using Server.Database;
+using Server.Logging;
 
 namespace Server.Networking.PacketSenders
 {
@@ -17,6 +18,8 @@ namespace Server.Networking.PacketSenders
         //Tells a client where all the other players are in the world so they can be spawned in before they can enter the world
         public static void SendActivePlayerList(int ClientID)
         {
+            CommunicationLog.LogOut(ClientID + " active player list");
+
             //Create a new NetworkPacket object to store the data for this active player list
             NetworkPacket Packet = new NetworkPacket();
 
@@ -30,8 +33,10 @@ namespace Server.Networking.PacketSenders
             //Loop through the list of other clients and write each of their information into the packet data
             foreach(ClientConnection OtherClient in OtherClients)
             {
+                //Write each characters name, and current location and rotation values
                 Packet.WriteString(OtherClient.CharacterName);
                 Packet.WriteVector3(OtherClient.CharacterPosition);
+                Packet.WriteQuaternion(OtherClient.CharacterRotation);
             }
 
             //Add this packet to the target clients outgoing packet queue
@@ -41,6 +46,8 @@ namespace Server.Networking.PacketSenders
         //Tells a client where all the active entities are in the world to have them spawned in before they can enter the game world
         public static void SendActiveEntityList(int ClientID)
         {
+            CommunicationLog.LogOut(ClientID + " active entity list");
+
             //Create a new NetworkPacket object to store the data for this active entity list
             NetworkPacket Packet = new NetworkPacket();
 
@@ -67,6 +74,8 @@ namespace Server.Networking.PacketSenders
         //Tells a client where all the active items are in the world to have them spawned in before they can start playing
         public static void SendActiveItemList(int ClientID)
         {
+            CommunicationLog.LogOut(ClientID + " active item list");
+
             //Create a new NetworkPacket object to store the data for this active item list
             NetworkPacket Packet = new NetworkPacket();
 
@@ -92,6 +101,8 @@ namespace Server.Networking.PacketSenders
         //Tells a clients all the contents of their chosen characters inventory to be loaded in before they enter into the game world
         public static void SendInventoryContents(int ClientID, string CharacterName)
         {
+            CommunicationLog.LogOut(ClientID + " inventory contents");
+
             //Create a new NetworkPacket object to store the data for this inventory contents request
             NetworkPacket Packet = new NetworkPacket();
 
@@ -116,6 +127,8 @@ namespace Server.Networking.PacketSenders
         //Tells a client all the items currently equipped on their chosen character to be loaded in before they enter into the game world
         public static void SendEquippedItems(int ClientID, string CharacterName)
         {
+            CommunicationLog.LogOut(ClientID + " equipped items");
+
             //Create a new NetworkPacket object to store the data for this equipped items request
             NetworkPacket Packet = new NetworkPacket();
 
@@ -141,8 +154,10 @@ namespace Server.Networking.PacketSenders
         //Tells a client all the items currently socketed into their ability bar to be loaded in before they can enter into the game world
         public static void SendSocketedAbilities(int ClientID, string CharacterName)
         {
+            CommunicationLog.LogOut(ClientID + " socketed abilities");
+   
             //Create a new NetworkPacket object to store the data for this socketed abilities request
-            NetworkPacket Packet = new NetworkPacket();
+               NetworkPacket Packet = new NetworkPacket();
 
             //Grab the list of all the items currently socketed into the characters action bar
             List<ItemData> SocketedAbilities = ActionBarsDatabase.GetEveryActionBarItem(CharacterName);

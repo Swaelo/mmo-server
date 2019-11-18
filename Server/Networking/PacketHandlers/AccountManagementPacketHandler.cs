@@ -96,6 +96,8 @@ namespace Server.Networking.PacketHandlers
         //Handles a users account login request
         public static void HandleAccountLoginRequest(int ClientID, ref NetworkPacket Packet)
         {
+            CommunicationLog.LogIn(ClientID + " account login request");
+
             //Read the data values from the packet reader
             string Username = Packet.ReadString();
             string Password = Packet.ReadString();
@@ -122,8 +124,16 @@ namespace Server.Networking.PacketHandlers
                 return;
             }
 
+            //Get this ClientConnection and make sure we were able to find them
+            ClientConnection ClientConnection = ConnectionManager.GetClientConnection(ClientID);
+            if(ClientConnection == null)
+            {
+                MessageLog.Print("ERROR: Client not found.");
+                return;
+            }
+
             //Everything looks good, grant the users account login request and display message showing the account has been logged into
-            ConnectionManager.ActiveConnections[ClientID].AccountName = Username;
+            ClientConnection.AccountName = Username;
             AccountManagementPacketSenders.SendAccountLoginReply(ClientID, true, "Login request granted.");
             MessageLog.Print(Username + " has logged in.");
         }
@@ -131,13 +141,25 @@ namespace Server.Networking.PacketHandlers
         //Handles a users account logout notification
         public static void HandleAccountLogoutAlert(int ClientID, ref NetworkPacket Packet)
         {
+            CommunicationLog.LogIn(ClientID + " account logout alert");
+
+            //Get this ClientConnection and make sure we were able to find them
+            ClientConnection ClientConnection = ConnectionManager.GetClientConnection(ClientID);
+            if (ClientConnection == null)
+            {
+                MessageLog.Print("ERROR: Client not found.");
+                return;
+            }
+
             //Just reset the value tracking what account this user is logged in to
-            ConnectionManager.ActiveConnections[ClientID].AccountName = "";
+            ClientConnection.AccountName = "";
         }
 
         //Handles a users new user account registration request
         public static void HandleAccountRegisterRequest(int ClientID, ref NetworkPacket Packet)
         {
+            CommunicationLog.LogIn(ClientID + " account registration request");
+
             //Fetch the relevant data values from the packet reader
             string Username = Packet.ReadString();
             string Password = Packet.ReadString();
@@ -169,16 +191,26 @@ namespace Server.Networking.PacketHandlers
         //Handles a users character data request
         public static void HandleCharacterDataRequest(int ClientID, ref NetworkPacket Packet)
         {
-            //We can find this clients logged in account name from their ClientConnection object
-            string AccountName = ConnectionManager.ActiveConnections[ClientID].AccountName;
+            CommunicationLog.LogIn(ClientID + " accounts character data request");
 
-            //Send the requested character data back to the client
+            //Get this ClientConnection and make sure we were able to find them
+            ClientConnection ClientConnection = ConnectionManager.GetClientConnection(ClientID);
+            if (ClientConnection == null)
+            {
+                MessageLog.Print("ERROR: Client not found.");
+                return;
+            }
+
+            //Get the clients account name and use that to send the character data back to them
+            string AccountName = ClientConnection.AccountName;
             AccountManagementPacketSenders.SendCharacterDataReply(ClientID, AccountName);
         }
 
         //Handles a users character creation request
         public static void HandleCreateCharacterRequest(int ClientID, ref NetworkPacket Packet)
         {
+            CommunicationLog.LogIn(ClientID + " characer creation request");
+
             //Fetch the desired name for the new character from the packet data
             string CharacterName = Packet.ReadString();
 
@@ -197,8 +229,16 @@ namespace Server.Networking.PacketHandlers
                 return;
             }
 
-            //Otherwise we need to register this new character into the database, then tell the client their request was granted
-            CharactersDatabase.SaveNewCharacter(ConnectionManager.ActiveConnections[ClientID].AccountName, CharacterName);
+            //Get this ClientConnection and make sure we were able to find them
+            ClientConnection ClientConnection = ConnectionManager.GetClientConnection(ClientID);
+            if (ClientConnection == null)
+            {
+                MessageLog.Print("ERROR: Client not found.");
+                return;
+            }
+
+            //Register this new character into the database, then tell the client their request was granted
+            CharactersDatabase.SaveNewCharacter(ClientConnection.AccountName, CharacterName);
             AccountManagementPacketSenders.SendCreateCharacterReply(ClientID, true, "Character Created!");
         }
     }

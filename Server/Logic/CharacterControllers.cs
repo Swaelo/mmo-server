@@ -743,9 +743,6 @@ namespace Server.Logic
                 }
                 pool.Return(ref analyzeContactsWorkerCaches);
             }
-
-            //var end = Stopwatch.GetTimestamp();
-            //MessageLog.Print($"Time (ms): {(end - start) / (1e-3 * Stopwatch.Frequency)}");
         }
 
         /// <summary>
