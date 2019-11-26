@@ -125,7 +125,7 @@ namespace Server.Networking
 
                     //Tell all the living clients to remove this character from the game worlds on their end
                     foreach (ClientConnection LivingClient in LivingClients)
-                        PlayerManagementPacketSender.SendRemoveOtherPlayer(LivingClient.NetworkID, DeadClient.CharacterName);
+                        PlayerManagementPacketSender.SendRemoveRemotePlayer(LivingClient.NetworkID, DeadClient.CharacterName);
 
                     //Display a message showing that this character has been cleaned up from the game world
                     MessageLog.Print(DeadClient.CharacterName + " was removed from the game world after their connection timed out.");
