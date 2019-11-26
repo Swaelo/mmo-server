@@ -91,7 +91,10 @@ namespace Server.Networking
             byte[] PacketBuffer = new byte[PacketSize];
             Array.Copy(DataBuffer, PacketBuffer, PacketSize);
             DataBuffer = new byte[NetworkConnection.Available];
-            DataStream.BeginRead(DataBuffer, 0, DataBuffer.Length, ReadPacket, null);
+
+            try { DataStream.BeginRead(DataBuffer, 0, DataBuffer.Length, ReadPacket, null); }
+            catch(IOException Exception) { MessageLog.Error(Exception, "Error sending packet to client, their connection no longer exists"); return; }
+            
 
             //Upgrade this clients connection if it is brand new
             if (!ConnectionUpgraded)

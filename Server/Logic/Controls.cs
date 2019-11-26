@@ -210,6 +210,115 @@ namespace Server.Logic
         }
     }
 
+    public struct InputControls
+    {
+        public HoldableBind LShift;
+        public HoldableBind RShift;
+
+        public HoldableBind BackSpace;
+        public InstantBind Enter;
+        public InstantBind Space;
+        
+        public InstantBind Comma;
+        public InstantBind Period;
+
+        public InstantBind Q;
+        public InstantBind W;
+        public InstantBind E;
+        public InstantBind R;
+        public InstantBind T;
+        public InstantBind Y;
+        public InstantBind U;
+        public InstantBind I;
+        public InstantBind O;
+        public InstantBind P;
+        public InstantBind A;
+        public InstantBind S;
+        public InstantBind D;
+        public InstantBind F;
+        public InstantBind G;
+        public InstantBind H;
+        public InstantBind J;
+        public InstantBind K;
+        public InstantBind L;
+        public InstantBind Z;
+        public InstantBind X;
+        public InstantBind C;
+        public InstantBind V;
+        public InstantBind B;
+        public InstantBind N;
+        public InstantBind M;
+
+        public InstantBind Zero;
+        public InstantBind One;
+        public InstantBind Two;
+        public InstantBind Three;
+        public InstantBind Four;
+        public InstantBind Five;
+        public InstantBind Six;
+        public InstantBind Seven;
+        public InstantBind Eight;
+        public InstantBind Nine;
+        public InstantBind Ten;
+
+        public static InputControls Default
+        {
+            get
+            {
+                return new InputControls
+                {
+                    LShift = Key.ShiftLeft,
+                    RShift = Key.ShiftRight,
+
+                    BackSpace = Key.BackSpace,
+                    Enter = Key.Enter,
+                    Space = Key.Space,
+
+                    Comma = Key.Comma,
+                    Period = Key.Period,
+
+                    Q = Key.Q,
+                    W = Key.W,
+                    E = Key.E,
+                    R = Key.R,
+                    T = Key.T,
+                    Y = Key.Y,
+                    U = Key.U,
+                    I = Key.I,
+                    O = Key.O,
+                    P = Key.P,
+                    A = Key.A,
+                    S = Key.S,
+                    D = Key.D,
+                    F = Key.F,
+                    G = Key.G,
+                    H = Key.H,
+                    J = Key.J,
+                    K = Key.K,
+                    L = Key.L,
+                    Z = Key.Z,
+                    X = Key.X,
+                    C = Key.C,
+                    V = Key.V,
+                    B = Key.B,
+                    N = Key.N,
+                    M = Key.M,
+
+                    Zero = Key.Number0,
+                    One = Key.Number1,
+                    Two = Key.Number2,
+                    Three = Key.Number3,
+                    Four = Key.Number4,
+                    Five = Key.Number5,
+                    Six = Key.Number6,
+                    Seven = Key.Number7,
+                    Eight = Key.Number8,
+                    Nine = Key.Number9,
+                };
+            }
+        }
+    }
+
     public struct Controls
     {
         public HoldableBind MoveForward;

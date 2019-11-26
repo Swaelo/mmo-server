@@ -59,6 +59,8 @@ namespace Server.World
         private bool ShowContacts = false;  //Should the active physical contact points between physics objects be displayed in the servers view window
         private bool ShowBoundingBoxes = false; //Should the physical bounding box colliders edges be displayed in the servers view window
 
+        private CommandInput CMDInputField = new CommandInput(); //Allows user to type messages into the server application for custom command execution 
+
         //Constructor which sets up the whole game world scene
         public GameWorld(GameLoop Loop, ContentArchive Content)
         {
@@ -96,6 +98,8 @@ namespace Server.World
             PacketsOutText = new TextBuilder(1024);
             ActiveClientsText = new TextBuilder(512);
 
+            CMDInputField.Initialize();
+
             //Make sure the window size is correct relative to the current resolution
             OnResize(ApplicationWindow.Resolution);
         }
@@ -111,133 +115,12 @@ namespace Server.World
             //Ignore user input if the application window is not in focus
             if (WindowFocused)
             {
-                //Close down the server when escape key is pressed
-                if (UserControls.Exit.WasTriggered(UserInput))
-                {
-                    //The location/rotation of every character currently logged into the game world needs to be backed up into the database before the server is shut down
-                    List<ClientConnection> ActiveClients = ClientSubsetFinder.GetInGameClients();
-                    foreach (ClientConnection ActiveClient in ActiveClients)
-                        CharactersDatabase.SaveCharacterValues(ActiveClient.CharacterName, ActiveClient.CharacterPosition, ActiveClient.CharacterRotation, ActiveClient.CameraZoom, ActiveClient.CameraXRotation, ActiveClient.CameraYRotation);
+                //Allow user to type messages into the command input window
+                CMDInputField.Update(UserInput, DeltaTime);
 
-                    ApplicationWindow.Close();
-                    return;
-                }
-
-                //Adjust camera movement speed with the scrollwheel
-                if (UserControls.MoveFaster.WasTriggered(UserInput))
-                {
-                    switch (CameraSpeedState)
-                    {
-                        case CameraMoveSpeedState.Slow:
-                            CameraSpeedState = CameraMoveSpeedState.Regular;
-                            break;
-                        case CameraMoveSpeedState.Regular:
-                            CameraSpeedState = CameraMoveSpeedState.Fast;
-                            break;
-                    }
-                }
-                if (UserControls.MoveSlower.WasTriggered(UserInput))
-                {
-                    switch (CameraSpeedState)
-                    {
-                        case CameraMoveSpeedState.Regular:
-                            CameraSpeedState = CameraMoveSpeedState.Slow;
-                            break;
-                        case CameraMoveSpeedState.Fast:
-                            CameraSpeedState = CameraMoveSpeedState.Regular;
-                            break;
-                    }
-                }
-
-                //Move camera around the world with WASD
-                var CameraOffset = new Vector3();
-                if (UserControls.MoveForward.IsDown(UserInput))
-                    CameraOffset += SceneCamera.Forward;
-                if (UserControls.MoveBackward.IsDown(UserInput))
-                    CameraOffset += SceneCamera.Backward;
-                if (UserControls.MoveLeft.IsDown(UserInput))
-                    CameraOffset += SceneCamera.Left;
-                if (UserControls.MoveRight.IsDown(UserInput))
-                    CameraOffset += SceneCamera.Right;
-                if (UserControls.MoveUp.IsDown(UserInput))
-                    CameraOffset += SceneCamera.Up;
-                if (UserControls.MoveDown.IsDown(UserInput))
-                    CameraOffset += SceneCamera.Down;
-
-                //Only update the camera position if its to be moved past a minimum distance
-                float CameraMovement = CameraOffset.Length();
-                if (CameraMovement > 1e-7f)
-                {
-                    //Get the current camera movement speed
-                    float CameraMoveSpeed = 0;
-                    switch (CameraSpeedState)
-                    {
-                        case CameraMoveSpeedState.Slow:
-                            CameraMoveSpeed = UserControls.CameraSlowMoveSpeed;
-                            break;
-                        case CameraMoveSpeedState.Regular:
-                            CameraMoveSpeed = UserControls.CameraMoveSpeed;
-                            break;
-                        case CameraMoveSpeedState.Fast:
-                            CameraMoveSpeed = UserControls.CameraFastMoveSpeed;
-                            break;
-                    }
-                    //Keep the movement speed framerate independant
-                    CameraOffset *= DeltaTime * CameraMoveSpeed / CameraMovement;
-                }
-                else
-                    CameraOffset = new Vector3();
-                //Update the cameras position
-                SceneCamera.Position += CameraOffset;
-
-                //Use the mouse to turn the camera when the RMB is held down
-                if(UserInput.IsDown(MouseButton.Right))
-                {
-                    var Delta = UserInput.MouseDelta;
-                    if (Delta.X != 0 || Delta.Y != 0)
-                    {
-                        SceneCamera.Yaw += Delta.X * UserControls.MouseSensitivity;
-                        SceneCamera.Pitch += Delta.Y * UserControls.MouseSensitivity;
-                    }
-                }
-
-                //Toggle character controller with C
-                if (UserInput.WasPushed(Key.C))
-                {
-                    if (CharacterActive)
-                    {
-                        //Remove and disable character controller, going to noclip fly mode
-                        Character.Dispose();
-                        CharacterActive = false;
-                    }
-                    else
-                    {
-                        //Create and enable character controller
-                        Character = new CharacterInput(Characters, SceneCamera.Position, new Capsule(0.5f, 1), 0.1f, 1, 20, 100, 6, 4, MathF.PI * 0.4f);
-                        CharacterActive = true;
-                    }
-                }
-
-                //Update the character controller whenever its active
-                if (CharacterActive)
-                    Character.UpdateCharacterGoals(UserInput, SceneCamera);
-
-                //Toggle the mouse lock with TAB
-                if (UserControls.LockMouse.WasTriggered(UserInput))
-                    UserInput.MouseLocked = !UserInput.MouseLocked;
-                //Toggle physical restraints display
-                if (UserControls.ShowConstraints.WasTriggered(UserInput))
-                    ShowConstraints = !ShowConstraints;
-                //Toggle physical contacts display
-                if (UserControls.ShowContacts.WasTriggered(UserInput))
-                    ShowContacts = !ShowContacts;
-                //Toggle bounding boxes display
-                if (UserControls.ShowBoundingBoxes.WasTriggered(UserInput))
-                    ShowBoundingBoxes = !ShowBoundingBoxes;
-
-                //Allow changing the timing display mode in the server performance graph display
-                if (UserControls.ChangeTimingDisplayMode.WasTriggered(UserInput))
-                    PerformanceGraph.ChangeToNextDisplayMode(ApplicationWindow);
+                //Allow the user to control the camera if the command input field is inactive
+                if(!CMDInputField.InputEnabled)
+                    UpdateCamera(DeltaTime);
             }
             else
                 UserInput.MouseLocked = false;
@@ -247,6 +130,9 @@ namespace Server.World
         {
             //Perform any actions required based on user input, move camera around the scene etc
             ProcessInput(ApplicationWindow.Focused, DeltaTime);
+
+            //Check if any events need to be executed that have been entered into the command input field
+            PerformCommandEvents();
 
             //Remove any item pickups from the physics scene which have been queued up to be removed
             ItemManager.ClearRemoveQueue(WorldSimulation);
@@ -294,6 +180,9 @@ namespace Server.World
 
         private void RenderUI(Renderer Renderer)
         {
+            //Display the current contents of the command input field in the middle of the screen
+            CMDInputField.Render(Renderer, UITextSize, UITextColor, UIFont);
+
             //Define the locations where each message log will start rendering its messages/information to
             Vector2 LogMsgPos = new Vector2(10, 750); //Bottom-Left Corner = Debug Log
             Vector2 PacketOutPos = new Vector2(800, 750); //Bottom-Right Corner = Outgoing Packets
@@ -354,6 +243,189 @@ namespace Server.World
 
                 //Display a message showing that the clients character has been spawned into the game world
                 MessageLog.Print(ClientToAdd.CharacterName + " has entered into the game world");
+            }
+        }
+
+        //Allows the user to move the camera around the game world to spectate whats going on
+        private void UpdateCamera(float DeltaTime)
+        {
+            //Adjust camera movement speed with the scrollwheel
+            if (UserControls.MoveFaster.WasTriggered(UserInput))
+            {
+                switch (CameraSpeedState)
+                {
+                    case CameraMoveSpeedState.Slow:
+                        CameraSpeedState = CameraMoveSpeedState.Regular;
+                        break;
+                    case CameraMoveSpeedState.Regular:
+                        CameraSpeedState = CameraMoveSpeedState.Fast;
+                        break;
+                }
+            }
+            if (UserControls.MoveSlower.WasTriggered(UserInput))
+            {
+                switch (CameraSpeedState)
+                {
+                    case CameraMoveSpeedState.Regular:
+                        CameraSpeedState = CameraMoveSpeedState.Slow;
+                        break;
+                    case CameraMoveSpeedState.Fast:
+                        CameraSpeedState = CameraMoveSpeedState.Regular;
+                        break;
+                }
+            }
+
+            //Move camera around the world with WASD
+            var CameraOffset = new Vector3();
+            if (UserControls.MoveForward.IsDown(UserInput))
+                CameraOffset += SceneCamera.Forward;
+            if (UserControls.MoveBackward.IsDown(UserInput))
+                CameraOffset += SceneCamera.Backward;
+            if (UserControls.MoveLeft.IsDown(UserInput))
+                CameraOffset += SceneCamera.Left;
+            if (UserControls.MoveRight.IsDown(UserInput))
+                CameraOffset += SceneCamera.Right;
+            if (UserControls.MoveUp.IsDown(UserInput))
+                CameraOffset += SceneCamera.Up;
+            if (UserControls.MoveDown.IsDown(UserInput))
+                CameraOffset += SceneCamera.Down;
+
+            //Only update the camera position if its to be moved past a minimum distance
+            float CameraMovement = CameraOffset.Length();
+            if (CameraMovement > 1e-7f)
+            {
+                //Get the current camera movement speed
+                float CameraMoveSpeed = 0;
+                switch (CameraSpeedState)
+                {
+                    case CameraMoveSpeedState.Slow:
+                        CameraMoveSpeed = UserControls.CameraSlowMoveSpeed;
+                        break;
+                    case CameraMoveSpeedState.Regular:
+                        CameraMoveSpeed = UserControls.CameraMoveSpeed;
+                        break;
+                    case CameraMoveSpeedState.Fast:
+                        CameraMoveSpeed = UserControls.CameraFastMoveSpeed;
+                        break;
+                }
+                //Keep the movement speed framerate independant
+                CameraOffset *= DeltaTime * CameraMoveSpeed / CameraMovement;
+            }
+            else
+                CameraOffset = new Vector3();
+            //Update the cameras position
+            SceneCamera.Position += CameraOffset;
+
+            //Use the mouse to turn the camera when the RMB is held down
+            if (UserInput.IsDown(MouseButton.Right))
+            {
+                var Delta = UserInput.MouseDelta;
+                if (Delta.X != 0 || Delta.Y != 0)
+                {
+                    SceneCamera.Yaw += Delta.X * UserControls.MouseSensitivity;
+                    SceneCamera.Pitch += Delta.Y * UserControls.MouseSensitivity;
+                }
+            }
+        }
+
+        //Check if any events need to be executed that have been entered into the command input field
+        private void PerformCommandEvents()
+        {
+            //First we check for the event for shutting down the server application
+            if(CMDInputField.ShutdownEvent)
+            {
+                MessageLog.Print("Server shutting down...");
+
+                //First get the list of all ingame clients so we can backup their info into the database before shutting the server down
+                List<ClientConnection> ActiveClients = ClientSubsetFinder.GetInGameClients();
+                //Loop through and update each characters location/rotation data, aswell as the 3rd person camera settings
+                foreach (ClientConnection ActiveClient in ActiveClients)
+                    CharactersDatabase.SaveCharacterValues(ActiveClient);
+
+                //Now all clients data has been backed up, we can close down the server now
+                ApplicationWindow.Close();
+                return;
+            }
+
+            //Second we check for the event for display the current location of some player character
+            if(CMDInputField.WhereEvent)
+            {
+                MessageLog.Print("Finding " + CMDInputField.WhereTarget + "'s location...");
+
+                //First try finding the client who is currently playing with this character name
+                ClientConnection Client = ClientSubsetFinder.GetClientUsingCharacter(CMDInputField.WhereTarget);
+
+                //If the target client was unable to be found, then it means the character we asked about isnt currently in the game world
+                if (Client == null)
+                    MessageLog.Print("ERROR: Could not find " + CMDInputField.WhereTarget + "'s location as that character doesnt appear to be in the game right now.");
+                //Otherwise we display where they are right now
+                else
+                    MessageLog.Print(CMDInputField.WhereTarget + " is at " + Client.CharacterPosition.ToString());
+
+                //Disable the flag now the commands been processed
+                CMDInputField.WhereEvent = false;
+            }
+
+            //Check for event to move one player to the location of another player
+            if(CMDInputField.RelocateToPlayerEvent)
+            {
+                MessageLog.Print("Moving " + CMDInputField.RelocateTarget + " to " + CMDInputField.RelocatePlayerDestination);
+
+                //First try finding the two clients who are currently playing with the two target characters
+                ClientConnection TargetClient = ClientSubsetFinder.GetClientUsingCharacter(CMDInputField.RelocateTarget);
+                ClientConnection DestinationClient = ClientSubsetFinder.GetClientUsingCharacter(CMDInputField.RelocatePlayerDestination);
+
+                //If either of these tartgets are unable to be found then it means of the characters isnt in the game world
+                if (TargetClient == null)
+                    MessageLog.Print("ERROR: Could not find " + CMDInputField.RelocateTarget + " as that character isnt in the game right now.");
+                else if (DestinationClient == null)
+                    MessageLog.Print("ERROR: Could not find " + CMDInputField.RelocatePlayerDestination + " as that character isnt in the game right now.");
+                else
+                {
+                    //Move the client to the new location and tell the owner and all other clients to do the same on their end
+                    TargetClient.CharacterPosition = DestinationClient.CharacterPosition;
+                    PlayerManagementPacketSender.SendForceMovePlayer(TargetClient.NetworkID, TargetClient.CharacterPosition);
+                    //Tell the other clients to move the character to the new location too
+                    List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(TargetClient.NetworkID);
+                    foreach (ClientConnection OtherClient in OtherClients)
+                        PlayerManagementPacketSender.SendForceMoveOtherPlayer(OtherClient.NetworkID, TargetClient.CharacterName, TargetClient.CharacterPosition);
+                }
+
+                CMDInputField.RelocateToPlayerEvent = false;
+            }
+
+            //Check for event to move a player to a new specific location
+            if(CMDInputField.RelocateToPositionEvent)
+            {
+                MessageLog.Print("Moving " + CMDInputField.RelocateTarget + " to " + CMDInputField.RelocatePositionDestination.ToString());
+
+                //Try finding the client who owns the character we are trying to move
+                ClientConnection TargetClient = ClientSubsetFinder.GetClientUsingCharacter(CMDInputField.RelocateTarget);
+
+                //If the client cant be found then print an error
+                if(TargetClient == null)
+                    MessageLog.Print("ERROR: Could not find " + CMDInputField.RelocateTarget + " as that character isnt in the game right now.");
+                //Otherwise we move the character to the new location
+                else
+                {
+                    //Tell the client to move their character to the new location
+                    TargetClient.CharacterPosition = CMDInputField.RelocatePositionDestination;
+                    PlayerManagementPacketSender.SendForceMovePlayer(TargetClient.NetworkID, TargetClient.CharacterPosition);
+                    //Tell the other clients to move the clients character too
+                    List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(TargetClient.NetworkID);
+                    foreach (ClientConnection OtherClient in OtherClients)
+                        PlayerManagementPacketSender.SendForceMoveOtherPlayer(OtherClient.NetworkID, TargetClient.CharacterName, TargetClient.CharacterPosition);
+                }
+
+                CMDInputField.RelocateToPositionEvent = false;
+            }
+
+            //Check for event for updating all characters locations within the database
+            if(CMDInputField.RelocateAllEvent)
+            {
+                MessageLog.Print("Updating all characters to new location " + CMDInputField.RelocateAllLocation.ToString() + " inside the database.");
+                CharactersDatabase.MoveAllCharacters(CMDInputField.RelocateAllLocation);
+                CMDInputField.RelocateAllEvent = false;
             }
         }
     }

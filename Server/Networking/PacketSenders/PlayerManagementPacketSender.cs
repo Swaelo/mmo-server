@@ -95,5 +95,28 @@ namespace Server.Networking.PacketSenders
             Packet.WriteType(ServerPacketType.PlayerBegin);
             PacketQueue.QueuePacket(ClientID, Packet);
         }
+
+        //Tells a client to force move their character to a new location
+        public static void SendForceMovePlayer(int ClientID, Vector3 NewLocation)
+        {
+            CommunicationLog.LogOut(ClientID + " force move");
+
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ServerPacketType.ForceCharacterMove);
+            Packet.WriteVector3(NewLocation);
+            PacketQueue.QueuePacket(ClientID, Packet);
+        }
+
+        //Tells a client to force move someone elses character to a new location
+        public static void SendForceMoveOtherPlayer(int ClientID, string CharacterName, Vector3 NewLocation)
+        {
+            CommunicationLog.LogOut(ClientID + " force move other");
+
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ServerPacketType.ForceOtherCharacterMove);
+            Packet.WriteString(CharacterName);
+            Packet.WriteVector3(NewLocation);
+            PacketQueue.QueuePacket(ClientID, Packet);
+        }
     }
 }

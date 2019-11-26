@@ -10,6 +10,24 @@ namespace Server.Networking
 {
     public static class ClientSubsetFinder
     {
+        //Returns the client who is currently active in the game world with the given character name
+        public static ClientConnection GetClientUsingCharacter(string CharacterName)
+        {
+            //Start with a list of all ingame clients
+            List<ClientConnection> InGameClients = GetInGameClients();
+
+            //Loop through these ingame cleints
+            foreach(ClientConnection InGameClient in InGameClients)
+            {
+                //Return the client if they are using the character
+                if (InGameClient.CharacterName == CharacterName)
+                    return InGameClient;
+            }
+
+            //Return null if the client was not found
+            return null;
+        }
+
         //Returns a list of all client connections which have been flagged as having a new position value that needs to be applied
         public static List<ClientConnection> GetUpdatedClients()
         {

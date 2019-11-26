@@ -78,5 +78,8 @@ public enum ServerPacketType
 
     CharacterPositionUpdate = 21,
     CharacterRotationUpdate = 22,
-    CharacterMovementUpdate = 23
+    CharacterMovementUpdate = 23,
+
+    ForceCharacterMove = 24,
+    ForceOtherCharacterMove = 25
 };

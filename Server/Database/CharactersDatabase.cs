@@ -8,6 +8,7 @@ using System.Numerics;
 using MySql.Data.MySqlClient;
 using Server.Data;
 using Server.Logging;
+using Server.Networking;
 using Quaternion = BepuUtilities.Quaternion;
 
 namespace Server.Database
@@ -56,6 +57,9 @@ namespace Server.Database
             CommandManager.ExecuteNonQuery(EquipmentQuery, "Inserting a new entry into the Equipment tables for the new character " + CharacterName);
             string ActionBarQuery = "INSERT INTO actionbars(CharacterName) VALUE('" + CharacterName + "')";
             CommandManager.ExecuteNonQuery(ActionBarQuery, "Inserting a new entry into the ActionBar tables for the new character " + CharacterName);
+
+            //Now the database has been setup to store this new characters information, we want to set their location onto the spawning platform
+            SetCharacterPosition(CharacterName, new Vector3(14.166f, 0.079f, 23.286f));
         }
 
         //Returns the name of the users character which exists in the given character slot number
@@ -92,6 +96,12 @@ namespace Server.Database
             return CharacterData;
         }
 
+        //Just takes in the ClientConnection object, then grabs the CharacterName, Position etc. values from it to be passed on to the actual function
+        public static void SaveCharacterValues(ClientConnection Client)
+        {
+            SaveCharacterValues(Client.CharacterName, Client.CharacterPosition, Client.CharacterRotation, Client.CameraZoom, Client.CameraXRotation, Client.CameraYRotation);
+        }
+
         //Backs up the position/rotation values of a players character into the database
         public static void SaveCharacterValues(string CharacterName, Vector3 CharacterPosition, Quaternion CharacterRotation, float CameraZoom, float CameraXRotation, float CameraYRotation)
         {
@@ -103,6 +113,19 @@ namespace Server.Database
 
             //Use the command manager to execute the query updating the values into the database
             CommandManager.ExecuteNonQuery(CharacterValueQuery, "Backing up " + CharacterName + "s world position/rotation and camera zoom/rotation values");
+        }
+
+        private static void SetCharacterPosition(string CharacterName, Vector3 CharacterPosition)
+        {
+            string UpdateQuery = "UPDATE characters SET XPosition='" + CharacterPosition.X + "', YPosition='" + CharacterPosition.Y + "', ZPosition='" + CharacterPosition.Z + "' WHERE CharacterName='" + CharacterName + "'";
+            CommandManager.ExecuteNonQuery(UpdateQuery, "Setting " + CharacterName + "s location in the database to " + CharacterPosition.ToString());
+        }
+
+        //Sets the location of all characters inside the database to a new value
+        public static void MoveAllCharacters(Vector3 CharacterPosition)
+        {
+            string UpdateQuery = "UPDATE characters SET XPosition='" + CharacterPosition.X + "', YPosition='" + CharacterPosition.Y + "', ZPosition='" + CharacterPosition.Z + "'";
+            CommandManager.ExecuteNonQuery(UpdateQuery, "Setting position of all characters in the database to " + CharacterPosition.ToString());
         }
     }
 }
