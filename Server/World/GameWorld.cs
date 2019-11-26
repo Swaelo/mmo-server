@@ -226,7 +226,7 @@ namespace Server.World
 
                 //Tell all other ingame clients they need to have this new player spawned into the game worlds
                 foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(ClientToAdd.NetworkID))
-                    PlayerManagementPacketSender.SendSpawnOtherPlayer(OtherClient.NetworkID, ClientToAdd.CharacterName, ClientToAdd.CharacterPosition, ClientToAdd.CharacterMovement, ClientToAdd.CharacterRotation);
+                    PlayerManagementPacketSender.SendAddRemotePlayer(OtherClient.NetworkID, ClientToAdd.CharacterName, ClientToAdd.CharacterPosition, ClientToAdd.CharacterMovement, ClientToAdd.CharacterRotation);
 
                 //Display a message showing that the clients character has been spawned into the game world
                 MessageLog.Print(ClientToAdd.CharacterName + " has entered into the game world");
