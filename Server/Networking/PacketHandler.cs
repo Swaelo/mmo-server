@@ -141,15 +141,12 @@ namespace Server.Networking
             PacketHandlers.Add(ClientPacketType.EnterWorldRequest, GameWorldStatePacketHandler.HandleEnterWorldRequest);
             PacketHandlers.Add(ClientPacketType.PlayerReadyAlert, GameWorldStatePacketHandler.HandleNewPlayerReady);
 
-
             //Player Communication Packet Handlers
             PacketHandlers.Add(ClientPacketType.PlayerChatMessage, PlayerCommunicationPacketHandler.HandleClientChatMessage);
 
             //Player Management Packet Handlers
-            PacketHandlers.Add(ClientPacketType.CharacterPositionUpdate, PlayerManagementPacketHandler.HandlePositionUpdate);
-            PacketHandlers.Add(ClientPacketType.CharacterRotationUpdate, PlayerManagementPacketHandler.HandleRotationUpdate);
-            PacketHandlers.Add(ClientPacketType.CharacterMovementUpdate, PlayerManagementPacketHandler.HandleMovementUpdate);
-            PacketHandlers.Add(ClientPacketType.CharacterCameraUpdate, PlayerManagementPacketHandler.HandlePlayerCameraUpdate);
+            PacketHandlers.Add(ClientPacketType.LocalPlayerCharacterUpdate, PlayerManagementPacketHandler.HandlePlayerCharacterUpdate);
+            PacketHandlers.Add(ClientPacketType.LocalPlayerCameraUpdate, PlayerManagementPacketHandler.HandlePlayerCameraUpdate);
 
             //System Packet Handlers
             PacketHandlers.Add(ClientPacketType.MissedPacketsRequest, SystemPacketHandler.HandleMissedPacketsRequest);

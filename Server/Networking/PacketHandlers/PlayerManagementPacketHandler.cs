@@ -15,101 +15,75 @@ namespace Server.Networking.PacketHandlers
 {
     public class PlayerManagementPacketHandler
     {
-        //Handles clients player characters giving us updated position/rotation/movement values
-        public static void HandlePositionUpdate(int ClientID, ref NetworkPacket Packet)
+        /// <summary>
+        /// Handles a client players updated character values to be shared all across the network
+        /// </summary>
+        /// <param name="ClientID">NetworkID of the target client</param>
+        /// <param name="Packet">Packet containing the information were after</param>
+        public static void HandlePlayerCharacterUpdate(int ClientID, ref NetworkPacket Packet)
         {
-            //Log what we are doing
-            CommunicationLog.LogIn(ClientID + " Position Update");
-            //Extract values from the packet
-            string CharacterName = Packet.ReadString();
-            Vector3 CharacterPosition = Packet.ReadVector3();
+            //Log what we are doing here
+            CommunicationLog.LogIn(ClientID + " Player Character Update");
 
-            //Get this ClientConnection and make sure we were able to find them
-            ClientConnection ClientConnection = ConnectionManager.GetClientConnection(ClientID);
-            if (ClientConnection == null)
+            //Extract all the values from the packet data
+            Vector3 Position = Packet.ReadVector3();
+            Vector3 Movement = Packet.ReadVector3();
+            Quaternion Rotation = Packet.ReadQuaternion();
+
+            //Try getting the ClientConnection object who sent this packet to us
+            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+
+            //Display an erro and exit from the function if they couldnt be found
+            if(Client == null)
             {
-                MessageLog.Print("ERROR: Client not found.");
+                MessageLog.Print("ERROR: " + ClientID + " ClientConnection object couldnt be found, Player Character Update could not be performed.");
                 return;
             }
 
             //Update the values in the ClientConnection object
-            ClientConnection.CharacterPosition = CharacterPosition;
-            ClientConnection.NewPosition = true;
-            //Share this clients new position values with all the other clients currently playing
+            Client.CharacterPosition = Position;
+            Client.CharacterMovement = Movement;
+            Client.CharacterRotation = Rotation;
+
+            //Set its NewPosition flag so it gets updated in the physics scene
+            Client.NewPosition = true;
+
+            //Share these new values to all the other clients in the game right now
             List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(ClientID);
             foreach (ClientConnection OtherClient in OtherClients)
-                PlayerManagementPacketSender.SendPlayerPositionUpdate(OtherClient.NetworkID, CharacterName, CharacterPosition);
-        }
-        public static void HandleRotationUpdate(int ClientID, ref NetworkPacket Packet)
-        {
-            //Log what we are doing
-            CommunicationLog.LogIn(ClientID + " Rotation Update");
-            //Extract values from network packet
-            string CharacterName = Packet.ReadString();
-            Quaternion CharacterRotation = Packet.ReadQuaternion();
-
-            //Get this ClientConnection and make sure we were able to find them
-            ClientConnection ClientConnection = ConnectionManager.GetClientConnection(ClientID);
-            if (ClientConnection == null)
-            {
-                MessageLog.Print("ERROR: Client not found.");
-                return;
-            }
-
-            //Update values in the ClientConnection object
-            ClientConnection.CharacterRotation = CharacterRotation;
-            //Share this clients new rotation values with all the other clients currently playing
-            List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(ClientID);
-            foreach (ClientConnection OtherClient in OtherClients)
-                PlayerManagementPacketSender.SendPlayerRotationUpdate(OtherClient.NetworkID, CharacterName, CharacterRotation);
-        }
-        public static void HandleMovementUpdate(int ClientID, ref NetworkPacket Packet)
-        {
-            //Log what we are doing
-            CommunicationLog.LogIn(ClientID + " Movement Update");
-            //Extract values from network packet
-            string CharacterName = Packet.ReadString();
-            Vector3 CharacterMovement = Packet.ReadVector3();
-
-            //Get this ClientConnection and make sure we were able to find them
-            ClientConnection ClientConnection = ConnectionManager.GetClientConnection(ClientID);
-            if (ClientConnection == null)
-            {
-                MessageLog.Print("ERROR: Client not found.");
-                return;
-            }
-
-            //Update values in the ClientConnection object
-            ClientConnection.CharacterMovement = CharacterMovement;
-            //Share this clients new movement values with all the other clients currently playing
-            List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(ClientID);
-            foreach (ClientConnection OtherClient in OtherClients)
-                PlayerManagementPacketSender.SendPlayerMovementUpdate(OtherClient.NetworkID, CharacterName, CharacterMovement);
+                PlayerManagementPacketSender.SendUpdateRemotePlayer(OtherClient.NetworkID, Client.CharacterName, Position, Movement, Rotation);
         }
 
-        //Handles a clients player camera zoom / rotation values that we need to store back into the database
+        /// <summary>
+        /// Handles a client players updated camera values to be stored in their ClientConnection, until
+        /// they either leave or the server is being shutdown, to then be backed up into the database
+        /// </summary>
+        /// <param name="ClientID">NetworkID of the target client</param>
+        /// <param name="Packet">Packet containing the information were after</param>
         public static void HandlePlayerCameraUpdate(int ClientID, ref NetworkPacket Packet)
         {
-            CommunicationLog.LogIn(ClientID + " camera update");
+            //Log what we are doing here
+            CommunicationLog.LogIn(ClientID + " Player Camera Update");
 
-            //Extract all values from the packet data
-            string CharacterName = Packet.ReadString();
-            float CameraZoom = Packet.ReadFloat();
+            //Extract all the values from the packet data
+            float Zoom = Packet.ReadFloat();
             float XRotation = Packet.ReadFloat();
             float YRotation = Packet.ReadFloat();
 
-            //Get this ClientConnection and make sure we were able to find them
-            ClientConnection ClientConnection = ConnectionManager.GetClientConnection(ClientID);
-            if (ClientConnection == null)
+            //Try getting the ClientConnection object who sent this packet to us
+            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+
+            //Display an error and exit from the function if they couldnt be found
+            if(Client == null)
             {
-                MessageLog.Print("ERROR: Client not found.");
+                MessageLog.Print("ERROR: " + ClientID + " ClientConnection object couldnt be found, Player Camera Update could not be performed.");
                 return;
             }
 
-            //Store the values within
-            ClientConnection.CameraZoom = CameraZoom;
-            ClientConnection.CameraXRotation = XRotation;
-            ClientConnection.CameraYRotation = YRotation;
+            //Store them in the ClientConnection object
+            Client.CameraZoom = Zoom;
+            Client.CameraXRotation = XRotation;
+            Client.CameraYRotation = YRotation;
         }
     }
 }
