@@ -14,49 +14,72 @@ namespace Server.Networking.PacketSenders
 {
     public class PlayerManagementPacketSender
     {
-        //Tells a client the updated Position/Rotation/Movement values of one of the other players characters
-        public static void SendPlayerPosition(int ClientID, string CharacterName, Vector3 CharacterPosition)
+        /// <summary>
+        /// //Tells a client the updated position values of one of the other players characters
+        /// </summary>
+        /// <param name="ClientID">NetworkID of the target client</param>
+        /// <param name="CharacterName">Name of the character who's position is being updated</param>
+        /// <param name="CharacterPosition">New position values for the character</param>
+        public static void SendPlayerPositionUpdate(int ClientID, string CharacterName, Vector3 CharacterPosition)
         {
             //Log what we are doing
             CommunicationLog.LogOut(ClientID + " Position Update");
             //Fill a new NetworkPacket with all the necessary data
             NetworkPacket Packet = new NetworkPacket();
-            Packet.WriteType(ServerPacketType.CharacterPositionUpdate);
+            Packet.WriteType(ServerPacketType.PlayerPositionUpdate);
             Packet.WriteString(CharacterName);
             Packet.WriteVector3(CharacterPosition);
             //Add this packet to the queue
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
-        public static void SendPlayerRotation(int ClientID, string CharacterName, Quaternion CharacterRotation)
+
+        /// <summary>
+        /// Tells a client the updated rotation values of one of the other player characters
+        /// </summary>
+        /// <param name="ClientID">NetworkID of the target client</param>
+        /// <param name="CharacterName">Name of the character who's position is being updated</param>
+        /// <param name="CharacterRotation">New rotation values for the character</param>
+        public static void SendPlayerRotationUpdate(int ClientID, string CharacterName, Quaternion CharacterRotation)
         {
             //Log what we are doing
             CommunicationLog.LogOut(ClientID + " Rotation Update");
             //Fill a new NetworkPacket with all the necessary data
             NetworkPacket Packet = new NetworkPacket();
-            Packet.WriteType(ServerPacketType.CharacterRotationUpdate);
+            Packet.WriteType(ServerPacketType.PlayerRotationUpdate);
             Packet.WriteString(CharacterName);
             Packet.WriteQuaternion(CharacterRotation);
             //Add this packet to the queue
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
-        public static void SendPlayerMovement(int ClientID, string CharacterName, Vector3 CharacterMovement)
+
+        /// <summary>
+        /// Tells a client the updated movement values of one of the other player characters
+        /// </summary>
+        /// <param name="ClientID">NetworkID of the target client</param>
+        /// <param name="CharacterName">Name of the character who's movement values are being updated</param>
+        /// <param name="CharacterRotation">New movement input values for the character</param>
+        public static void SendPlayerMovementUpdate(int ClientID, string CharacterName, Vector3 CharacterMovement)
         {
             //Log what we are doing
             CommunicationLog.LogOut(ClientID + " Movement Update");
             //Fill a new NetworkPacket with all the necessary data
             NetworkPacket Packet = new NetworkPacket();
-            Packet.WriteType(ServerPacketType.CharacterMovementUpdate);
+            Packet.WriteType(ServerPacketType.PlayerMovementUpdate);
             Packet.WriteString(CharacterName);
             Packet.WriteVector3(CharacterMovement);
             //Add this packet to the queue
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
-        //Tells a client to spawn a remote player character into their game world
-        public static void SendAddOtherPlayer(int ClientID, string CharacterName, Vector3 CharacterPosition, Quaternion CharacterRotation)
+        /// <summary>
+        /// //Tells a client to spawn a remote player character into their game world
+        /// </summary>
+        /// <param name="ClientID">NetworkID of the target client</param>
+        /// <param name="CharacterName">Name of the character to be spawned in</param>
+        /// <param name="CharacterPosition">Where to spawn the character</param>
+        /// <param name="CharacterMovement">Characters initial movement input values</param>
+        /// <param name="CharacterRotation">Characters initial rotation values</param>
+        public static void SendSpawnOtherPlayer(int ClientID, string CharacterName, Vector3 CharacterPosition, Vector3 CharacterMovement, Quaternion CharacterRotation)
         {
             CommunicationLog.LogOut(ClientID + " add other player");
 
@@ -64,17 +87,21 @@ namespace Server.Networking.PacketSenders
             NetworkPacket Packet = new NetworkPacket();
 
             //Write all the relevant data into the network packet
-            Packet.WriteType(ServerPacketType.SpawnPlayer);
+            Packet.WriteType(ServerPacketType.SpawnOtherPlayer);
             Packet.WriteString(CharacterName);
             Packet.WriteVector3(CharacterPosition);
+            Packet.WriteVector3(CharacterMovement);
             Packet.WriteQuaternion(CharacterRotation);
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
-        //Tells a client to remove a remote player character from their game world
+        /// <summary>
+        /// //Tells a client to remove a remote player character from their game world
+        /// </summary>
+        /// <param name="ClientID">NetworkID of the target client</param>
+        /// <param name="CharacterName">Name of the character to be removed</param>
         public static void SendRemoveOtherPlayer(int ClientID, string CharacterName)
         {
             CommunicationLog.LogOut(ClientID + " remove other player");
@@ -83,15 +110,17 @@ namespace Server.Networking.PacketSenders
             NetworkPacket Packet = new NetworkPacket();
 
             //Write all the relevant data into the network packet
-            Packet.WriteType(ServerPacketType.RemovePlayer);
+            Packet.WriteType(ServerPacketType.RemoveOtherPlayer);
             Packet.WriteString(CharacterName);
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
-        //Tells a client they have been added into the game world physics simulation and they may now start playing
+        /// <summary>
+        /// //Tells a client they have been added into the game world physics simulation and they may now start playing
+        /// </summary>
+        /// <param name="ClientID">NetworkID of the target client</param>
         public static void SendPlayerBegin(int ClientID)
         {
             CommunicationLog.LogOut(ClientID + " player begin");
@@ -99,32 +128,38 @@ namespace Server.Networking.PacketSenders
             NetworkPacket Packet = new NetworkPacket();
             Packet.WriteType(ServerPacketType.PlayerBegin);
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
-        //Tells a client to force move their character to a new location
+        /// <summary>
+        /// //Tells a client to force move their character to a new location
+        /// </summary>
+        /// <param name="ClientID">NetworkID of the target client</param>
+        /// <param name="NewLocation">Location where the clients character is to be moved to</param>
         public static void SendForceMovePlayer(int ClientID, Vector3 NewLocation)
         {
             CommunicationLog.LogOut(ClientID + " force move");
 
             NetworkPacket Packet = new NetworkPacket();
-            Packet.WriteType(ServerPacketType.ForceCharacterMove);
+            Packet.WriteType(ServerPacketType.ForceMovePlayer);
             Packet.WriteVector3(NewLocation);
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
-        //Tells a client to force move someone elses character to a new location
+        /// <summary>
+        /// //Tells a client to force move someone elses character to a new location
+        /// </summary>
+        /// <param name="ClientID">NetworkID of the target client</param>
+        /// <param name="CharacterName">Name of the character to be moved</param>
+        /// <param name="NewLocation">Where the character is to be moved to</param>
         public static void SendForceMoveOtherPlayer(int ClientID, string CharacterName, Vector3 NewLocation)
         {
             CommunicationLog.LogOut(ClientID + " force move other");
 
             NetworkPacket Packet = new NetworkPacket();
-            Packet.WriteType(ServerPacketType.ForceOtherCharacterMove);
+            Packet.WriteType(ServerPacketType.ForceMoveOtherPlayer);
             Packet.WriteString(CharacterName);
             Packet.WriteVector3(NewLocation);
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
     }
 }

@@ -32,7 +32,6 @@ namespace Server.Networking.PacketSenders
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
         /// <summary>
@@ -55,7 +54,6 @@ namespace Server.Networking.PacketSenders
 
             //Add this packet to the target clients outgoign packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
         /// <summary>
@@ -76,7 +74,7 @@ namespace Server.Networking.PacketSenders
             Packet.WriteInt(CharacterCount);
 
             //Loop through all of their characters and write each ones information into the packet data
-            for(int i = 0; i < CharacterCount; i++)
+            for (int i = 0; i < CharacterCount; i++)
             {
                 //Get each characters name from the database, then use that to fetch the rest of that characters data from the database also
                 string CharacterName = CharactersDatabase.GetCharacterName(AccountName, i + 1);
@@ -93,7 +91,6 @@ namespace Server.Networking.PacketSenders
 
             //Add this to the packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
         /// <summary>
@@ -110,13 +107,12 @@ namespace Server.Networking.PacketSenders
             NetworkPacket Packet = new NetworkPacket();
 
             //Write the relevant data values into the packet data
-            Packet.WriteType(ServerPacketType.CharacterCreationReply);
+            Packet.WriteType(ServerPacketType.CreateCharacterReply);
             Packet.WriteBool(CreationSuccess);
             Packet.WriteString(ReplyMessage);
 
             //Add this packet to the target clients outgoing packets queue
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
     }
 }

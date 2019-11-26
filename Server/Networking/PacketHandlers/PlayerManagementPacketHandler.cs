@@ -38,7 +38,7 @@ namespace Server.Networking.PacketHandlers
             //Share this clients new position values with all the other clients currently playing
             List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(ClientID);
             foreach (ClientConnection OtherClient in OtherClients)
-                PlayerManagementPacketSender.SendPlayerPosition(OtherClient.NetworkID, CharacterName, CharacterPosition);
+                PlayerManagementPacketSender.SendPlayerPositionUpdate(OtherClient.NetworkID, CharacterName, CharacterPosition);
         }
         public static void HandleRotationUpdate(int ClientID, ref NetworkPacket Packet)
         {
@@ -61,7 +61,7 @@ namespace Server.Networking.PacketHandlers
             //Share this clients new rotation values with all the other clients currently playing
             List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(ClientID);
             foreach (ClientConnection OtherClient in OtherClients)
-                PlayerManagementPacketSender.SendPlayerRotation(OtherClient.NetworkID, CharacterName, CharacterRotation);
+                PlayerManagementPacketSender.SendPlayerRotationUpdate(OtherClient.NetworkID, CharacterName, CharacterRotation);
         }
         public static void HandleMovementUpdate(int ClientID, ref NetworkPacket Packet)
         {
@@ -84,7 +84,7 @@ namespace Server.Networking.PacketHandlers
             //Share this clients new movement values with all the other clients currently playing
             List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(ClientID);
             foreach (ClientConnection OtherClient in OtherClients)
-                PlayerManagementPacketSender.SendPlayerMovement(OtherClient.NetworkID, CharacterName, CharacterMovement);
+                PlayerManagementPacketSender.SendPlayerMovementUpdate(OtherClient.NetworkID, CharacterName, CharacterMovement);
         }
 
         //Handles a clients player camera zoom / rotation values that we need to store back into the database

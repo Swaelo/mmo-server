@@ -10,7 +10,12 @@ namespace Server.Networking.PacketSenders
 {
     public static class PlayerCommunicationPacketSender
     {
-        //Sends a chat message out to be displayed in a client chat window
+        /// <summary>
+        /// //Sends a chat message out to be displayed in a client chat window
+        /// </summary>
+        /// <param name="ClientID">NetworkID of target client</param>
+        /// <param name="Sender">Name of character who sent the message</param>
+        /// <param name="Message">Contents of the message that was sent</param>
         public static void SendChatMessage(int ClientID, string Sender, string Message)
         {
             CommunicationLog.LogOut(ClientID + " player chat message");
@@ -25,7 +30,6 @@ namespace Server.Networking.PacketSenders
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
     }
 }

@@ -6,91 +6,62 @@
 
 public enum ClientPacketType
 {
-    AccountRegistrationRequest = 1,
-    AccountLoginRequest = 2,
-    CharacterCreationRequest = 3,
-    CharacterDataRequest = 4,
+    //Account Management Packet Types
+    AccountLoginRequest = 1,
+    AccountRegistrationRequest = 2,
+    CharacterDataRequest = 3,
+    CharacterCreationRequest = 4,
+
+    //Game World State Packet Types
     EnterWorldRequest = 5,
-    ActiveEntityRequest = 6,
-    ActiveItemRequest = 7,
-    NewPlayerReady = 8,
-    PlayerChatMessage = 9,
-    PlayerUpdate = 10,
-    PlayerAttack = 11,
-    DisconnectionNotice = 12,
+    PlayerReadyAlert = 6,
 
-    PlayerInventoryRequest = 13,
-    PlayerEquipmentRequest = 14,
-    PlayerActionBarRequest = 15,
-    PlayerTakeItemRequest = 16,
-    RemoveInventoryItem = 17,
-    EquipInventoryItem = 18,
-    UnequipItem = 19,
+    //Player Communication Packet Types
+    PlayerChatMessage = 7,
 
-    PlayerMoveInventoryItem = 20,
-    PlayerSwapInventoryItems = 21,
-    PlayerSwapEquipmentItem = 22,
-    PlayerDropItem = 23,
-    PlayerEquipAbility = 24,
-    PlayerSwapEquipAbility = 25,
-    PlayerUnequipAbility = 26,
-    PlayerSwapAbilities = 27,
-    PlayerMoveAbility = 28,
-    PlayerDropAbility = 29,
+    //Player Management Packet Types
+    CharacterPositionUpdate = 8,
+    CharacterRotationUpdate = 9,
+    CharacterMovementUpdate = 10,
+    CharacterCameraUpdate = 11,
 
-    AccountLogoutAlert = 30,
-    StillAlive = 31,
-    CameraSettings = 32,
-
-    CharacterPositionUpdate = 33,
-    CharacterRotationUpdate = 34,
-    CharacterMovementUpdate = 35,
-
-    RemotePlayerUnknown = 36,
-
-    MissedPackets = 37,
-    StillConnectedReply = 38,
-    MissedPacketsReply = 39
+    //System Packet Types
+    MissedPacketsRequest = 12,
+    StillConnectedReply = 13,
+    OutOfSyncAlert = 14
 };
 
 public enum ServerPacketType
 {
-    AccountRegistrationReply = 1,
-    AccountLoginReply = 2,
-    CharacterCreationReply = 3,
-    CharacterDataReply = 4,
+    //Account Management Packet Types
+    AccountLoginReply = 1,
+    AccountRegistrationReply = 2,
+    CharacterDataReply = 3,
+    CreateCharacterReply = 4,
 
+    //Game World State Packet Types
     ActivePlayerList = 5,
     ActiveEntityList = 6,
     ActiveItemList = 7,
-    SpawnItem = 8,
-    RemoveItem = 9,
+    InventoryContents = 8,
+    EquippedItems = 9,
+    SocketedAbilities = 10,
 
-    EntityUpdates = 10,
-    RemoveEntities = 11,
+    //Player Communication Packet Types
+    PlayerChatMessage = 11,
 
-    PlayerChatMessage = 12,
-    PlayerUpdate = 13,
-    SpawnPlayer = 14,
-    RemovePlayer = 15,
+    //Player Management Packet Types
+    PlayerPositionUpdate = 12,
+    PlayerRotationUpdate = 13,
+    PlayerMovementUpdate = 14,
+    SpawnOtherPlayer = 15,
+    RemoveOtherPlayer = 16,
+    PlayerBegin = 17,
+    ForceMovePlayer = 18,
+    ForceMoveOtherPlayer = 19,
 
-    PlayerInventoryItems = 16,
-    PlayerEquipmentItems = 17,
-    PlayerActionBarAbilities = 18,
-    PlayerTotalItemUpdate = 19,
-    PlayerBegin = 20,
-
-    CharacterPositionUpdate = 21,
-    CharacterRotationUpdate = 22,
-    CharacterMovementUpdate = 23,
-
-    ForceCharacterMove = 24,
-    ForceOtherCharacterMove = 25,
-
-    NewNextPacketNumber = 26,
-    StillConnectedCheck = 27,
-    ConnectionDeSync = 28,
-    MissingPacketsReply = 29,
-    MissedPackets = 30,
-    KickedFromServer = 31
+    //System Packet Types
+    StillConnectedCheck = 20,
+    MissingPacketsRequest = 21,
+    KickedFromServer = 22
 };

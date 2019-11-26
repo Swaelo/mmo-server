@@ -505,7 +505,7 @@ namespace Server.Interface
                 }
 
                 //Tell the client they have been kicked from the game and mark them as being dead
-                SystemPacketSender.SendKickPlayer(TargetClient.NetworkID);
+                SystemPacketSender.SendKickedFromServer(TargetClient.NetworkID);
                 TargetClient.ClientDead = true;
 
                 //Tell all other ingame clients to remove this character from their game worlds

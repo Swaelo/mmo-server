@@ -5,9 +5,9 @@
 // ================================================================================================================================
 
 using System.Collections.Generic;
-using Server.Logging;
 using Server.Networking.PacketSenders;
 using Server.Networking.PacketHandlers;
+using Server.Logging;
 
 namespace Server.Networking
 {
@@ -25,13 +25,24 @@ namespace Server.Networking
 
             //Fetch the ClientConnection who sent this packet to us
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            if (Client == null)
+            {
+                MessageLog.Print("ERROR: Client " + ClientID + " not found.");
+                return;
+            }
 
             //Before reading the packets data, check the order number to make sure we didnt miss any packets in between
             int NewOrderNumber = NewPacket.ReadInt();
             int ExpectedOrderNumber = Client.LastPacketReceived + 1;
 
+            //If we ever recieve a packet with an order number of -1, then that packet needs to be processed immediately
+            if(NewOrderNumber == -1)
+            {
+                //Handle this packets data now
+                HandlePacket(ClientID, NewPacket);
+            }
             //If packets were missed then we need to let the client know, and then just wait until all the missing packets have been received
-            if (NewOrderNumber != ExpectedOrderNumber)
+            else if (NewOrderNumber != ExpectedOrderNumber)
             {
                 //Add this packet that we have just not received into the WaitingToProcess dictionary and mark it as being the NewestPacketWaitingToProcess while we wait for the rest
                 Client.WaitingToProcess.Add(NewOrderNumber, NewPacket);
@@ -39,7 +50,7 @@ namespace Server.Networking
                 Client.WaitingForMissingPackets = true;
 
                 //Send an alert to the client, letting them know which packets need to be resent to us so we can catch up to them
-                SystemPacketSender.SendMissedPacketAlert(ClientID, ExpectedOrderNumber);
+                SystemPacketSender.SendMissingPacketsRequest(ClientID, ExpectedOrderNumber);
 
                 //Keep track of the initial order number that we are waiting to receive back from the client
                 Client.FirstMissingPacketNumber = ExpectedOrderNumber;
@@ -83,16 +94,8 @@ namespace Server.Networking
                                 //Grab each packet from the dictionary
                                 NetworkPacket PacketToProcess = Client.WaitingToProcess[i];
 
-                                //Loop through all of the data in each packet, passing each section of instructions on to its registerd handler function
-                                while (!PacketToProcess.FinishedReading())
-                                {
-                                    //Read the packet type value for this packet
-                                    ClientPacketType PacketType = PacketToProcess.ReadType();
-
-                                    //Use this type value to invoke the correct handler function
-                                    if (PacketHandlers.TryGetValue(PacketType, out Packet Packet))
-                                        Packet.Invoke(ClientID, ref PacketToProcess);
-                                }
+                                //Handle the packets data
+                                HandlePacket(ClientID, PacketToProcess);
                             }
 
                             //All the missing packets have now been processed, reset the dictionary, disable the flag and set the new value for the next expected packet number
@@ -108,50 +111,50 @@ namespace Server.Networking
                     //Set this number as the last that was received from this client
                     Client.LastPacketReceived = NewOrderNumber;
 
-                    //Loop through all of the data in this packet, passing each section of instructions on to their registered handler functions
-                    while(!NewPacket.FinishedReading())
-                    {
-                        //Read the packet type value for this packet
-                        ClientPacketType PacketType = NewPacket.ReadType();
-
-                        //Use this type value to invoke the correct handler function
-                        if (PacketHandlers.TryGetValue(PacketType, out Packet Packet))
-                            Packet.Invoke(ClientID, ref NewPacket);
-                    }
+                    //Handle the packets data
+                    HandlePacket(ClientID, NewPacket);
                 }
+            }
+        }
+
+        //Read all the information from the given packet, passing each section on to its registered handler function
+        private static void HandlePacket(int ClientID, NetworkPacket NewPacket)
+        {
+            while(!NewPacket.FinishedReading())
+            {
+                ClientPacketType PacketType = NewPacket.ReadType();
+                if (PacketHandlers.TryGetValue(PacketType, out Packet Packet))
+                    Packet.Invoke(ClientID, ref NewPacket);
             }
         }
 
         //Map all the packet handler functions into the dictionary
         public static void RegisterPacketHandlers()
         {
-            //Map all the account management packet handlers into the dictionary
+            //Account Management Packet Handlers
             PacketHandlers.Add(ClientPacketType.AccountLoginRequest, AccountManagementPacketHandler.HandleAccountLoginRequest);
-            PacketHandlers.Add(ClientPacketType.AccountLogoutAlert, AccountManagementPacketHandler.HandleAccountLogoutAlert);
             PacketHandlers.Add(ClientPacketType.AccountRegistrationRequest, AccountManagementPacketHandler.HandleAccountRegisterRequest);
             PacketHandlers.Add(ClientPacketType.CharacterDataRequest, AccountManagementPacketHandler.HandleCharacterDataRequest);
             PacketHandlers.Add(ClientPacketType.CharacterCreationRequest, AccountManagementPacketHandler.HandleCreateCharacterRequest);
 
-            //Map all the game world state packet handlers into the dictionary
+            //Game World State Packet Handlers
             PacketHandlers.Add(ClientPacketType.EnterWorldRequest, GameWorldStatePacketHandler.HandleEnterWorldRequest);
-            PacketHandlers.Add(ClientPacketType.NewPlayerReady, GameWorldStatePacketHandler.HandleNewPlayerReady);
+            PacketHandlers.Add(ClientPacketType.PlayerReadyAlert, GameWorldStatePacketHandler.HandleNewPlayerReady);
 
-            //Register functions for handling players Position/Rotation/Movement value updates
+
+            //Player Communication Packet Handlers
+            PacketHandlers.Add(ClientPacketType.PlayerChatMessage, PlayerCommunicationPacketHandler.HandleClientChatMessage);
+
+            //Player Management Packet Handlers
             PacketHandlers.Add(ClientPacketType.CharacterPositionUpdate, PlayerManagementPacketHandler.HandlePositionUpdate);
             PacketHandlers.Add(ClientPacketType.CharacterRotationUpdate, PlayerManagementPacketHandler.HandleRotationUpdate);
             PacketHandlers.Add(ClientPacketType.CharacterMovementUpdate, PlayerManagementPacketHandler.HandleMovementUpdate);
+            PacketHandlers.Add(ClientPacketType.CharacterCameraUpdate, PlayerManagementPacketHandler.HandlePlayerCameraUpdate);
 
-            //Register miscellaneous packet handers into the dictionary
-            PacketHandlers.Add(ClientPacketType.StillAlive, MiscellaneousPacketHandler.HandleStillAliveAlert);
-
-            //Map player communication handlers into the dictionary
-            PacketHandlers.Add(ClientPacketType.PlayerChatMessage, PlayerCommunicationPacketHandler.HandleClientChatMessage);
-
-            PacketHandlers.Add(ClientPacketType.CameraSettings, PlayerManagementPacketHandler.HandlePlayerCameraUpdate);
-
-            PacketHandlers.Add(ClientPacketType.MissedPackets, SystemPacketHandler.HandleMissedPacketAlert);
+            //System Packet Handlers
+            PacketHandlers.Add(ClientPacketType.MissedPacketsRequest, SystemPacketHandler.HandleMissedPacketsRequest);
             PacketHandlers.Add(ClientPacketType.StillConnectedReply, SystemPacketHandler.HandleStillConnectedReply);
-            
+            PacketHandlers.Add(ClientPacketType.OutOfSyncAlert, SystemPacketHandler.HandleOutOfSyncAlert);
         }
     }
 }

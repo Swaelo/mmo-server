@@ -4,95 +4,15 @@
 // Author:	    Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
-using System;
 using Server.Database;
 using Server.Logging;
+using Server.Misc;
 using Server.Networking.PacketSenders;
 
 namespace Server.Networking.PacketHandlers
 {
     public static class AccountManagementPacketHandler
     {
-        //Helper function to check if a given username or password contains any banned characters
-        private static bool IsValidUsername(string Username)
-        {
-            for (int i = 0; i < Username.Length; i++)
-            {
-                //letters and numbers are allowed
-                if (Char.IsLetter(Username[i]) || Char.IsNumber(Username[i]))
-                    continue;
-                //Dashes, Periods and Underscores are allowed
-                if (Username[i] == '-' || Username[i] == '.' || Username[i] == '_')
-                    continue;
-
-                //Absolutely anything else is banned
-                return false;
-            }
-            return true;
-        }
-
-        //Helper function telling you what banned character was found that made a username invalid
-        private static string InvalidUsernameReason(string Username)
-        {
-            //Loop through all the characters in the username
-            for(int i = 0; i < Username.Length; i++)
-            {
-                //letters and numbers are fine
-                if (Char.IsLetter(Username[i]) || Char.IsNumber(Username[i]))
-                    continue;
-                //Dashes, Periods and Underscores are allowed
-                if (Username[i] == '-' || Username[i] == '.' || Username[i] == '_')
-                    continue;
-
-                //Absolutely anything else is banned
-                return ("contains '" + Username[i] + "'");
-            }
-            return "";
-        }
-
-        //Checks if a new character name is valid or not
-        private static bool IsValidName(string CharacterName)
-        {
-            //Empty names are not allowed
-            if (CharacterName == "")
-                return false;
-
-            //Spaces are not allowed in character names
-            if (CharacterName.Contains(' '))
-                return false;
-
-            //Now just run the name through the username checker to detect any other illegal characters
-            return IsValidUsername(CharacterName);
-        }
-
-        //Returns a message explaining why a character name was rejected
-        private static string GetInvalidNameReason(string CharacterName)
-        {
-            //Check for empty name
-            if (CharacterName == "")
-                return "Empty names are not allowed";
-
-            //Check for name with spaces
-            if (CharacterName.Contains(' '))
-                return "Spaces are not allowed in character names";
-
-            //Check each character in the name individually
-            for(int i = 0; i < CharacterName.Length; i++)
-            {
-                //letters and numbers are fine
-                if (Char.IsLetter(CharacterName[i]) || Char.IsNumber(CharacterName[i]))
-                    continue;
-                //dashes, periods and underscores are allowed
-                if (CharacterName[i] == '-' || CharacterName[i] == '.' || CharacterName[i] == '_')
-                    continue;
-
-                //Absolutely any other characters are banned from being used in character names
-                return ("Cannot use '" + CharacterName[i] + "'s in character names");
-            }
-
-            return "";
-        }
-
         //Handles a users account login request
         public static void HandleAccountLoginRequest(int ClientID, ref NetworkPacket Packet)
         {
@@ -138,23 +58,6 @@ namespace Server.Networking.PacketHandlers
             MessageLog.Print(Username + " has logged in.");
         }
 
-        //Handles a users account logout notification
-        public static void HandleAccountLogoutAlert(int ClientID, ref NetworkPacket Packet)
-        {
-            CommunicationLog.LogIn(ClientID + " account logout alert");
-
-            //Get this ClientConnection and make sure we were able to find them
-            ClientConnection ClientConnection = ConnectionManager.GetClientConnection(ClientID);
-            if (ClientConnection == null)
-            {
-                MessageLog.Print("ERROR: Client not found.");
-                return;
-            }
-
-            //Just reset the value tracking what account this user is logged in to
-            ClientConnection.AccountName = "";
-        }
-
         //Handles a users new user account registration request
         public static void HandleAccountRegisterRequest(int ClientID, ref NetworkPacket Packet)
         {
@@ -165,15 +68,15 @@ namespace Server.Networking.PacketHandlers
             string Password = Packet.ReadString();
 
             //Reject this request if the username is already taken, or if the username or password contain any banned characters
-            if(!IsValidUsername(Username))
+            if(!ValidInputCheckers.IsValidUsername(Username))
             {
-                string InvalidWhy = InvalidUsernameReason(Username);
+                string InvalidWhy = ValidInputCheckers.InvalidUsernameReason(Username);
                 AccountManagementPacketSenders.SendAccountRegistrationReply(ClientID, false, "Username " + InvalidWhy);
                 return;
             }
-            if(!IsValidUsername(Password))
+            if(!ValidInputCheckers.IsValidUsername(Password))
             {
-                string InvalidWhy = InvalidUsernameReason(Password);
+                string InvalidWhy = ValidInputCheckers.InvalidUsernameReason(Password);
                 AccountManagementPacketSenders.SendAccountRegistrationReply(ClientID, false, "Password " + InvalidWhy);
                 return;
             }
@@ -215,9 +118,9 @@ namespace Server.Networking.PacketHandlers
             string CharacterName = Packet.ReadString();
 
             //Reject the request if an illegal name was provided by the client
-            if(!IsValidName(CharacterName))
+            if(!ValidInputCheckers.IsValidCharacterName(CharacterName))
             {
-                string Reason = GetInvalidNameReason(CharacterName);
+                string Reason = ValidInputCheckers.GetInvalidCharacterNameReason(CharacterName);
                 AccountManagementPacketSenders.SendCreateCharacterReply(ClientID, false, Reason);
                 return;
             }

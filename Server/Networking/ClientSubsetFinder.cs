@@ -5,6 +5,7 @@
 // ================================================================================================================================
 
 using System.Collections.Generic;
+using Server.Logging;
 
 namespace Server.Networking
 {
@@ -149,6 +150,11 @@ namespace Server.Networking
 
             //Get the ClientConnection that we dont want in this list
             ClientConnection ExceptFor = ConnectionManager.GetClientConnection(ClientID);
+            if (ExceptFor == null)
+            {
+                MessageLog.Print("ERROR: Client " + ClientID + " not found.");
+                return null;
+            }
 
             //Remove the excepted client from the list if its in there
             if (InGameClients.Contains(ExceptFor))

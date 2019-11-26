@@ -15,7 +15,10 @@ namespace Server.Networking.PacketSenders
 {
     public static class GameWorldStatePacketSender
     {
-        //Tells a client where all the other players are in the world so they can be spawned in before they can enter the world
+        /// <summary>
+        /// //Tells a client where all the other players are in the world so they can be spawned in before they can enter the world
+        /// </summary>
+        /// <param name="ClientID">NetworkID for target client</param>
         public static void SendActivePlayerList(int ClientID)
         {
             CommunicationLog.LogOut(ClientID + " active player list");
@@ -36,15 +39,18 @@ namespace Server.Networking.PacketSenders
                 //Write each characters name, and current location and rotation values
                 Packet.WriteString(OtherClient.CharacterName);
                 Packet.WriteVector3(OtherClient.CharacterPosition);
+                Packet.WriteVector3(OtherClient.CharacterMovement);
                 Packet.WriteQuaternion(OtherClient.CharacterRotation);
             }
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
-        //Tells a client where all the active entities are in the world to have them spawned in before they can enter the game world
+        /// <summary>
+        /// //Tells a client where all the active entities are in the world to have them spawned in before they can enter the game world
+        /// </summary>
+        /// <param name="ClientID">NetworkID for target client</param>
         public static void SendActiveEntityList(int ClientID)
         {
             CommunicationLog.LogOut(ClientID + " active entity list");
@@ -70,10 +76,12 @@ namespace Server.Networking.PacketSenders
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
-        //Tells a client where all the active items are in the world to have them spawned in before they can start playing
+        /// <summary>
+        /// //Tells a client where all the active items are in the world to have them spawned in before they can start playing
+        /// </summary>
+        /// <param name="ClientID">NetworkID for target client</param>
         public static void SendActiveItemList(int ClientID)
         {
             CommunicationLog.LogOut(ClientID + " active item list");
@@ -98,10 +106,13 @@ namespace Server.Networking.PacketSenders
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
-        //Tells a clients all the contents of their chosen characters inventory to be loaded in before they enter into the game world
+        /// <summary>
+        /// //Tells a clients all the contents of their chosen characters inventory to be loaded in before they enter into the game world
+        /// </summary>
+        /// <param name="ClientID">NetworkID of target client</param>
+        /// <param name="CharacterName">Name of character who's inventory contents are being sent</param>
         public static void SendInventoryContents(int ClientID, string CharacterName)
         {
             CommunicationLog.LogOut(ClientID + " inventory contents");
@@ -113,7 +124,7 @@ namespace Server.Networking.PacketSenders
             List<ItemData> InventoryContents = InventoriesDatabase.GetAllInventorySlots(CharacterName);
 
             //Write the relevant data values into the packet data
-            Packet.WriteType(ServerPacketType.PlayerInventoryItems);
+            Packet.WriteType(ServerPacketType.InventoryContents);
             Packet.WriteInt(InventoryContents.Count);
 
             //Loop through the list of items in the players inventory and write all of their information into the packet data
@@ -125,10 +136,13 @@ namespace Server.Networking.PacketSenders
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
-        //Tells a client all the items currently equipped on their chosen character to be loaded in before they enter into the game world
+        /// <summary>
+        /// //Tells a client all the items currently equipped on their chosen character to be loaded in before they enter into the game world
+        /// </summary>
+        /// <param name="ClientID">NetworkID of target client</param>
+        /// <param name="CharacterName">Name of character who's equipped items are being sent</param>
         public static void SendEquippedItems(int ClientID, string CharacterName)
         {
             CommunicationLog.LogOut(ClientID + " equipped items");
@@ -140,7 +154,7 @@ namespace Server.Networking.PacketSenders
             List<ItemData> EquippedItems = EquipmentsDatabase.GetAllEquipmentSlots(CharacterName);
 
             //Write the relevant data values into the packet data
-            Packet.WriteType(ServerPacketType.PlayerEquipmentItems);
+            Packet.WriteType(ServerPacketType.EquippedItems);
             Packet.WriteInt(EquippedItems.Count);
 
             //Loop through the list and write in each items information into the packet data
@@ -153,10 +167,13 @@ namespace Server.Networking.PacketSenders
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
-        //Tells a client all the items currently socketed into their ability bar to be loaded in before they can enter into the game world
+        /// <summary>
+        /// //Tells a client all the items currently socketed into their ability bar to be loaded in before they can enter into the game world
+        /// </summary>
+        /// <param name="ClientID">NetworkID of target client</param>
+        /// <param name="CharacterName">Name of character who's socketed abilities are being sent</param>
         public static void SendSocketedAbilities(int ClientID, string CharacterName)
         {
             CommunicationLog.LogOut(ClientID + " socketed abilities");
@@ -168,7 +185,7 @@ namespace Server.Networking.PacketSenders
             List<ItemData> SocketedAbilities = ActionBarsDatabase.GetEveryActionBarItem(CharacterName);
 
             //Write the relevant data values into the packet data
-            Packet.WriteType(ServerPacketType.PlayerActionBarAbilities);
+            Packet.WriteType(ServerPacketType.SocketedAbilities);
             Packet.WriteInt(SocketedAbilities.Count);
 
             //Loop through the list and write in each items information into the packet data
@@ -180,7 +197,6 @@ namespace Server.Networking.PacketSenders
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
-            //ConnectionManager.SendPacket(ClientID, Packet);
         }
     }
 }

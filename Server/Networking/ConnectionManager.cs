@@ -91,7 +91,7 @@ namespace Server.Networking
                 foreach(KeyValuePair<int, ClientConnection> Client in ActiveConnections)
                 {
                     //Ask this client if they are still connected to us
-                    SystemPacketSender.SendStillAliveRequest(Client.Key);
+                    SystemPacketSender.SendStillConnectedCheck(Client.Key);
 
                     //Check how much time has passed since we last heard from them, flag their connection as dead if too much time has passed
                     int LastHeard = Client.Value.LastCommunication.AgeInSeconds();

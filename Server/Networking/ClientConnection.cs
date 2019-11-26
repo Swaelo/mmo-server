@@ -16,7 +16,7 @@ using BepuPhysics.Collidables;
 using Server.Misc;
 using Server.Time;
 using Server.Logging;
-using Server.Enums;
+using Server.Networking.PacketSenders;
 using Quaternion = BepuUtilities.Quaternion;
 
 namespace Server.Networking
@@ -91,8 +91,8 @@ namespace Server.Networking
             LastCommunication = new PointInTime();
 
             //Set up the datastream and buffer, then start listening for messages from the client
-            NetworkConnection.SendBufferSize = 4096;
-            NetworkConnection.ReceiveBufferSize = 4096;
+            NetworkConnection.SendBufferSize = 262144;
+            NetworkConnection.ReceiveBufferSize = 262144;
             DataStream = NetworkConnection.GetStream();
             DataBuffer = new byte[NetworkConnection.Available];
             DataStream.BeginRead(DataBuffer, 0, DataBuffer.Length, ReadPacket, null);
@@ -116,7 +116,6 @@ namespace Server.Networking
             try { DataStream.BeginRead(DataBuffer, 0, DataBuffer.Length, ReadPacket, null); }
             catch(IOException Exception) { MessageLog.Error(Exception, "Error sending packet to client, their connection no longer exists"); return; }
             
-
             //Upgrade this clients connection if it is brand new
             if (!ConnectionUpgraded)
                 UpgradeConnection(PacketBuffer);
@@ -240,8 +239,8 @@ namespace Server.Networking
 
             //Store this packet into the previous packets dictionary, maintain the dictionary to only store the last 25 packets sent to that client
             PreviousPackets.Add(NextOutgoingPacketNumber, Packet);
-            if (PreviousPackets.Count > 25)
-                PreviousPackets.Remove(NextOutgoingPacketNumber - 25);
+            if (PreviousPackets.Count > 150)
+                PreviousPackets.Remove(NextOutgoingPacketNumber - 150);
 
             //Frame the packet data and convert into a byte array ready for transmission
             byte[] PacketData = GetFrameFromString(Packet.PacketData);
@@ -257,12 +256,24 @@ namespace Server.Networking
         }
 
         //Transmits a missing packet back to a client who requested it again
-        public void SendMissingPacket(int PacketNumber)
+        public void SendMissingPacket(ClientConnection Client, int PacketNumber)
         {
             //First check that this missing packet is still stored in memory
             if(!PreviousPackets.ContainsKey(PacketNumber))
             {
-                MessageLog.Print("ERROR: Missing packet no longer in memory, client needs to be resynchronized manually.");
+                //Log an error showing this client has requested packets that are no longer being stored in memory and that their connection needs to be closed down
+                MessageLog.Print("ERROR: Client requesting missing packet no longer in memory, closing down their connection.");
+
+                //Kick this player from the server, letting them know why they have been kicked
+                SystemPacketSender.SendKickedFromServer(Client.NetworkID, "Missed packets from server that are no longer kept in memory, desync unable to be fixed.");
+
+                //Tell all the other clients to remove this character from their game worlds
+                List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(Client.NetworkID);
+                foreach (ClientConnection OtherClient in OtherClients)
+                    PlayerManagementPacketSender.SendRemoveOtherPlayer(OtherClient.NetworkID, Client.CharacterName);
+
+                //Set the client as dead so they are cleaned up and have their data backed up into the database correctly and exit the function
+                Client.ClientDead = true;
                 return;
             }
 
@@ -282,15 +293,19 @@ namespace Server.Networking
             }
         }
 
+        //Any packet with order number -1 has its order number ignored by clients and is processed immediately
         public void SendPacketImmediately(NetworkPacket Packet)
         {
-            //Frame and convert the data to byte array
+            //First add the -1 order number into the packet data
+            Packet.AddPacketOrderNumber(-1);
+
+            //Frame and convert the data into bytes, then into string for reading the payload size properly
             byte[] PacketData = GetFrameFromString(Packet.PacketData);
             string PacketString = Encoding.UTF8.GetString(PacketData);
 
-            //Send the packet right away, display error if that couldnt be done
+            //Send the packet to the client, display an error if it couldnt be done
             try { DataStream.BeginWrite(PacketData, 0, PacketString.Length, null, null); }
-            catch (IOException Exception) { MessageLog.Error(Exception, "Error trying to immediately send a packet to a client, their connection is no longer open."); }
+            catch (IOException Exception) { MessageLog.Error(Exception, "Error trying to immediately send a packet to a client, their connection is no longer active."); }
         }
 
         //Frames the message correctly so it can be sent to the client
