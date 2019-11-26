@@ -270,7 +270,7 @@ namespace Server.Networking
                 //Tell all the other clients to remove this character from their game worlds
                 List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(Client.NetworkID);
                 foreach (ClientConnection OtherClient in OtherClients)
-                    PlayerManagementPacketSender.SendRemoveOtherPlayer(OtherClient.NetworkID, Client.CharacterName);
+                    PlayerManagementPacketSender.SendRemoveRemotePlayer(OtherClient.NetworkID, Client.CharacterName);
 
                 //Set the client as dead so they are cleaned up and have their data backed up into the database correctly and exit the function
                 Client.ClientDead = true;
