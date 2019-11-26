@@ -39,17 +39,6 @@ namespace Server.Interface
         public bool WhereEvent = false;
         public string WhereTarget = "";
 
-        //Relocate event is for moving a character to a new location in the game world
-        public bool RelocateToPlayerEvent = false;
-        public bool RelocateToPositionEvent = false;
-        public string RelocateTarget = "";
-        public string RelocatePlayerDestination = "";
-        public Vector3 RelocatePositionDestination = Vector3.Zero;
-
-        //Event for updating the location of all characters inside the database to a new location
-        public bool RelocateAllEvent = false;
-        public Vector3 RelocateAllLocation = Vector3.Zero;
-
         //Event for kicking a player from the server
         public bool KickPlayerEvent = false;
         public string KickPlayerName = "";
@@ -235,8 +224,6 @@ namespace Server.Interface
 
             if (TryWherePlayer(InputSplit) ||
                 TryShutdown(InputSplit) ||
-                TryRelocateAll(InputSplit) ||
-                TryRelocatePlayer(InputSplit) ||
                 TryKickPlayer(InputSplit))
                 Reset();
             else
@@ -279,48 +266,6 @@ namespace Server.Interface
             Reset();
             return true;
         }
-
-        private bool TryRelocateAll(string[] InputSplit)
-        {
-            //Check for command key
-            if (InputSplit[0] != "relocateall")
-                return false;
-            //Check argument count
-            if (InputSplit.Length != 4)
-                return false;
-            //Flag this event
-            RelocateAllEvent = true;
-            RelocateAllLocation = new Vector3(float.Parse(InputSplit[1]), float.Parse(InputSplit[2]), float.Parse(InputSplit[3]));
-            //Reset and exit
-            Reset();
-            return true;
-        }
-
-        private bool TryRelocatePlayer(string[] InputSplit)
-        {
-            //Check for command key
-            if (InputSplit[0] != "relocate")
-                return false;
-            //Check argument count
-            if (InputSplit.Length != 3 && InputSplit.Length != 5)
-                return false;
-            //Flag this event
-            if(InputSplit.Length == 3)
-            {
-                RelocateToPlayerEvent = true;
-                RelocateTarget = InputSplit[1];
-                RelocatePlayerDestination = InputSplit[2];
-            }
-            else if(InputSplit.Length == 5)
-            {
-                RelocateToPositionEvent = true;
-                RelocateTarget = InputSplit[1];
-                RelocatePositionDestination = new Vector3(float.Parse(InputSplit[2]), float.Parse(InputSplit[3]), float.Parse(InputSplit[4]));
-            }
-            //Reset and exit
-            Reset();
-            return true;
-        }
         
         private bool TryKickPlayer(string[] InputSplit)
         {
@@ -342,9 +287,6 @@ namespace Server.Interface
         {
             TryPerformWherePlayer();
             TryPerformShutdown();
-            TryPerformRelocateAll();
-            TryPerformRelocatePlayerToPlayer();
-            TryPerformRelocatePlayerToPosition();
             TryPerformKickPlayer();
         }
 
@@ -389,101 +331,6 @@ namespace Server.Interface
             }
         }
 
-        private void TryPerformRelocateAll()
-        {
-            if(RelocateAllEvent)
-            {
-                //Log what is happening here
-                MessageLog.Print("Updating the location of every character inside the database...");
-
-                //Update all the characters position in the database
-                CharactersDatabase.MoveAllCharacters(RelocateAllLocation);
-
-                //Disable the event flag
-                RelocateAllEvent = false;
-            }
-        }
-
-        private void TryPerformRelocatePlayerToPlayer()
-        {
-            if(RelocateToPlayerEvent)
-            {
-                //Log what is happening here
-                MessageLog.Print("Moving " + RelocateTarget + " to " + RelocatePlayerDestination + "'s location...");
-
-                //Get the clients whom these two characters belong to
-                ClientConnection TargetClient = ClientSubsetFinder.GetClientUsingCharacter(RelocateTarget);
-                ClientConnection DestinationClient = ClientSubsetFinder.GetClientUsingCharacter(RelocatePlayerDestination);
-
-                //If either of these clients were unable to be found then that means one of the characters wasnt found in the game world
-                if (TargetClient == null)
-                {
-                    //Display an error showing this command could not be performed
-                    MessageLog.Print("ERROR: Could not find " + RelocateTarget + ", so they couldnt be moved.");
-                    //Disable the event flag and exit out of the function
-                    RelocateToPlayerEvent = false;
-                    return;
-                }
-                if(DestinationClient == null)
-                {
-                    //Display an error showing this command could not be performed
-                    MessageLog.Print("ERROR: Could not find " + RelocatePlayerDestination + ", so " + RelocateTarget + " couldnt be moved to their location.");
-                    //Disable the event flag and exit out of the function
-                    RelocateToPlayerEvent = false;
-                    return;
-                }
-
-                //Move the client to the new location
-                TargetClient.CharacterPosition = DestinationClient.CharacterPosition;
-
-                //First tell the owning client to move their character to the new location
-                PlayerManagementPacketSender.SendForceMovePlayer(TargetClient.NetworkID, TargetClient.CharacterPosition);
-                //Now loop through all the other ingame clients and tell them to move this character to the new location also
-                List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(TargetClient.NetworkID);
-                foreach (ClientConnection OtherClient in OtherClients)
-                    PlayerManagementPacketSender.SendForceMoveOtherPlayer(OtherClient.NetworkID, TargetClient.CharacterName, TargetClient.CharacterPosition);
-
-                //Disable the event flag
-                RelocateToPlayerEvent = false;
-            }
-        }
-
-        private void TryPerformRelocatePlayerToPosition()
-        {
-            if(RelocateToPositionEvent)
-            {
-                //Log what is happening here
-                MessageLog.Print("Moving " + RelocateTarget + " to " + RelocatePlayerDestination.ToString() + "...");
-
-                //Get the client who this character belongs to
-                ClientConnection TargetClient = ClientSubsetFinder.GetClientUsingCharacter(RelocateTarget);
-
-                //Check we were able to find the client
-                if(TargetClient == null)
-                {
-                    //Display an error showing this command could not be performed
-                    MessageLog.Print("ERROR: Could not find " + RelocateTarget + ", so they couldnt be moved.");
-                    //Disable the event flag and exit out of the function
-                    RelocateToPositionEvent = false;
-                    return;
-                }
-
-                //Move the client to their new location
-                TargetClient.CharacterPosition = RelocatePositionDestination;
-
-                //Tell the client to move their character to its new location
-                PlayerManagementPacketSender.SendForceMovePlayer(TargetClient.NetworkID, TargetClient.CharacterPosition);
-
-                //Tell all other ingame clients to move this character to its new location also
-                List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(TargetClient.NetworkID);
-                foreach (ClientConnection OtherClient in OtherClients)
-                    PlayerManagementPacketSender.SendForceMoveOtherPlayer(OtherClient.NetworkID, TargetClient.CharacterName, TargetClient.CharacterPosition);
-
-                //Disable the event flag
-                RelocateToPositionEvent = false;
-            }
-        }
-
         private void TryPerformKickPlayer()
         {
             if(KickPlayerEvent)
@@ -511,7 +358,7 @@ namespace Server.Interface
                 //Tell all other ingame clients to remove this character from their game worlds
                 List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(TargetClient.NetworkID);
                 foreach (ClientConnection OtherClient in OtherClients)
-                    PlayerManagementPacketSender.SendRemoveOtherPlayer(OtherClient.NetworkID, TargetClient.CharacterName);
+                    PlayerManagementPacketSender.SendRemoveRemotePlayer(OtherClient.NetworkID, TargetClient.CharacterName);
 
                 //Disable the event flag
                 KickPlayerEvent = false;
