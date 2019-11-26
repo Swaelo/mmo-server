@@ -41,6 +41,7 @@ namespace Server.Networking.PacketSenders
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
+            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
         //Tells a client where all the active entities are in the world to have them spawned in before they can enter the game world
@@ -69,6 +70,7 @@ namespace Server.Networking.PacketSenders
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
+            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
         //Tells a client where all the active items are in the world to have them spawned in before they can start playing
@@ -96,6 +98,7 @@ namespace Server.Networking.PacketSenders
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
+            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
         //Tells a clients all the contents of their chosen characters inventory to be loaded in before they enter into the game world
@@ -122,6 +125,7 @@ namespace Server.Networking.PacketSenders
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
+            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
         //Tells a client all the items currently equipped on their chosen character to be loaded in before they enter into the game world
@@ -149,6 +153,7 @@ namespace Server.Networking.PacketSenders
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
+            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
         //Tells a client all the items currently socketed into their ability bar to be loaded in before they can enter into the game world
@@ -175,6 +180,7 @@ namespace Server.Networking.PacketSenders
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
+            //ConnectionManager.SendPacket(ClientID, Packet);
         }
     }
 }

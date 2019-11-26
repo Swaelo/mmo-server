@@ -87,10 +87,13 @@ namespace Server.Networking
                 //Reset the timer for checking client connections again
                 NextConnectionCheck = ConnectionCheckInterval;
 
-                //Go through the entire list of active client connections and flag the ones which have had their connections timed out
-                foreach (KeyValuePair<int, ClientConnection> Client in ActiveConnections)
+                //Send a message to all active client connections requesting they immediately let us know they are still connected
+                foreach(KeyValuePair<int, ClientConnection> Client in ActiveConnections)
                 {
-                    //Check how much time has passed since we last heard from them, flag their connection as dead if they have timed out
+                    //Ask this client if they are still connected to us
+                    SystemPacketSender.SendStillAliveRequest(Client.Key);
+
+                    //Check how much time has passed since we last heard from them, flag their connection as dead if too much time has passed
                     int LastHeard = Client.Value.LastCommunication.AgeInSeconds();
                     if (LastHeard >= ClientConnectionTimeout)
                         Client.Value.ClientDead = true;

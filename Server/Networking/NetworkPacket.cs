@@ -24,6 +24,12 @@ namespace Server.Networking
             RemainingPacketData = PacketData;
         }
 
+        //Adds the packet order number to the start of the packet data
+        public void AddPacketOrderNumber(int PacketNumber)
+        {
+            PacketData = PacketNumber.ToString() + " " + PacketData;
+        }
+
         //Checks the current value of the RemainingPacketData to check if there is any data left to be read from it
         public bool FinishedReading()
         {

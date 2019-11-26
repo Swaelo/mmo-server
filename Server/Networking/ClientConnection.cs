@@ -10,6 +10,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Numerics;
+using System.Collections.Generic;
 using BepuPhysics;
 using BepuPhysics.Collidables;
 using Server.Misc;
@@ -29,6 +30,19 @@ namespace Server.Networking
         public NetworkStream DataStream;    //Information is transmitted back and forth with this
         public byte[] DataBuffer;   //Data is streamed into here during asynchronous reading
         public PointInTime LastCommunication;   //The exact moment we last had communications with this client connection
+        public bool ClientDead = false; //Flag set by the ConnectionManager when it detects that this client has been disconnected and needs to be cleaned up
+        public bool ClientDeSynced = false; //Set when a client has missed packets outside of memory, they will request all data needed to resync then tell us when to disable this
+
+        //If we miss some packets from a client, we need to store any later packets in the dictionary until we receive the ones that are missing, before all can be processed
+        public Dictionary<int, NetworkPacket> WaitingToProcess = new Dictionary<int, NetworkPacket>();
+        public bool WaitingForMissingPackets = false;   //Set when we detect we have missed some packets, disabled once all have been received and processed to catch back up again
+        public int FirstMissingPacketNumber;    //The packet order number of the first missing packet that we are currently waiting for
+        public int NewestPacketWaitingToProcess;    //The order number of the newest packet that is waiting to be processed (newer packets may be received and added here before we
+        //receive the older missing packets back from the client that we requested
+        public int NextOutgoingPacketNumber = 0;    //Order number for the next packet to be sent to this client
+        public int GetNextOutgoingPacketNumber() { NextOutgoingPacketNumber++; return NextOutgoingPacketNumber; }
+        private Dictionary<int, NetworkPacket> PreviousPackets = new Dictionary<int, NetworkPacket>();  //Dictionary storing the last 25 packets sent to this client
+        public int LastPacketReceived = 0;    //Order number for the next packet to be recieved from this client
 
         //Account / Character settings
         public bool WaitingToEnter = false; //Set when client is ready to enter the game, any with this flag set are added into the physics scene at the start of each update
@@ -54,7 +68,14 @@ namespace Server.Networking
         public BodyDescription PhysicsBody; //The world simulation physics object for this clients character controller when they are in the game world
         public int BodyHandle = -1; //The reference handle pointing to this clients world simulation physics object for this clients character controller
 
-        public bool ClientDead = false; //Flag set by the ConnectionManager when it detects that this client has been disconnected and needs to be cleaned up
+        //Returns a NetworkPacket from the list of previous packets sent to this client
+        public NetworkPacket GetPreviousPacket(int PacketOrderNumber)
+        {
+            //Return null if the packet cannot be found in the dictionary
+            if (!PreviousPackets.ContainsKey(PacketOrderNumber))
+                return null;
+            return PreviousPackets[PacketOrderNumber];
+        }
 
         /// <summary>
         /// Constructor
@@ -204,21 +225,72 @@ namespace Server.Networking
             ConnectionUpgraded = true;
         }
 
-        //Transmits a message to this client 
-        public void SendPacket(string PacketMessage)
+        public void SendPacket(string PacketData)
         {
-            //Put the network frame around the message and convert that to bytes
-            byte[] PacketData = GetFrameFromString(PacketMessage);
+            NetworkPacket NewPacket = new NetworkPacket(PacketData);
+            SendPacket(NewPacket);
+        }
+
+        //Transmits a packet to this client, and stores it in the list of previously sent packets
+        public void SendPacket(NetworkPacket Packet)
+        {
+            //Set the order number for this packet, then place that at the start of the packet data
+            NextOutgoingPacketNumber++;
+            Packet.AddPacketOrderNumber(NextOutgoingPacketNumber);
+
+            //Store this packet into the previous packets dictionary, maintain the dictionary to only store the last 25 packets sent to that client
+            PreviousPackets.Add(NextOutgoingPacketNumber, Packet);
+            if (PreviousPackets.Count > 25)
+                PreviousPackets.Remove(NextOutgoingPacketNumber - 25);
+
+            //Frame the packet data and convert into a byte array ready for transmission
+            byte[] PacketData = GetFrameFromString(Packet.PacketData);
             string PacketString = Encoding.UTF8.GetString(PacketData);
 
-            //Make sure the connection to this client is still open before we begin writing data to their stream
-            try { DataStream.BeginWrite(PacketData, 0, PacketData.Length, null, null); }
-            catch (IOException Exception)
+            //Now try sending to the client, making sure the connection is still active
+            try { DataStream.BeginWrite(PacketData, 0, PacketString.Length, null, null); }
+            catch(IOException Exception)
             {
-                //Catch IO Exception caused from trying to send packet to a dead client connection, mark them as needing to be cleaned up
-                MessageLog.Error(Exception, "Error sending packet data to client #" + NetworkID + ", their connection has been lost.");
+                MessageLog.Error(Exception, "Error sending packet to dead client connection, marking them for cleanup.");
                 ClientDead = true;
             }
+        }
+
+        //Transmits a missing packet back to a client who requested it again
+        public void SendMissingPacket(int PacketNumber)
+        {
+            //First check that this missing packet is still stored in memory
+            if(!PreviousPackets.ContainsKey(PacketNumber))
+            {
+                MessageLog.Print("ERROR: Missing packet no longer in memory, client needs to be resynchronized manually.");
+                return;
+            }
+
+            //Otherwise, we fetch the missing packet from the dictionary
+            NetworkPacket MissingPacket = PreviousPackets[PacketNumber];
+
+            //Frame the data, convert to binary array, and again to string to get the final packet size
+            byte[] PacketData = GetFrameFromString(MissingPacket.PacketData);
+            string PacketString = Encoding.UTF8.GetString(PacketData);
+
+            //Then send the missing packet to the client, making sure connection is still open
+            try { DataStream.BeginWrite(PacketData, 0, PacketString.Length, null, null); }
+            catch(IOException Exception)
+            {
+                MessageLog.Error(Exception, "Error resending missing packet to dead client connection, marking them for cleanup.");
+                ClientDead = true;
+            }
+        }
+
+        public void SendPacketImmediately(NetworkPacket Packet)
+        {
+            //Frame and convert the data to byte array
+            byte[] PacketData = GetFrameFromString(Packet.PacketData);
+            string PacketString = Encoding.UTF8.GetString(PacketData);
+
+            //Send the packet right away, display error if that couldnt be done
+            try { DataStream.BeginWrite(PacketData, 0, PacketString.Length, null, null); }
+            catch (IOException Exception) { MessageLog.Error(Exception, "Error trying to immediately send a packet to a client, their connection is no longer open."); }
         }
 
         //Frames the message correctly so it can be sent to the client

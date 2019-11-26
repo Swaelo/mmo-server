@@ -5,11 +5,15 @@
 // ================================================================================================================================
 
 using System.Numerics;
+using System.Collections.Generic;
 using ServerUtilities;
 using ContentRenderer;
 using ContentRenderer.UI;
 using Server.Logic;
 using Server.Logging;
+using Server.Networking;
+using Server.Networking.PacketSenders;
+using Server.Database;
 
 namespace Server.Interface
 {
@@ -45,6 +49,10 @@ namespace Server.Interface
         //Event for updating the location of all characters inside the database to a new location
         public bool RelocateAllEvent = false;
         public Vector3 RelocateAllLocation = Vector3.Zero;
+
+        //Event for kicking a player from the server
+        public bool KickPlayerEvent = false;
+        public string KickPlayerName = "";
 
         public void Initialize()
         {
@@ -86,86 +94,6 @@ namespace Server.Interface
                 if (Controls.Enter.WasTriggered(Input))
                     TryExecute();
             }
-        }
-
-        //Try using the current contents of the command input field to execute a new command
-        private void TryExecute()
-        {
-            //Do nothing if there is no content in the input field
-            if (MessageInput == "")
-                return;
-
-            //Check for the server shutdown event
-            if (MessageInput == "shutdown")
-                ShutdownEvent = true;
-
-            //Try splitting the string from its spaces to check for multi word / argument requiring commands
-            string[] InputSplit = MessageInput.Split(" ");
-
-            //If the first word of the input split is where, we want to display the location of a certain character
-            if(InputSplit[0] == "where")
-            {
-                //For the Where function, there must only be a 2nd word in the array, ignore this input if thats not the case
-                if(InputSplit.Length != 2)
-                {
-                    Reset();
-                    return;
-                }
-
-                //Otherwise, we want to use the 2nd word as the name of the character we want to find the location of
-                WhereEvent = true;
-                WhereTarget = InputSplit[1];
-
-                Reset();
-                return;
-            }
-            //if the first word of the pslit is relocateall, we want to update the locations of all characters inside the database to the new location typed in
-            else if (InputSplit[0] == "relocateall")
-            {
-                //Only listen with an argument count of 4
-                if (InputSplit.Length != 4)
-                {
-                    MessageLog.Print("Relocateall invalid argument count: " + InputSplit.Length + ", expecting 4");
-                    Reset();
-                    return;
-                }
-
-                //Get the new location where we want to position all characters inside the database
-                RelocateAllLocation = new Vector3(float.Parse(InputSplit[1]), float.Parse(InputSplit[2]), float.Parse(InputSplit[3]));
-                RelocateAllEvent = true;
-            }
-            //If the first word of the split is relocate, we want to move one of the characters to a new location in the game world
-            else if (InputSplit[0] == "relocate")
-            {
-                //For the Relocate function, we only listen if there is only 3 total items in the split (CMD, PlayerToMove, PlayerToMoveTo), or 5 items (CMD, PlayerToMove, NewXPos, NewYPos, NewZPos)
-                if(InputSplit.Length != 3 && InputSplit.Length != 5)
-                {
-                    MessageLog.Print("Relocate invalid argument count: " + InputSplit.Length);
-                    Reset();
-                    return;
-                }
-
-                //If the length was 3, we want to move the first character to the location of the second character
-                if(InputSplit.Length == 3)
-                {
-                    RelocateToPlayerEvent = true;
-                    RelocateTarget = InputSplit[1];
-                    RelocatePlayerDestination = InputSplit[2];
-                }
-                //If the length was 5, we want to move the character to the vector location that was entered
-                else if(InputSplit.Length == 5)
-                {
-                    RelocateToPositionEvent = true;
-                    RelocateTarget = InputSplit[1];
-                    RelocatePositionDestination = new Vector3(float.Parse(InputSplit[2]), float.Parse(InputSplit[3]), float.Parse(InputSplit[4]));
-                }
-
-                Reset();
-                return;
-            }
-
-            //Reset the contents of the input field
-            Reset();
         }
 
         //Empties the input field and disables it
@@ -293,6 +221,301 @@ namespace Server.Interface
         public void Render(Renderer Renderer, float TextHeight, Vector3 TextColor, Font TextFont)
         {
             Renderer.TextBatcher.Write(TextBuilder.Clear().Append(PreInput + MessageInput), UIPosition, TextHeight, TextColor, TextFont);
+        }
+
+        //Try using the current contents of the command input field to execute a new command
+        private void TryExecute()
+        {
+            //Do nothing if there is no content in the input field
+            if (MessageInput == "")
+                return;
+
+            //Try splitting the string from its spaces to check for multi word / argument requiring commands
+            string[] InputSplit = MessageInput.Split(" ");
+
+            if (TryWherePlayer(InputSplit) ||
+                TryShutdown(InputSplit) ||
+                TryRelocateAll(InputSplit) ||
+                TryRelocatePlayer(InputSplit) ||
+                TryKickPlayer(InputSplit))
+                Reset();
+            else
+                Reset();
+        }
+
+        private bool TryWherePlayer(string[] InputSplit)
+        {
+            //Check for command key
+            if (InputSplit[0] != "where")
+                return false;
+
+            //Check argument count
+            if (InputSplit.Length != 2)
+                return false;
+
+            //Flag this event
+            WhereEvent = true;
+            WhereTarget = InputSplit[1];
+
+            //Reset and exit
+            Reset();
+            return true;
+        }
+
+        private bool TryShutdown(string[] InputSplit)
+        {
+            //Check for command key
+            if (InputSplit[0] != "shutdown")
+                return false;
+
+            //Check argument count
+            if (InputSplit.Length != 1)
+                return false;
+
+            //Flag this event
+            ShutdownEvent = true;
+
+            //Reset and exit
+            Reset();
+            return true;
+        }
+
+        private bool TryRelocateAll(string[] InputSplit)
+        {
+            //Check for command key
+            if (InputSplit[0] != "relocateall")
+                return false;
+            //Check argument count
+            if (InputSplit.Length != 4)
+                return false;
+            //Flag this event
+            RelocateAllEvent = true;
+            RelocateAllLocation = new Vector3(float.Parse(InputSplit[1]), float.Parse(InputSplit[2]), float.Parse(InputSplit[3]));
+            //Reset and exit
+            Reset();
+            return true;
+        }
+
+        private bool TryRelocatePlayer(string[] InputSplit)
+        {
+            //Check for command key
+            if (InputSplit[0] != "relocate")
+                return false;
+            //Check argument count
+            if (InputSplit.Length != 3 && InputSplit.Length != 5)
+                return false;
+            //Flag this event
+            if(InputSplit.Length == 3)
+            {
+                RelocateToPlayerEvent = true;
+                RelocateTarget = InputSplit[1];
+                RelocatePlayerDestination = InputSplit[2];
+            }
+            else if(InputSplit.Length == 5)
+            {
+                RelocateToPositionEvent = true;
+                RelocateTarget = InputSplit[1];
+                RelocatePositionDestination = new Vector3(float.Parse(InputSplit[2]), float.Parse(InputSplit[3]), float.Parse(InputSplit[4]));
+            }
+            //Reset and exit
+            Reset();
+            return true;
+        }
+        
+        private bool TryKickPlayer(string[] InputSplit)
+        {
+            //Check for command key
+            if (InputSplit[0] != "kick")
+                return false;
+            //Check argument count
+            if (InputSplit.Length != 2)
+                return false;
+            //Flag this event
+            KickPlayerEvent = true;
+            KickPlayerName = InputSplit[1];
+            //Reset and exit
+            Reset();
+            return true;
+        }
+
+        public void TryPerformEvents()
+        {
+            TryPerformWherePlayer();
+            TryPerformShutdown();
+            TryPerformRelocateAll();
+            TryPerformRelocatePlayerToPlayer();
+            TryPerformRelocatePlayerToPosition();
+            TryPerformKickPlayer();
+        }
+
+        private void TryPerformWherePlayer()
+        {
+            if(WhereEvent)
+            {
+                //Log what is happening here
+                MessageLog.Print("Finding " + WhereTarget + "'s location...");
+
+                //Get the client controller the character we are looking for
+                ClientConnection Client = ClientSubsetFinder.GetClientUsingCharacter(WhereTarget);
+
+                //If the client was unable to be found, the character being searched for isnt in the game right now
+                if (Client == null)
+                    MessageLog.Print(WhereTarget + " could not be found.");
+                //Otherwise, we use that client to find their characters current location then display that
+                else
+                    MessageLog.Print(WhereTarget + " is located at " + Client.CharacterPosition.ToString());
+
+                //Disable the event flag
+                WhereEvent = false;
+            }
+        }
+
+        private void TryPerformShutdown()
+        {
+            if(ShutdownEvent)
+            {
+                //Log what is happening here
+                MessageLog.Print("Shutting down the server...");
+
+                //Get a list of all ingame clients who are logged in and playing right now
+                List<ClientConnection> ActiveClients = ClientSubsetFinder.GetInGameClients();
+
+                //Loop through all the clients and backup all their characters information into the database
+                foreach (ClientConnection ActiveClient in ActiveClients)
+                    CharactersDatabase.SaveCharacterValues(ActiveClient);
+
+                //Now everything is backed up, we can shutdown the application
+                Program.ApplicationWindow.Close();
+            }
+        }
+
+        private void TryPerformRelocateAll()
+        {
+            if(RelocateAllEvent)
+            {
+                //Log what is happening here
+                MessageLog.Print("Updating the location of every character inside the database...");
+
+                //Update all the characters position in the database
+                CharactersDatabase.MoveAllCharacters(RelocateAllLocation);
+
+                //Disable the event flag
+                RelocateAllEvent = false;
+            }
+        }
+
+        private void TryPerformRelocatePlayerToPlayer()
+        {
+            if(RelocateToPlayerEvent)
+            {
+                //Log what is happening here
+                MessageLog.Print("Moving " + RelocateTarget + " to " + RelocatePlayerDestination + "'s location...");
+
+                //Get the clients whom these two characters belong to
+                ClientConnection TargetClient = ClientSubsetFinder.GetClientUsingCharacter(RelocateTarget);
+                ClientConnection DestinationClient = ClientSubsetFinder.GetClientUsingCharacter(RelocatePlayerDestination);
+
+                //If either of these clients were unable to be found then that means one of the characters wasnt found in the game world
+                if (TargetClient == null)
+                {
+                    //Display an error showing this command could not be performed
+                    MessageLog.Print("ERROR: Could not find " + RelocateTarget + ", so they couldnt be moved.");
+                    //Disable the event flag and exit out of the function
+                    RelocateToPlayerEvent = false;
+                    return;
+                }
+                if(DestinationClient == null)
+                {
+                    //Display an error showing this command could not be performed
+                    MessageLog.Print("ERROR: Could not find " + RelocatePlayerDestination + ", so " + RelocateTarget + " couldnt be moved to their location.");
+                    //Disable the event flag and exit out of the function
+                    RelocateToPlayerEvent = false;
+                    return;
+                }
+
+                //Move the client to the new location
+                TargetClient.CharacterPosition = DestinationClient.CharacterPosition;
+
+                //First tell the owning client to move their character to the new location
+                PlayerManagementPacketSender.SendForceMovePlayer(TargetClient.NetworkID, TargetClient.CharacterPosition);
+                //Now loop through all the other ingame clients and tell them to move this character to the new location also
+                List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(TargetClient.NetworkID);
+                foreach (ClientConnection OtherClient in OtherClients)
+                    PlayerManagementPacketSender.SendForceMoveOtherPlayer(OtherClient.NetworkID, TargetClient.CharacterName, TargetClient.CharacterPosition);
+
+                //Disable the event flag
+                RelocateToPlayerEvent = false;
+            }
+        }
+
+        private void TryPerformRelocatePlayerToPosition()
+        {
+            if(RelocateToPositionEvent)
+            {
+                //Log what is happening here
+                MessageLog.Print("Moving " + RelocateTarget + " to " + RelocatePlayerDestination.ToString() + "...");
+
+                //Get the client who this character belongs to
+                ClientConnection TargetClient = ClientSubsetFinder.GetClientUsingCharacter(RelocateTarget);
+
+                //Check we were able to find the client
+                if(TargetClient == null)
+                {
+                    //Display an error showing this command could not be performed
+                    MessageLog.Print("ERROR: Could not find " + RelocateTarget + ", so they couldnt be moved.");
+                    //Disable the event flag and exit out of the function
+                    RelocateToPositionEvent = false;
+                    return;
+                }
+
+                //Move the client to their new location
+                TargetClient.CharacterPosition = RelocatePositionDestination;
+
+                //Tell the client to move their character to its new location
+                PlayerManagementPacketSender.SendForceMovePlayer(TargetClient.NetworkID, TargetClient.CharacterPosition);
+
+                //Tell all other ingame clients to move this character to its new location also
+                List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(TargetClient.NetworkID);
+                foreach (ClientConnection OtherClient in OtherClients)
+                    PlayerManagementPacketSender.SendForceMoveOtherPlayer(OtherClient.NetworkID, TargetClient.CharacterName, TargetClient.CharacterPosition);
+
+                //Disable the event flag
+                RelocateToPositionEvent = false;
+            }
+        }
+
+        private void TryPerformKickPlayer()
+        {
+            if(KickPlayerEvent)
+            {
+                //Log what is happening here
+                MessageLog.Print("Kicking " + KickPlayerName + " from the server...");
+
+                //Get the client who this character belongs to
+                ClientConnection TargetClient = ClientSubsetFinder.GetClientUsingCharacter(KickPlayerName);
+
+                //Check we were able to find the client
+                if(TargetClient == null)
+                {
+                    //Display an error showing this command could not be performed
+                    MessageLog.Print("ERROR: Could not find " + KickPlayerName + ", so they couldnt be kicked.");
+                    //Disable the event flag and exit out of the function
+                    KickPlayerEvent = false;
+                    return;
+                }
+
+                //Tell the client they have been kicked from the game and mark them as being dead
+                SystemPacketSender.SendKickPlayer(TargetClient.NetworkID);
+                TargetClient.ClientDead = true;
+
+                //Tell all other ingame clients to remove this character from their game worlds
+                List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(TargetClient.NetworkID);
+                foreach (ClientConnection OtherClient in OtherClients)
+                    PlayerManagementPacketSender.SendRemoveOtherPlayer(OtherClient.NetworkID, TargetClient.CharacterName);
+
+                //Disable the event flag
+                KickPlayerEvent = false;
+            }
         }
     }
 }

@@ -26,6 +26,7 @@ namespace Server.Networking.PacketSenders
             Packet.WriteVector3(CharacterPosition);
             //Add this packet to the queue
             PacketQueue.QueuePacket(ClientID, Packet);
+            //ConnectionManager.SendPacket(ClientID, Packet);
         }
         public static void SendPlayerRotation(int ClientID, string CharacterName, Quaternion CharacterRotation)
         {
@@ -38,6 +39,7 @@ namespace Server.Networking.PacketSenders
             Packet.WriteQuaternion(CharacterRotation);
             //Add this packet to the queue
             PacketQueue.QueuePacket(ClientID, Packet);
+            //ConnectionManager.SendPacket(ClientID, Packet);
         }
         public static void SendPlayerMovement(int ClientID, string CharacterName, Vector3 CharacterMovement)
         {
@@ -50,6 +52,7 @@ namespace Server.Networking.PacketSenders
             Packet.WriteVector3(CharacterMovement);
             //Add this packet to the queue
             PacketQueue.QueuePacket(ClientID, Packet);
+            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
         //Tells a client to spawn a remote player character into their game world
@@ -68,6 +71,7 @@ namespace Server.Networking.PacketSenders
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
+            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
         //Tells a client to remove a remote player character from their game world
@@ -84,6 +88,7 @@ namespace Server.Networking.PacketSenders
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
+            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
         //Tells a client they have been added into the game world physics simulation and they may now start playing
@@ -94,6 +99,7 @@ namespace Server.Networking.PacketSenders
             NetworkPacket Packet = new NetworkPacket();
             Packet.WriteType(ServerPacketType.PlayerBegin);
             PacketQueue.QueuePacket(ClientID, Packet);
+            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
         //Tells a client to force move their character to a new location
@@ -105,6 +111,7 @@ namespace Server.Networking.PacketSenders
             Packet.WriteType(ServerPacketType.ForceCharacterMove);
             Packet.WriteVector3(NewLocation);
             PacketQueue.QueuePacket(ClientID, Packet);
+            //ConnectionManager.SendPacket(ClientID, Packet);
         }
 
         //Tells a client to force move someone elses character to a new location
@@ -117,6 +124,7 @@ namespace Server.Networking.PacketSenders
             Packet.WriteString(CharacterName);
             Packet.WriteVector3(NewLocation);
             PacketQueue.QueuePacket(ClientID, Packet);
+            //ConnectionManager.SendPacket(ClientID, Packet);
         }
     }
 }

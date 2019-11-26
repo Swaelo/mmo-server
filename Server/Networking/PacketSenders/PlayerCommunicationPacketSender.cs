@@ -25,6 +25,7 @@ namespace Server.Networking.PacketSenders
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);
+            //ConnectionManager.SendPacket(ClientID, Packet);
         }
     }
 }

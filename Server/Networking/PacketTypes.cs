@@ -46,7 +46,11 @@ public enum ClientPacketType
     CharacterRotationUpdate = 34,
     CharacterMovementUpdate = 35,
 
-    RemotePlayerUnknown = 36
+    RemotePlayerUnknown = 36,
+
+    MissedPackets = 37,
+    StillConnectedReply = 38,
+    MissedPacketsReply = 39
 };
 
 public enum ServerPacketType
@@ -81,5 +85,12 @@ public enum ServerPacketType
     CharacterMovementUpdate = 23,
 
     ForceCharacterMove = 24,
-    ForceOtherCharacterMove = 25
+    ForceOtherCharacterMove = 25,
+
+    NewNextPacketNumber = 26,
+    StillConnectedCheck = 27,
+    ConnectionDeSync = 28,
+    MissingPacketsReply = 29,
+    MissedPackets = 30,
+    KickedFromServer = 31
 };

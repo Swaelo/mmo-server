@@ -11,8 +11,8 @@ namespace Server.Networking
 {
     public static class PacketQueue
     {
-        private static float CommunicationInterval = 0.1f; //How often the outgoing packets list will be emptied and transmitted to the target game 
-        private static float NextCommunication = 0.1f; //time remaining before the next communication interval occurs
+        private static float CommunicationInterval = 0.25f; //How often the outgoing packets list will be emptied and transmitted to the target game 
+        private static float NextCommunication = 0.25f; //time remaining before the next communication interval occurs
         private static Dictionary<int, List<NetworkPacket>> OutgoingPackets = new Dictionary<int, List<NetworkPacket>>();   //List of outgoing packets for each of the current client connections, each mapped to their network ID
 
         //Adds a network packet onto one of the clients outgoing packet queues
@@ -53,7 +53,7 @@ namespace Server.Networking
             NextCommunication = CommunicationInterval;
 
             //Loop through the entire dictionary of packet writer lists
-            foreach(KeyValuePair<int, List<NetworkPacket>> OutgoingQueue in OutgoingPackets)
+            foreach (KeyValuePair<int, List<NetworkPacket>> OutgoingQueue in OutgoingPackets)
             {
                 //Grab this clients packet queue
                 List<NetworkPacket> PacketList = OutgoingQueue.Value;
@@ -70,7 +70,7 @@ namespace Server.Networking
                 {
                     //Fetch the ClientConnection and make sure we could find them
                     ClientConnection Client = ConnectionManager.GetClientConnection(OutgoingQueue.Key);
-                    if(Client == null)
+                    if (Client == null)
                     {
                         MessageLog.Print("ERROR: Client not found.");
                         continue;
