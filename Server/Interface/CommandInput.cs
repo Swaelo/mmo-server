@@ -326,6 +326,9 @@ namespace Server.Interface
                 foreach (ClientConnection ActiveClient in ActiveClients)
                     CharactersDatabase.SaveCharacterValues(ActiveClient);
 
+                //Close and save the current log file properly
+                MessageLog.Close();
+
                 //Now everything is backed up, we can shutdown the application
                 Program.ApplicationWindow.Close();
             }
