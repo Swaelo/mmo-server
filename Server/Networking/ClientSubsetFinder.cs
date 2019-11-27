@@ -152,7 +152,7 @@ namespace Server.Networking
             ClientConnection ExceptFor = ConnectionManager.GetClientConnection(ClientID);
             if (ExceptFor == null)
             {
-                MessageLog.Print("ERROR: Client " + ClientID + " not found.");
+                MessageLog.Print("ERROR: Client " + ClientID + " not found, unable to handle ingame clients list request.");
                 return null;
             }
 
