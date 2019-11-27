@@ -22,11 +22,12 @@ public enum ClientPacketType
     //Player Management Packet Types
     LocalPlayerCharacterUpdate = 8,
     LocalPlayerCameraUpdate = 9,
+    LocalPlayerPlayAnimationAlert = 10,
 
     //System Packet Types
-    MissedPacketsRequest = 10,
-    StillConnectedReply = 11,
-    OutOfSyncAlert = 12
+    MissedPacketsRequest = 11,
+    StillConnectedReply = 12,
+    OutOfSyncAlert = 13
 };
 
 public enum ServerPacketType
@@ -53,9 +54,10 @@ public enum ServerPacketType
     AddRemotePlayer = 13,
     RemoveRemotePlayer = 14,
     AllowPlayerBegin = 15,
+    RemotePlayerPlayAnimationAlert = 16,
 
     //System Packet Types
-    StillConnectedCheck = 16,
-    MissingPacketsRequest = 17,
-    KickedFromServer = 18
+    StillConnectedCheck = 17,
+    MissingPacketsRequest = 18,
+    KickedFromServer = 19
 };

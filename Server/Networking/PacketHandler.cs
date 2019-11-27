@@ -147,6 +147,7 @@ namespace Server.Networking
             //Player Management Packet Handlers
             PacketHandlers.Add(ClientPacketType.LocalPlayerCharacterUpdate, PlayerManagementPacketHandler.HandlePlayerCharacterUpdate);
             PacketHandlers.Add(ClientPacketType.LocalPlayerCameraUpdate, PlayerManagementPacketHandler.HandlePlayerCameraUpdate);
+            PacketHandlers.Add(ClientPacketType.LocalPlayerPlayAnimationAlert, PlayerManagementPacketHandler.HandlePlayAnimationAlert);
 
             //System Packet Handlers
             PacketHandlers.Add(ClientPacketType.MissedPacketsRequest, SystemPacketHandler.HandleMissedPacketsRequest);

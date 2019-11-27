@@ -85,5 +85,20 @@ namespace Server.Networking.PacketHandlers
             Client.CameraXRotation = XRotation;
             Client.CameraYRotation = YRotation;
         }
+
+        public static void HandlePlayAnimationAlert(int ClientID, ref NetworkPacket Packet)
+        {
+            CommunicationLog.LogIn("Handle " + ClientID + " Play Animation Alert");
+            string AnimationName = Packet.ReadString();
+            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            if(Client == null)
+            {
+                MessageLog.Print("ERROR: Client not found, unable to handle play animation alert.");
+                return;
+            }
+            List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(ClientID);
+            foreach (ClientConnection OtherClient in OtherClients)
+                PlayerManagementPacketSender.SendPlayAnimationAlert(OtherClient.NetworkID, Client.CharacterName, AnimationName);
+        }
     }
 }

@@ -99,5 +99,15 @@ namespace Server.Networking.PacketSenders
             Packet.WriteType(ServerPacketType.AllowPlayerBegin);
             PacketQueue.QueuePacket(ClientID, Packet);
         }
+
+        public static void SendPlayAnimationAlert(int ClientID, string CharacterName, string AnimationName)
+        {
+            CommunicationLog.LogOut(ClientID + " play animation alert");
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ServerPacketType.RemotePlayerPlayAnimationAlert);
+            Packet.WriteString(CharacterName);
+            Packet.WriteString(AnimationName);
+            PacketQueue.QueuePacket(ClientID, Packet);
+        }
     }
 }
