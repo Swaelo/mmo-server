@@ -27,7 +27,7 @@ namespace Server.Networking
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
             if (Client == null)
             {
-                MessageLog.Print("ERROR: Client " + ClientID + " not found.");
+                MessageLog.Print("ERROR: Client " + ClientID + " not found, unable to read network packet from them.");
                 return;
             }
 

@@ -19,7 +19,7 @@ namespace Server.Networking.PacketHandlers
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
             if(Client == null)
             {
-                MessageLog.Print("ERROR: Client " + ClientID + " not found.");
+                MessageLog.Print("ERROR: Client " + ClientID + " not found, unable to handle missing packets request.");
                 return;
             }
 
@@ -34,7 +34,7 @@ namespace Server.Networking.PacketHandlers
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
             if (Client == null)
             {
-                MessageLog.Print("ERROR: Client " + ClientID + " not found.");
+                MessageLog.Print("ERROR: Client " + ClientID + " not found, unable to handle still connected reply.");
                 return;
             }
 
@@ -49,7 +49,7 @@ namespace Server.Networking.PacketHandlers
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
             if (Client == null)
             {
-                MessageLog.Print("ERROR: Client " + ClientID + " not found.");
+                MessageLog.Print("ERROR: Client " + ClientID + " not found, unable to handle out of sync alert.");
                 return;
             }
 

@@ -48,7 +48,7 @@ namespace Server.Networking.PacketHandlers
             ClientConnection ClientConnection = ConnectionManager.GetClientConnection(ClientID);
             if(ClientConnection == null)
             {
-                MessageLog.Print("ERROR: Client not found.");
+                MessageLog.Print("ERROR: Client not found, unable to handle account login request.");
                 return;
             }
 
@@ -100,7 +100,7 @@ namespace Server.Networking.PacketHandlers
             ClientConnection ClientConnection = ConnectionManager.GetClientConnection(ClientID);
             if (ClientConnection == null)
             {
-                MessageLog.Print("ERROR: Client not found.");
+                MessageLog.Print("ERROR: Client not found, unable to handle character data request.");
                 return;
             }
 
@@ -136,7 +136,7 @@ namespace Server.Networking.PacketHandlers
             ClientConnection ClientConnection = ConnectionManager.GetClientConnection(ClientID);
             if (ClientConnection == null)
             {
-                MessageLog.Print("ERROR: Client not found.");
+                MessageLog.Print("ERROR: Client not found, unable to handle character creation request.");
                 return;
             }
 

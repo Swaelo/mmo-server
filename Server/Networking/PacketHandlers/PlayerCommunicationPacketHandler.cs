@@ -20,7 +20,7 @@ namespace Server.Networking.PacketHandlers
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
             if (Client == null)
             {
-                MessageLog.Print("ERROR: Client not found.");
+                MessageLog.Print("ERROR: Client not found, unable to handle chat message.");
                 return;
             }
 

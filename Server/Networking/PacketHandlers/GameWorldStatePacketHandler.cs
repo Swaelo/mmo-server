@@ -26,7 +26,7 @@ namespace Server.Networking.PacketHandlers
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
             if(Client == null)
             {
-                MessageLog.Print("ERROR: Client not found.");
+                MessageLog.Print("ERROR: Client not found, unable to handle enter world request.");
                 return;
             }
 
@@ -56,7 +56,7 @@ namespace Server.Networking.PacketHandlers
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
             if (Client == null)
             {
-                MessageLog.Print("ERROR: Client not found.");
+                MessageLog.Print("ERROR: Client not found, unable to handle new player ready alert.");
                 return;
             }
 
