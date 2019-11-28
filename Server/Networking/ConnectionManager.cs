@@ -117,7 +117,7 @@ namespace Server.Networking
                 if(DeadClient.InGame)
                 {
                     //Save this characters values into the database
-                    CharactersDatabase.SaveCharacterValues(DeadClient.CharacterName, DeadClient.CharacterPosition, DeadClient.CharacterRotation, DeadClient.CameraZoom, DeadClient.CameraXRotation, DeadClient.CameraYRotation);
+                    CharactersDatabase.SaveCharacterData(DeadClient.Character);
 
                     //Remove the characters body from the servers world physics simulation
                     WorldSimulation.Bodies.Remove(DeadClient.BodyHandle);
@@ -125,16 +125,16 @@ namespace Server.Networking
 
                     //Tell all the living clients to remove this character from the game worlds on their end
                     foreach (ClientConnection LivingClient in LivingClients)
-                        PlayerManagementPacketSender.SendRemoveRemotePlayer(LivingClient.NetworkID, DeadClient.CharacterName);
+                        PlayerManagementPacketSender.SendRemoveRemotePlayer(LivingClient.NetworkID, DeadClient.Character.Name);
 
                     //Display a message showing that this character has been cleaned up from the game world
-                    MessageLog.Print(DeadClient.CharacterName + " was removed from the game world after their connection timed out.");
+                    MessageLog.Print(DeadClient.Character.Name + " was removed from the game world after their connection timed out.");
                 }
                 else
                 {
                     //DeadClients who werent ingame yet simply show a message that their connection has been closed properly
-                    if (DeadClient.AccountName != "")
-                        MessageLog.Print(DeadClient.AccountName + " has been logged out after their connection timed out.");
+                    if (DeadClient.Character.Account != "")
+                        MessageLog.Print(DeadClient.Character.Account + " has been logged out after their connection timed out.");
                     else
                         MessageLog.Print(DeadClient.NetworkID + " has been disconnected after their connection timed out.");
                 }
@@ -154,7 +154,7 @@ namespace Server.Networking
             foreach(ClientConnection UpdatedClient in UpdatedClients)
             {
                 //Use the NewPosition value to reassign a new ShapePose for the clients physics body
-                UpdatedClient.ShapePose = new RigidPose(UpdatedClient.CharacterPosition, UpdatedClient.CharacterRotation);
+                UpdatedClient.ShapePose = new RigidPose(UpdatedClient.Character.Position, UpdatedClient.Character.Rotation);
                 //Calculate a new Inertia value for the clients physics body
                 UpdatedClient.PhysicsShape.ComputeInertia(1, out var Inertia);
                 //Use the new ShapePose and Inertia values to assign a new BodyDescription to the client
@@ -162,7 +162,7 @@ namespace Server.Networking
                 //Apply this new body description to the clients physics body inside the gameworld physics simulation
                 World.Bodies.ApplyDescription(UpdatedClient.BodyHandle, ref UpdatedClient.PhysicsBody);
                 //Reset the clients updated position flag now that their physics body has been moved to the new position
-                UpdatedClient.NewPosition = false;
+                UpdatedClient.Character.NewPosition = false;
             }
         }
         
@@ -171,7 +171,7 @@ namespace Server.Networking
         {
             foreach(KeyValuePair<int, ClientConnection> Client in ActiveConnections)
             {
-                if (Client.Value.AccountName == AccountName)
+                if (Client.Value.Character.Account == AccountName)
                     return true;
             }
             return false;

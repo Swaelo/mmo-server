@@ -15,6 +15,20 @@ namespace Server.Database
 {
     class CharactersDatabase
     {
+        //Sets some string value in the table of every character in the database
+        public static void SetAllStringValue(string VariableName, string VariableValue)
+        {
+            string UpdateQuery = "UPDATE characters SET " + VariableName + "='" + VariableValue + "'";
+            CommandManager.ExecuteNonQuery(UpdateQuery, "Setting value of " + VariableName + " to " + VariableValue + " in all existing character tables.");
+        }
+
+        //Sets some integer value in the table of every character in the database
+        public static void SetAllIntegerValue(string VariableName, int IntegerValue)
+        {
+            string UpdateQuery = "UPDATE characters SET " + VariableName + "='" + IntegerValue + "'";
+            CommandManager.ExecuteNonQuery(UpdateQuery, "Setting value of " + VariableName + " to " + IntegerValue + " in all existing character tables.");
+        }
+
         //Checks if the given character name has already been taken by someone else or is free to use
         //NOTE: assumes the character name provided is valid
         public static bool IsCharacterNameAvailable(string CharacterName)
@@ -22,6 +36,14 @@ namespace Server.Database
             //Define query/command for checking if the given character name is still available
             string CharacterNameQuery = "SELECT * FROM characters WHERE CharacterName='" + CharacterName + "'";
             return !CommandManager.ExecuteRowCheck(CharacterNameQuery, "Checking if the character name " + CharacterName + " is still available");
+        }
+
+        //Checks if there is an existing character that goes by the given name
+        public static bool DoesCharacterExist(string CharacterName)
+        {
+            return CommandManager.ExecuteRowCheck(
+                "SELECT * FROM characters WHERE CharacterName='" + CharacterName + "'",
+                "Checking if there exists a character named " + CharacterName + " in the database");
         }
 
         //Returns the number of characters that exist under a given user account
@@ -87,6 +109,8 @@ namespace Server.Database
             CharacterData.CameraZoom = CommandManager.ReadFloatValue(CharacterDataQuery, "CameraZoom", "Reading " + CharacterName + "s camera zoom distance value");
             CharacterData.CameraXRotation = CommandManager.ReadFloatValue(CharacterDataQuery, "CameraXRotation", "Reading " + CharacterName + "s camera X rotation value");
             CharacterData.CameraYRotation = CommandManager.ReadFloatValue(CharacterDataQuery, "CameraYRotation", "Reading " + CharacterName + "s camera Y rotation value");
+            CharacterData.CurrentHealth = CommandManager.ReadIntegerValue(CharacterDataQuery, "CurrentHealth", "Reading " + CharacterName + "s current health value");
+            CharacterData.MaxHealth = CommandManager.ReadIntegerValue(CharacterDataQuery, "MaxHealth", "Reading " + CharacterName + "s maximum health value");
             CharacterData.Experience = CommandManager.ReadIntegerValue(CharacterDataQuery, "ExperiencePoints", "Reading " + CharacterName + "s ExperiencePoints value");
             CharacterData.ExperienceToLevel = CommandManager.ReadIntegerValue(CharacterDataQuery, "ExperienceToLevel", "Reading " + CharacterName + "s ExperienceToLevel value");
             CharacterData.Level = CommandManager.ReadIntegerValue(CharacterDataQuery, "Level", "Reading " + CharacterName + "s Level value");
@@ -96,23 +120,15 @@ namespace Server.Database
             return CharacterData;
         }
 
-        //Just takes in the ClientConnection object, then grabs the CharacterName, Position etc. values from it to be passed on to the actual function
-        public static void SaveCharacterValues(ClientConnection Client)
+        //Backs up all of a characters information into the database
+        public static void SaveCharacterData(CharacterData CharacterData)
         {
-            SaveCharacterValues(Client.CharacterName, Client.CharacterPosition, Client.CharacterRotation, Client.CameraZoom, Client.CameraXRotation, Client.CameraYRotation);
-        }
-
-        //Backs up the position/rotation values of a players character into the database
-        public static void SaveCharacterValues(string CharacterName, Vector3 CharacterPosition, Quaternion CharacterRotation, float CameraZoom, float CameraXRotation, float CameraYRotation)
-        {
-            //Define a new query/command to store the characters updated position/rotation and camera zoom/rotation values into the database
-            string CharacterValueQuery = "UPDATE characters SET XPosition='" + CharacterPosition.X + "', YPosition='" + CharacterPosition.Y + "', ZPosition='" + CharacterPosition.Z +
-                "', XRotation='" + CharacterRotation.X + "', YRotation='" + CharacterRotation.Y + "', ZRotation='" + CharacterRotation.Z + "', WRotation='" + CharacterRotation.W +
-                "', CameraZoom='" + CameraZoom + "', CameraXRotation='" + CameraXRotation + "', CameraYRotation='" + CameraYRotation +
-                "' WHERE CharacterName='" + CharacterName + "'";
-
-            //Use the command manager to execute the query updating the values into the database
-            CommandManager.ExecuteNonQuery(CharacterValueQuery, "Backing up " + CharacterName + "s world position/rotation and camera zoom/rotation values");
+            string SaveDataQuery = "UPDATE characters SET XPosition='" + CharacterData.Position.X + "', YPosition='" + CharacterData.Position.Y + "', ZPosition='" + CharacterData.Position.Z +
+                "', XRotation='" + CharacterData.Rotation.X + "', YRotation='" + CharacterData.Rotation.Y + "', ZRotation='" + CharacterData.CameraZoom + "', WRotation='" + CharacterData.Rotation.W +
+                "', CurrentHealth='" + CharacterData.CurrentHealth + "', MaxHealth='" + CharacterData.MaxHealth +
+                "', CameraZoom='" + CharacterData.CameraZoom + "', CameraXRotation='" + CharacterData.CameraXRotation + "', CameraYRotation='" + CharacterData.CameraYRotation +
+                "' WHERE CharacterName='" + CharacterData.Name + "'";
+            CommandManager.ExecuteNonQuery(SaveDataQuery, "Saving " + CharacterData.Name + "'s character data into the database.");
         }
 
         private static void SetCharacterPosition(string CharacterName, Vector3 CharacterPosition)

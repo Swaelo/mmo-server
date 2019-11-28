@@ -23,7 +23,7 @@ namespace Server.Networking.PacketHandlers
         public static void HandlePlayerCharacterUpdate(int ClientID, ref NetworkPacket Packet)
         {
             //Log what we are doing here
-            CommunicationLog.LogIn(ClientID + " Player Character Update");
+            CommunicationLog.LogIn("Handle " + ClientID + " Player Character Update");
 
             //Extract all the values from the packet data
             Vector3 Position = Packet.ReadVector3();
@@ -41,17 +41,17 @@ namespace Server.Networking.PacketHandlers
             }
 
             //Update the values in the ClientConnection object
-            Client.CharacterPosition = Position;
-            Client.CharacterMovement = Movement;
-            Client.CharacterRotation = Rotation;
+            Client.Character.Position = Position;
+            Client.Character.Movement = Movement;
+            Client.Character.Rotation = Rotation;
 
             //Set its NewPosition flag so it gets updated in the physics scene
-            Client.NewPosition = true;
+            Client.Character.NewPosition = true;
 
             //Share these new values to all the other clients in the game right now
             List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(ClientID);
             foreach (ClientConnection OtherClient in OtherClients)
-                PlayerManagementPacketSender.SendUpdateRemotePlayer(OtherClient.NetworkID, Client.CharacterName, Position, Movement, Rotation);
+                PlayerManagementPacketSender.SendUpdateRemotePlayer(OtherClient.NetworkID, Client.Character.Name, Position, Movement, Rotation);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace Server.Networking.PacketHandlers
         public static void HandlePlayerCameraUpdate(int ClientID, ref NetworkPacket Packet)
         {
             //Log what we are doing here
-            CommunicationLog.LogIn(ClientID + " Player Camera Update");
+            CommunicationLog.LogIn("Handle " + ClientID + " Player Camera Update");
 
             //Extract all the values from the packet data
             float Zoom = Packet.ReadFloat();
@@ -81,9 +81,9 @@ namespace Server.Networking.PacketHandlers
             }
 
             //Store them in the ClientConnection object
-            Client.CameraZoom = Zoom;
-            Client.CameraXRotation = XRotation;
-            Client.CameraYRotation = YRotation;
+            Client.Character.CameraZoom = Zoom;
+            Client.Character.CameraXRotation = XRotation;
+            Client.Character.CameraYRotation = YRotation;
         }
 
         public static void HandlePlayAnimationAlert(int ClientID, ref NetworkPacket Packet)
@@ -98,7 +98,7 @@ namespace Server.Networking.PacketHandlers
             }
             List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(ClientID);
             foreach (ClientConnection OtherClient in OtherClients)
-                PlayerManagementPacketSender.SendPlayAnimationAlert(OtherClient.NetworkID, Client.CharacterName, AnimationName);
+                PlayerManagementPacketSender.SendPlayAnimationAlert(OtherClient.NetworkID, Client.Character.Name, AnimationName);
         }
     }
 }

@@ -4,6 +4,7 @@
 // Author:	    Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
+using Server.Data;
 using Server.Database;
 using Server.Logging;
 using Server.Misc;
@@ -16,133 +17,157 @@ namespace Server.Networking.PacketHandlers
         //Handles a users account login request
         public static void HandleAccountLoginRequest(int ClientID, ref NetworkPacket Packet)
         {
-            CommunicationLog.LogIn(ClientID + " account login request");
+            //Log what we are doing here
+            CommunicationLog.LogIn("Handle " + ClientID + "Account Login Request.");
 
-            //Read the data values from the packet reader
-            string Username = Packet.ReadString();
-            string Password = Packet.ReadString();
+            //Get the username and password the user provided for trying to login with
+            string AccountName = Packet.ReadString();
+            string AccountPass = Packet.ReadString();
 
-            //Check if this user account exists already
-            if (AccountsDatabase.IsAccountNameAvailable(Username))
+            //Make sure we are still connected to this client
+            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            if(Client == null)
             {
-                //Reject the request if the account doesnt even exist
-                AccountManagementPacketSenders.SendAccountLoginReply(ClientID, false, "That account does not exist.");
+                //Ignore the request if we cant find this clients network connection
+                MessageLog.Print("ERROR: Connection to this client could not be found, no way to reply to their Account Login Request so it has been aborted.");
                 return;
             }
 
-            //Make sure someone else isnt already logged into this account
-            if (ConnectionManager.IsAccountLoggedIn(Username))
+            //Make sure there is account that exists with the name that was provided by the user
+            if (!AccountsDatabase.DoesAccountExist(AccountName))
             {
-                AccountManagementPacketSenders.SendAccountLoginReply(ClientID, false, "Someone else is already logged into this account.");
+                //Reject the request if that account doesnt exist
+                AccountManagementPacketSenders.SendAccountLoginReply(ClientID, false, "That account doesnt exist.");
                 return;
             }
 
-            //Make sure they have provided a matching username and password
-            if (!AccountsDatabase.IsPasswordCorrect(Username, Password))
+            //Make sure someone else isnt already logged into that account
+            if(ConnectionManager.IsAccountLoggedIn(AccountName))
             {
-                AccountManagementPacketSenders.SendAccountLoginReply(ClientID, false, "The password you entered was incorrect.");
+                //Reject the request if the account is already being used
+                AccountManagementPacketSenders.SendAccountLoginReply(ClientID, false, "That account is already logged in.");
                 return;
             }
 
-            //Get this ClientConnection and make sure we were able to find them
-            ClientConnection ClientConnection = ConnectionManager.GetClientConnection(ClientID);
-            if(ClientConnection == null)
+            //Check if they provided the correct password
+            if(!AccountsDatabase.IsPasswordCorrect(AccountName, AccountPass))
             {
-                MessageLog.Print("ERROR: Client not found, unable to handle account login request.");
+                //Reject the request if the password was wrong
+                AccountManagementPacketSenders.SendAccountLoginReply(ClientID, false, "The password was incorrect.");
                 return;
             }
 
-            //Everything looks good, grant the users account login request and display message showing the account has been logged into
-            ClientConnection.AccountName = Username;
-            AccountManagementPacketSenders.SendAccountLoginReply(ClientID, true, "Login request granted.");
-            MessageLog.Print(Username + " has logged in.");
+            //Fetch all of the accounts information from the database and store it with this client
+            AccountData Account = AccountsDatabase.GetAccountData(AccountName);
+            Client.Account = Account;
+
+            //Grant this users account login request
+            MessageLog.Print(ClientID + " logged into the account " + AccountName);
+            AccountManagementPacketSenders.SendAccountLoginReply(ClientID, true, "Login Request Granted.");
         }
 
         //Handles a users new user account registration request
         public static void HandleAccountRegisterRequest(int ClientID, ref NetworkPacket Packet)
         {
-            CommunicationLog.LogIn(ClientID + " account registration request");
+            //Log what we are doing here
+            CommunicationLog.LogIn("Handle " + ClientID + " Account Registration Request.");
 
-            //Fetch the relevant data values from the packet reader
-            string Username = Packet.ReadString();
-            string Password = Packet.ReadString();
+            //Fetch the username and password the client has provided
+            string AccountName = Packet.ReadString();
+            string AccountPass = Packet.ReadString();
 
-            //Reject this request if the username is already taken, or if the username or password contain any banned characters
-            if(!ValidInputCheckers.IsValidUsername(Username))
+            //Make sure we are still connected to this client
+            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            if(Client == null)
             {
-                string InvalidWhy = ValidInputCheckers.InvalidUsernameReason(Username);
-                AccountManagementPacketSenders.SendAccountRegistrationReply(ClientID, false, "Username " + InvalidWhy);
-                return;
-            }
-            if(!ValidInputCheckers.IsValidUsername(Password))
-            {
-                string InvalidWhy = ValidInputCheckers.InvalidUsernameReason(Password);
-                AccountManagementPacketSenders.SendAccountRegistrationReply(ClientID, false, "Password " + InvalidWhy);
-                return;
-            }
-            if(!AccountsDatabase.IsAccountNameAvailable(Username))
-            {
-                AccountManagementPacketSenders.SendAccountRegistrationReply(ClientID, false, "Username is already taken");
+                //Ignore the request if we cant find this clients network connection
+                MessageLog.Print("ERROR: Connection to this client could not be found, no way to reply to their Account Registration Request.");
                 return;
             }
 
-            //All looks good, register the new account into the database and tell the client the registration was a success
-            AccountsDatabase.RegisterNewAccount(Username, Password);
-            AccountManagementPacketSenders.SendAccountRegistrationReply(ClientID, true, "Registration success");
+            //Make sure this username isnt already taken by someone else
+            if(AccountsDatabase.DoesAccountExist(AccountName))
+            {
+                //Reject the request is the username is already taken
+                AccountManagementPacketSenders.SendAccountRegistrationReply(ClientID, false, "That username is already taken.");
+                return;
+            }
+
+            //Make sure they have provided us with a valid username and password
+            if(!ValidInputCheckers.IsValidUsername(AccountName))
+            {
+                //Reject the request if the username contained any banned characters
+                AccountManagementPacketSenders.SendAccountRegistrationReply(ClientID, false, "The username you provided contained banned characters.");
+                return;
+            }
+            if(!ValidInputCheckers.IsValidUsername(AccountPass))
+            {
+                //Reject the request if the password contained any banned characters
+                AccountManagementPacketSenders.SendAccountRegistrationReply(ClientID, false, ("The password you provided contained banned characters."));
+                return;
+            }
+
+            //Register the new account into the database and tell the client their request has been granted
+            AccountsDatabase.RegisterNewAccount(AccountName, AccountPass);
+            AccountManagementPacketSenders.SendAccountRegistrationReply(ClientID, true, "Account Registered Successfully.");
         }
 
         //Handles a users character data request
         public static void HandleCharacterDataRequest(int ClientID, ref NetworkPacket Packet)
         {
-            CommunicationLog.LogIn(ClientID + " accounts character data request");
+            //Log what we are doing here
+            CommunicationLog.LogIn("Handle " + ClientID + " Character Data Request.");
 
-            //Get this ClientConnection and make sure we were able to find them
-            ClientConnection ClientConnection = ConnectionManager.GetClientConnection(ClientID);
-            if (ClientConnection == null)
+            //Make sure we are still connected to this client
+            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            if(Client == null)
             {
-                MessageLog.Print("ERROR: Client not found, unable to handle character data request.");
+                //Ignore the request if we arent connected to this client anymore
+                MessageLog.Print("ERROR:  Cant find this clients network connection, no way to fullfil their Character Data Request.");
                 return;
             }
 
-            //Get the clients account name and use that to send the character data back to them
-            string AccountName = ClientConnection.AccountName;
-            AccountManagementPacketSenders.SendCharacterDataReply(ClientID, AccountName);
+            //Fulfil the users request
+            AccountManagementPacketSenders.SendCharacterDataReply(ClientID, Client.Account.Username);
         }
 
         //Handles a users character creation request
         public static void HandleCreateCharacterRequest(int ClientID, ref NetworkPacket Packet)
         {
-            CommunicationLog.LogIn(ClientID + " characer creation request");
+            //Log what we are doing here
+            CommunicationLog.LogIn("Handle " + ClientID + " Character Creation Request.");
 
-            //Fetch the desired name for the new character from the packet data
+            //Fetch the name that has been provided for the new character
             string CharacterName = Packet.ReadString();
 
-            //Reject the request if an illegal name was provided by the client
+            //Make sure we are still connected to this client
+            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            if(Client == null)
+            {
+                //Ignore the request if the connection could not be found
+                MessageLog.Print("ERROR: " + ClientID + " network connection could not be found, ignoring their character creation request.");
+                return;
+            }
+
+            //Make sure they provided a valid character name
             if(!ValidInputCheckers.IsValidCharacterName(CharacterName))
             {
-                string Reason = ValidInputCheckers.GetInvalidCharacterNameReason(CharacterName);
-                AccountManagementPacketSenders.SendCreateCharacterReply(ClientID, false, Reason);
+                //Reject the request if the provided character name contained any banned character
+                AccountManagementPacketSenders.SendCreateCharacterReply(ClientID, false, "Character name provided contained banned characters.");
                 return;
             }
 
-            //Reject the request if this character name has already been taken by someone else
+            //Make sure the character name isnt already taken
             if(!CharactersDatabase.IsCharacterNameAvailable(CharacterName))
             {
-                AccountManagementPacketSenders.SendCreateCharacterReply(ClientID, false, "Character name is already taken");
+                //Reject the request if the name is already taken
+                AccountManagementPacketSenders.SendCreateCharacterReply(ClientID, false, "That character name is already taken.");
                 return;
             }
 
-            //Get this ClientConnection and make sure we were able to find them
-            ClientConnection ClientConnection = ConnectionManager.GetClientConnection(ClientID);
-            if (ClientConnection == null)
-            {
-                MessageLog.Print("ERROR: Client not found, unable to handle character creation request.");
-                return;
-            }
-
-            //Register this new character into the database, then tell the client their request was granted
-            CharactersDatabase.SaveNewCharacter(ClientConnection.AccountName, CharacterName);
-            AccountManagementPacketSenders.SendCreateCharacterReply(ClientID, true, "Character Created!");
+            //Register the new character into the database and tell the client their request was granted
+            CharactersDatabase.SaveNewCharacter(Client.Account.Username, CharacterName);
+            AccountManagementPacketSenders.SendCreateCharacterReply(ClientID, true, "Character Created.");
         }
     }
 }

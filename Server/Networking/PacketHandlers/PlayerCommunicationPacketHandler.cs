@@ -14,7 +14,7 @@ namespace Server.Networking.PacketHandlers
     {
         public static void HandleClientChatMessage(int ClientID, ref NetworkPacket Packet)
         {
-            CommunicationLog.LogIn(ClientID + " chat message");
+            CommunicationLog.LogIn("Handle " + ClientID + " chat message");
 
             //Fetch this ClientConnection and make sure they were able to be found
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
@@ -32,7 +32,7 @@ namespace Server.Networking.PacketHandlers
 
             //Pass this chat message on to all the other clients that are ingame
             foreach (ClientConnection OtherClient in OtherClients)
-                PlayerCommunicationPacketSender.SendChatMessage(OtherClient.NetworkID, Client.CharacterName, ChatMessage);
+                PlayerCommunicationPacketSender.SendChatMessage(OtherClient.NetworkID, Client.Character.Name, ChatMessage);
         }
     }
 }

@@ -15,6 +15,9 @@ namespace Server.Networking.PacketHandlers
         //Handle alert from client letting us know they have missed some packets and need to be resent
         public static void HandleMissedPacketsRequest(int ClientID, ref NetworkPacket Packet)
         {
+            //Log what is happening here
+            CommunicationLog.LogIn("Handle " + ClientID + " Missed Packets Request.");
+
             //Find the client who sent this alert, and the number of the packet they want sent back to them
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
             if(Client == null)
@@ -30,7 +33,7 @@ namespace Server.Networking.PacketHandlers
         //Handle reply from client letting us know they are still connected through the network
         public static void HandleStillConnectedReply(int ClientID, ref NetworkPacket Packet)
         {
-            CommunicationLog.LogIn(ClientID + " Still Connected Reply");
+            CommunicationLog.LogIn("Handle " + ClientID + " Still Connected Reply");
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
             if (Client == null)
             {
@@ -45,6 +48,8 @@ namespace Server.Networking.PacketHandlers
         //Handle alert from server letting us know they are out of sync and need to be removed from the game
         public static void HandleOutOfSyncAlert(int ClientID, ref NetworkPacket Packet)
         {
+            CommunicationLog.LogIn("Handle " + ClientID + " Out Of Sync Alert.");
+            
             //Get the client who is being removed from the game
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
             if (Client == null)
@@ -62,7 +67,7 @@ namespace Server.Networking.PacketHandlers
             //Tell all the other clients to remove this character from their game worlds
             List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(ClientID);
             foreach (ClientConnection OtherClient in OtherClients)
-                PlayerManagementPacketSender.SendRemoveRemotePlayer(OtherClient.NetworkID, Client.CharacterName);
+                PlayerManagementPacketSender.SendRemoveRemotePlayer(OtherClient.NetworkID, Client.Character.Name);
 
             //Set the client as dead to they get cleaned up and have their data saved into the database
             Client.ClientDead = true;

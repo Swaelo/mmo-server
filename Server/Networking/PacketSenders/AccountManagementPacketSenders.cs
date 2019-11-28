@@ -63,33 +63,43 @@ namespace Server.Networking.PacketSenders
         /// <param name="AccountName">The account the client is logged into</param>
         public static void SendCharacterDataReply(int ClientID, string AccountName)
         {
-            CommunicationLog.LogOut(ClientID + " character data reply");
+            //Log what is happening here
+            CommunicationLog.LogOut(ClientID + " Character Data Reply.");
 
-            //Create a new NetworkPacket object to store the data for this account login reply
-            NetworkPacket Packet = new NetworkPacket();
-
-            //Write the packet type and number of existing characters this user currently has
-            Packet.WriteType(ServerPacketType.CharacterDataReply);
-            int CharacterCount = CharactersDatabase.GetCharacterCount(AccountName);
-            Packet.WriteInt(CharacterCount);
-
-            //Loop through all of their characters and write each ones information into the packet data
-            for (int i = 0; i < CharacterCount; i++)
+            //Make sure we are still connected to this client
+            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            if(Client == null)
             {
-                //Get each characters name from the database, then use that to fetch the rest of that characters data from the database also
-                string CharacterName = CharactersDatabase.GetCharacterName(AccountName, i + 1);
-                CharacterData CharacterData = CharactersDatabase.GetCharacterData(CharacterName);
+                //Cancel the reply if the clients connection couldnt be found
+                MessageLog.Print("ERROR: Clients network connection couldnt not be found, Character Data Reply cancelled.");
+                return;
+            }
 
-                //Write all of this characters information into the packet data
-                Packet.WriteString(CharacterName);
+            //Create a new NetworkPacket object to store all the character data we are going to send to the client
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ServerPacketType.CharacterDataReply);
+
+            //Write the number of characters existing in the users account
+            Packet.WriteInt(Client.Account.CharacterCount);
+
+            //Loop through and fetch the data for each of the users characters
+            for(int i = 0; i < Client.Account.CharacterCount; i++)
+            {
+                //Fetch the data of each character in their account
+                CharacterData CharacterData = Client.Account.GetCharactersData(i + 1);
+
+                //Write all of the characters information into the packet
+                Packet.WriteString(CharacterData.Name);
                 Packet.WriteVector3(CharacterData.Position);
                 Packet.WriteQuaternion(CharacterData.Rotation);
                 Packet.WriteFloat(CharacterData.CameraZoom);
                 Packet.WriteFloat(CharacterData.CameraXRotation);
                 Packet.WriteFloat(CharacterData.CameraYRotation);
+                Packet.WriteInt(CharacterData.CurrentHealth);
+                Packet.WriteInt(CharacterData.MaxHealth);
             }
 
-            //Add this to the packet queue
+            //Add this packet to the transmission queue
             PacketQueue.QueuePacket(ClientID, Packet);
         }
 

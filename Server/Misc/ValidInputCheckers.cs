@@ -12,6 +12,70 @@ namespace Server.Misc
 {
     public class ValidInputCheckers
     {
+        //Checks if the string is the name of a valid variable type that can be used to set values in the database
+        public static bool IsValidVariableType(string VariableType)
+        {
+            if (VariableType == "string")
+                return true;
+            if (VariableType == "integer")
+                return true;
+            if (VariableType == "float")
+                return true;
+            return false;
+        }
+
+        //Checks if the variable name matches one that exists in the accounts database tables
+        public static bool IsAccountVariableNameValid(string VariableName)
+        {
+            if (VariableName == "Username")
+                return true;
+            if (VariableName == "Password")
+                return true;
+            if (VariableName == "CharacterCount")
+                return true;
+            if (VariableName == "FirstCharacterName")
+                return true;
+            if (VariableName == "SecondCharacterName")
+                return true;
+            if (VariableName == "ThirdCharacterName")
+                return true;
+            return false;
+        }
+
+        //Checks if the variable name matches on that exists in the characters database tables
+        public static bool IsCharacterVariableNameValid(string VariableName)
+        {
+            if (VariableName == "Account")
+                return true;
+            if (VariableName == "Name")
+                return true;
+            if (VariableName == "Position")
+                return true;
+            if (VariableName == "Movement")
+                return true;
+            if (VariableName == "Rotation")
+                return true;
+            if (VariableName == "CameraZoom")
+                return true;
+            if (VariableName == "CameraXRotation")
+                return true;
+            if (VariableName == "CameraYRotation")
+                return true;
+            if (VariableName == "CurrentHealth")
+                return true;
+            if (VariableName == "MaxHealth")
+                return true;
+            if (VariableName == "Experience")
+                return true;
+            if (VariableName == "ExperienceToLevel")
+                return true;
+            if (VariableName == "Level")
+                return true;
+            if (VariableName == "IsMale")
+                return true;
+            return false;
+        }
+
         //Checks if a given username or password contains any banned characters
         public static bool IsValidUsername(string Username)
         {

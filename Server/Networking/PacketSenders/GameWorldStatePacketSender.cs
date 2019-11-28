@@ -37,10 +37,10 @@ namespace Server.Networking.PacketSenders
             foreach(ClientConnection OtherClient in OtherClients)
             {
                 //Write each characters name, and current location and rotation values
-                Packet.WriteString(OtherClient.CharacterName);
-                Packet.WriteVector3(OtherClient.CharacterPosition);
-                Packet.WriteVector3(OtherClient.CharacterMovement);
-                Packet.WriteQuaternion(OtherClient.CharacterRotation);
+                Packet.WriteString(OtherClient.Character.Name);
+                Packet.WriteVector3(OtherClient.Character.Position);
+                Packet.WriteVector3(OtherClient.Character.Movement);
+                Packet.WriteQuaternion(OtherClient.Character.Rotation);
             }
 
             //Add this packet to the target clients outgoing packet queue

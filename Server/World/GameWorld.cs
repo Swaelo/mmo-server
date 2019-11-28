@@ -173,7 +173,7 @@ namespace Server.World
             //Define the locations where each message log will start rendering its messages/information to
             Vector2 LogMsgPos = new Vector2(10, 750); //Bottom-Left Corner = Debug Log
             Vector2 PacketOutPos = new Vector2(800, 750); //Bottom-Right Corner = Outgoing Packets
-            Vector2 PacketInPos = new Vector2(550, 750);    //Bottom-Middle = Incoming Packets
+            Vector2 PacketInPos = new Vector2(525, 750);    //Bottom-Middle = Incoming Packets
 
             //Get the lists of messages to be displayed in each of the message windows
             string[] LogMsgs = MessageLog.GetMessages();
@@ -211,7 +211,7 @@ namespace Server.World
                 ClientToAdd.ShapeIndex = WorldSimulation.Shapes.Add(ClientToAdd.PhysicsShape);
                 ClientToAdd.PhysicsDescription = new CollidableDescription(ClientToAdd.ShapeIndex, 0.1f);
                 ClientToAdd.PhysicsShape.ComputeInertia(1, out var Inertia);
-                Vector3 SpawnLocation = new Vector3(ClientToAdd.CharacterPosition.X, ClientToAdd.CharacterPosition.Y + 2, ClientToAdd.CharacterPosition.Z);
+                Vector3 SpawnLocation = new Vector3(ClientToAdd.Character.Position.X, ClientToAdd.Character.Position.Y + 2, ClientToAdd.Character.Position.Z);
                 ClientToAdd.ShapePose = new RigidPose(SpawnLocation, Quaternion.Identity);
                 ClientToAdd.ActivityDescription = new BodyActivityDescription(0.01f);
                 ClientToAdd.PhysicsBody = BodyDescription.CreateDynamic(ClientToAdd.ShapePose, Inertia, ClientToAdd.PhysicsDescription, ClientToAdd.ActivityDescription);
@@ -226,10 +226,10 @@ namespace Server.World
 
                 //Tell all other ingame clients they need to have this new player spawned into the game worlds
                 foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(ClientToAdd.NetworkID))
-                    PlayerManagementPacketSender.SendAddRemotePlayer(OtherClient.NetworkID, ClientToAdd.CharacterName, ClientToAdd.CharacterPosition, ClientToAdd.CharacterMovement, ClientToAdd.CharacterRotation);
+                    PlayerManagementPacketSender.SendAddRemotePlayer(OtherClient.NetworkID, ClientToAdd.Character.Name, ClientToAdd.Character.Position, ClientToAdd.Character.Movement, ClientToAdd.Character.Rotation);
 
                 //Display a message showing that the clients character has been spawned into the game world
-                MessageLog.Print(ClientToAdd.CharacterName + " has entered into the game world");
+                MessageLog.Print(ClientToAdd.Character.Name + " has entered into the game world");
             }
         }
     }

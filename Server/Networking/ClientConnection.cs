@@ -9,15 +9,14 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Numerics;
 using System.Collections.Generic;
 using BepuPhysics;
 using BepuPhysics.Collidables;
 using Server.Misc;
 using Server.Time;
+using Server.Data;
 using Server.Logging;
 using Server.Networking.PacketSenders;
-using Quaternion = BepuUtilities.Quaternion;
 
 namespace Server.Networking
 {
@@ -33,6 +32,10 @@ namespace Server.Networking
         public bool ClientDead = false; //Flag set by the ConnectionManager when it detects that this client has been disconnected and needs to be cleaned up
         public bool ClientDeSynced = false; //Set when a client has missed packets outside of memory, they will request all data needed to resync then tell us when to disable this
 
+        //Objects containing all the information about the account this client is logged in to, and the character they are currently playing with
+        public AccountData Account = new AccountData();
+        public CharacterData Character = new CharacterData();
+
         //If we miss some packets from a client, we need to store any later packets in the dictionary until we receive the ones that are missing, before all can be processed
         public Dictionary<int, NetworkPacket> WaitingToProcess = new Dictionary<int, NetworkPacket>();
         public bool WaitingForMissingPackets = false;   //Set when we detect we have missed some packets, disabled once all have been received and processed to catch back up again
@@ -47,17 +50,6 @@ namespace Server.Networking
         //Account / Character settings
         public bool WaitingToEnter = false; //Set when client is ready to enter the game, any with this flag set are added into the physics scene at the start of each update
         public bool InGame = false; //Tracks if each client is actually in the game world with one of their characters, flagged after we have spawned them into the physics scene
-        public string AccountName = "";  //The account this user is currently logged into
-        public string CharacterName = "";    //The name of the character this user is currently playing with
-        public Vector3 CharacterPosition = Vector3.Zero;   //The world position of the character this user is currently playing with
-        public Vector3 CharacterMovement = Vector3.Zero;
-        public Quaternion CharacterRotation = Quaternion.Identity;    //Current rotation of the character this user is currently playing with
-        public bool NewPosition = false;    //Set when clients send us a new location value so we know to update them in the physics scene
-
-        //Players camera zoom distance / rotation settings
-        public float CameraZoom = 0f;
-        public float CameraXRotation = 0f;
-        public float CameraYRotation = 0f;
 
         //Physics settings
         public Capsule PhysicsShape;    //The character collider physics shape objeect in the world simulation
@@ -270,7 +262,7 @@ namespace Server.Networking
                 //Tell all the other clients to remove this character from their game worlds
                 List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(Client.NetworkID);
                 foreach (ClientConnection OtherClient in OtherClients)
-                    PlayerManagementPacketSender.SendRemoveRemotePlayer(OtherClient.NetworkID, Client.CharacterName);
+                    PlayerManagementPacketSender.SendRemoveRemotePlayer(OtherClient.NetworkID, Client.Character.Name);
 
                 //Set the client as dead so they are cleaned up and have their data backed up into the database correctly and exit the function
                 Client.ClientDead = true;

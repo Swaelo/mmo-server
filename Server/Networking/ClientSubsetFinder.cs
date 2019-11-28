@@ -21,7 +21,7 @@ namespace Server.Networking
             foreach(ClientConnection InGameClient in InGameClients)
             {
                 //Return the client if they are using the character
-                if (InGameClient.CharacterName == CharacterName)
+                if (InGameClient.Character.Name == CharacterName)
                     return InGameClient;
             }
 
@@ -39,7 +39,7 @@ namespace Server.Networking
             List<ClientConnection> ClientConnections = ConnectionManager.GetClientConnections();
             foreach(ClientConnection ClientConnection in ClientConnections)
             {
-                if (ClientConnection.NewPosition)
+                if (ClientConnection.Character.NewPosition)
                     UpdatedClients.Add(ClientConnection);
             }
 
