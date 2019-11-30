@@ -1,3 +1,11 @@
+# Overview  
+This is one half of my MMO project that I have been developing in my free time over the last year or so.  
+It's still very early on in development, but my main idea for the project was wanting to create a 3d open world mmorpg project that can be played in your web browser.  
+This project is the server application which you can run to host your own server for the mmo, its written in C#, uses TCP/WebSockets for communication with game clients.  
+Although the game client uses the Unity engine I have chosen to implement the open source physics engine BepuPhysics2 in the server project to handle all server side game logic, as this engine is also coded in C# and because its open source.  
+All you will need to compile and run the server is Visual Studio 2019 with the .NET Core 3.0 SDK installed, you will need to open port 5500 on your router to allow outside connections to be able to connect to the server.  
+After you have the server running, take at look at the other half of the project [mmo-client](https://github.com/Swaelo/mmo-client) to get a game client running to connect and start playing.
+
 # Project Requirements 
 ### Windows 10
 I've always used Windows 10 while working on this project, I suspect you may be able to get it running in Windows 8 or 8.1 but that’s totally up to you.  Any issues caused by trying this are left up to you to figure out on your own.  
@@ -11,7 +19,7 @@ The server application maintains a MySQL database to store many important things
 If no database exists or it’s unable to connect then the server is unable to function correctly.  
 ### MySQL Workbench  
 Very useful application to assist in making manual changes to the database or checking what values are currently being stored which is often needed during development and troubleshooting.  
-Initially required to help set up all the correct required table structures/database layout which are needed before the server can interact with it correctly.
+Initially required to help set up all the correct required table structures/database layout which are needed before the server can interact with it correctly.  
 
 # Setup Instructions
 
