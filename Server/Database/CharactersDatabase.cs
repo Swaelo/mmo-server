@@ -15,6 +15,13 @@ namespace Server.Database
 {
     class CharactersDatabase
     {
+        //Removes all characters from the database
+        public static void PurgeCharacters()
+        {
+            string PurgeQuery = "DELETE FROM characters";
+            CommandManager.ExecuteNonQuery(PurgeQuery, "Purging all entries from the characters database.");
+        }
+
         //Sets some integer value in the table of every character in the database
         public static void SetAllIntegerValue(string VariableName, int IntegerValue)
         {
@@ -49,6 +56,19 @@ namespace Server.Database
             CommandManager.ExecuteNonQuery(RotationQuery, "Setting the rotation of all characters in the database to " + Rotation.ToString() + ".");
         }
 
+        //Sets the camera values of all characters in the database
+        public static void SetAllCameras(float Zoom, float XRot, float YRot)
+        {
+            //Define the query for updating camera values
+            string CameraQuery = "UPDATE characters SET " +
+                "CameraZoom='" + Zoom + "', " +
+                "CameraXRotation='" + XRot + "', " +
+                "CameraYRotation='" + YRot + "'";
+
+            //Pass the query to be executed
+            CommandManager.ExecuteNonQuery(CameraQuery, "Setting the camera values of all characters in the database to: Zoom:" + Zoom + ", XRot:" + XRot + ", YRot:" + YRot + ".");
+        }
+
         //Checks if the given character name has already been taken by someone else or is free to use
         //NOTE: assumes the character name provided is valid
         public static bool IsCharacterNameAvailable(string CharacterName)
@@ -77,31 +97,30 @@ namespace Server.Database
         //Saves a brand new player character into the characters database
         public static void SaveNewCharacter(string AccountName, string CharacterName)
         {
-            //Define new query/command for inserting a new row into the characters table where this new characters information will be stored
-            string InsertRowQuery = "INSERT INTO characters(OwnerAccountname,CharacterName,IsMale) VALUE('" + AccountName + "','" + CharacterName + "','" + 1 + "')";
-            CommandManager.ExecuteNonQuery(InsertRowQuery, "Inserting new row into characters table to store data for new character " + CharacterName);
+            //Insert a new row into the characters table for storing the new characters information
+            string InsertRow = "INSERT INTO characters(OwnerAccountName,CharacterName,IsMale) VALUE('" + AccountName + "','" + CharacterName + "','" + 1 + "')";
+            CommandManager.ExecuteNonQuery(InsertRow, "Inserting new row into characters table for store data for " + AccountName + "'s new character " + CharacterName + ".");
 
-            //Define and execute a new query/command for updating the accounts table to reference this users new character count
+            //Update the users account table with their new character count, then reference this as one of their characters
             int NewCharacterCount = GetCharacterCount(AccountName) + 1;
-            string CharacterCountQuery = "UPDATE accounts SET CharactersCreated='" + NewCharacterCount + "' WHERE Username='" + AccountName + "'";
-            CommandManager.ExecuteNonQuery(CharacterCountQuery, "Updating the number of characters that exist under " + AccountName + "s account");
+            string CountQuery = "UPDATE accounts SET CharactersCreated='" + NewCharacterCount + "' WHERE Username='" + AccountName + "'";
+            CommandManager.ExecuteNonQuery(CountQuery, "Updating " + AccountName + "'s accounts table with their new character count.");
+            string CharacterKey = NewCharacterCount == 1 ? "FirstCharacterName" : NewCharacterCount == 2 ? "SecondCharacterName" : "ThirdCharacterName";
+            string ReferenceQuery = "UPDATE accounts SET " + CharacterKey + "='" + CharacterName + "' WHERE Username='" + AccountName + "'";
+            CommandManager.ExecuteNonQuery(ReferenceQuery, "Updating " + AccountName + "'s accounts table to reference the new character " + CharacterName + " as being one of theirs.");
 
-            //Define and execute a new query/command for updating the accounts table to reference this character under the owners account details
-            string NewCharacterReference = NewCharacterCount == 1 ? "FirstCharacterName" :
-                NewCharacterCount == 2 ? "SecondCharacterName" : "ThirdCharacterName";
-            string CharacterReferenceQuery = "UPDATE accounts SET " + NewCharacterReference + "='" + CharacterName + "' WHERE Username='" + AccountName + "'";
-            CommandManager.ExecuteNonQuery(CharacterReferenceQuery, "Updating " + AccountName + "s table to reference that the new character " + CharacterName + " belongs to them");
-
-            //Define and execute new queries/commands for inserting a new blank entry into each of the Inventory, Equipments and Actionbars tables for this newly created character
+            //Insert new blank entries into the Inventory/Equipment/ActionBar tables for storing information about this new character
             string InventoryQuery = "INSERT INTO inventories(CharacterName) VALUE('" + CharacterName + "')";
-            CommandManager.ExecuteNonQuery(InventoryQuery, "Inserting a new entry into the Inventory tables for the new character " + CharacterName);
             string EquipmentQuery = "INSERT INTO equipments(CharacterName) VALUE('" + CharacterName + "')";
-            CommandManager.ExecuteNonQuery(EquipmentQuery, "Inserting a new entry into the Equipment tables for the new character " + CharacterName);
             string ActionBarQuery = "INSERT INTO actionbars(CharacterName) VALUE('" + CharacterName + "')";
-            CommandManager.ExecuteNonQuery(ActionBarQuery, "Inserting a new entry into the ActionBar tables for the new character " + CharacterName);
+            CommandManager.ExecuteNonQuery(InventoryQuery, "Inserting new row into inventories table for storing data for " + AccountName + "'s new character " + CharacterName + ".");
+            CommandManager.ExecuteNonQuery(EquipmentQuery, "Inserting new row into equipments table for storing data for " + AccountName + "'s new character " + CharacterName + ".");
+            CommandManager.ExecuteNonQuery(ActionBarQuery, "Inserting new row into actionbars table for storing data for " + AccountName + "'s new character " + CharacterName + ".");
 
-            //Now the database has been setup to store this new characters information, we want to set their location onto the spawning platform
-            SetCharacterPosition(CharacterName, new Vector3(14.166f, 0.079f, 23.286f));
+            //Write some default position/rotation/camera setting values into the new characters table
+            SetCharacterPosition(CharacterName, new Vector3(15.068f, 0.079f, 22.025f));
+            SetCharacterRotation(CharacterName, new Quaternion(0f, 0.125f, 0f, -0.992f));
+            SetCharacterCamera(CharacterName, 7f, -14.28f, 5.449f);
         }
 
         //Returns the name of the users character which exists in the given character slot number
@@ -166,6 +185,18 @@ namespace Server.Database
         {
             string UpdateQuery = "UPDATE characters SET XPosition='" + CharacterPosition.X + "', YPosition='" + CharacterPosition.Y + "', ZPosition='" + CharacterPosition.Z + "' WHERE CharacterName='" + CharacterName + "'";
             CommandManager.ExecuteNonQuery(UpdateQuery, "Setting " + CharacterName + "s location in the database to " + CharacterPosition.ToString());
+        }
+
+        private static void SetCharacterRotation(string CharacterName, Quaternion CharacterRotation)
+        {
+            string UpdateQuery = "UPDATE characters SET XRotation='" + CharacterRotation.X + "', YRotation='" + CharacterRotation.Y + "', ZRotation='" + CharacterRotation.Z + "', WRotation='" + CharacterRotation.W + "' WHERE CharacterName='" + CharacterName + "'";
+            CommandManager.ExecuteNonQuery(UpdateQuery, "Setting " + CharacterName + "s rotation in the database to " + CharacterRotation.ToString());
+        }
+
+        private static void SetCharacterCamera(string CharacterName, float Zoom, float XRot, float YRot)
+        {
+            string UpdateQuery = "UPDATE characters SET CameraZoom='" + Zoom + "', CameraXRotation='" + XRot + "', CameraYRotation='" + YRot + "' WHERE CharacterName='" + CharacterName + "'";
+            CommandManager.ExecuteNonQuery(UpdateQuery, "Setting " + CharacterName + "s camera values in the database to Zoom:" + Zoom + ", XRot:" + XRot + ", YRot:" + YRot + ".");
         }
 
         //Sets the location of all characters inside the database to a new value

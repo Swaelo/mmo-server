@@ -5,6 +5,7 @@
 // ================================================================================================================================
 
 using System;
+using System.Numerics;
 using System.Net;
 using System.Net.Sockets;
 using System.Collections.Generic;
@@ -12,7 +13,9 @@ using Server.Networking.PacketSenders;
 using Server.Logging;
 using Server.Database;
 using BepuPhysics;
-using Quaternion = BepuUtilities.Quaternion;
+using ServerUtilities;
+using ContentRenderer;
+using ContentRenderer.UI;
 
 namespace Server.Networking
 {
@@ -25,6 +28,8 @@ namespace Server.Networking
         public static float NextConnectionCheck = 2.5f; //How long until we need to check for dead client connections again
         private static int ClientConnectionTimeout = 5;    //How many seconds must pass without hearing from a client before we shut down their connection
 
+        private static TextBuilder ConnectionsText = new TextBuilder(2048); //Used to render information about the active game cients to the window UI
+
         //Sets up the connection manager and starts listening for new incoming client connections
         public static void InitializeManager(string ServerIP)
         {
@@ -33,6 +38,45 @@ namespace Server.Networking
             NewClientListener = new TcpListener(IPAddress.Parse(ServerIP), 5500);
             NewClientListener.Start();
             NewClientListener.BeginAcceptTcpClient(new AsyncCallback(NewClientConnected), null);
+        }
+
+        //Renders information about all the current clients connections to the window UI
+        public static void RenderClientsInfo(Renderer Renderer, Vector2 Position, float FontSize, Vector3 FontColor, Font Font)
+        {
+            //Display an initial string at the start indicating what is being shown here
+            Renderer.TextBatcher.Write(ConnectionsText.Clear().Append("---Active Clients Info---"), Position, FontSize, FontColor, Font);
+
+            //Get the current list of active client connections
+            List<ClientConnection> Clients = GetClientConnections();
+
+            //Offset the Y value before we start rendering all the clients information to the log
+            Position.Y += FontSize * 1.5f;
+
+            //Loop through all of the active client connections
+            foreach(ClientConnection Client in Clients)
+            {
+                //Check if each one is logged into an account, and if they are ingame with a character of theirs
+                bool LoggedIn = Client.Account.Username != "";
+                bool InGame = Client.Character.Name != "";
+
+                //Create a string with all the clients info, start by putting their NetworkID
+                string ClientInfo = "<" + Client.NetworkID + ">";
+
+                //Add their current account name if they are logged into one
+                if (LoggedIn)
+                    ClientInfo += ", <" + Client.Account.Username + ">";
+
+                //Add their characters information if they are ingame with one
+                if (InGame)
+                    ClientInfo +=
+                        /*name*/    ", <" + Client.Character.Name + ">, " +
+                        /*pos*/     "<" + Client.Character.Position.ToString() + ">, " +
+                        /*HP*/      "<" + Client.Character.CurrentHealth + "/" + Client.Character.MaxHealth + ">";
+
+                //Draw the clients information to the UI and offset the position value for drawing the next clients information
+                Renderer.TextBatcher.Write(ConnectionsText.Clear().Append(ClientInfo), Position, FontSize, FontColor, Font);
+                Position.Y += FontSize * 1.2f;
+            }
         }
 
         //Returns the entire list of ClientConnections

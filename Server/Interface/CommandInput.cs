@@ -22,9 +22,8 @@ namespace Server.Interface
     public class CommandInput
     {
         private TextBuilder TextBuilder; //Used by the Renderer the draw the text to the UI
-        private string PreInput = "CMD: ";   //Text shown to show where the user can type commands into
+        private string PreInput = "Command Input: ";   //Text shown to show where the user can type commands into
         private string MessageInput = "";    //Current contents of the command input field
-        private Vector2 UIPosition = new Vector2(10, 425);  //Window Position where the CMD Input Field will be drawn to the UI
         private InputControls Controls; //Input Controls definitions
 
         public bool InputEnabled = false;   //Input is only read for this window if the field is enabled
@@ -202,9 +201,9 @@ namespace Server.Interface
         }
 
         //Draws the current content typed into the command input field
-        public void Render(Renderer Renderer, float TextHeight, Vector3 TextColor, Font TextFont)
+        public void Render(Renderer Renderer, Vector2 Position, float FontSize, Vector3 FontColor, Font FontType)
         {
-            Renderer.TextBatcher.Write(TextBuilder.Clear().Append(PreInput + MessageInput), UIPosition, TextHeight, TextColor, TextFont);
+            Renderer.TextBatcher.Write(TextBuilder.Clear().Append(PreInput + MessageInput), Position, FontSize, FontColor, FontType);
         }
 
         //Try using the current contents of the command input field to execute a new command
@@ -218,22 +217,26 @@ namespace Server.Interface
             string[] InputSplit = MessageInput.Split(" ");
 
             //Check if input can be used for one command after another until one can be performed
-            if (CanShowCommands(InputSplit))
+            if (CanShowCommands(InputSplit))    //Show Available Commands
                 Reset();
-            else if (CanServerShutdown(InputSplit))
+            else if (CanServerShutdown(InputSplit)) //Perform Server Shutdown
                 TryServerShutdown(InputSplit);
-            else if (CanKickPlayer(InputSplit))
+            else if (CanKickPlayer(InputSplit)) //Kick Player From Server
                 TryKickPlayer(InputSplit);
-            else if (CanCharacterInfoSearch(InputSplit))
+            else if (CanCharacterInfoSearch(InputSplit))    //Display Characters Information
                 TryCharacterInfoSearch(InputSplit);
-            else if (CanAccountInfoSearch(InputSplit))
+            else if (CanAccountInfoSearch(InputSplit))  //Display Accounts Information
                 TryAccountInfoSearch(InputSplit);
-            else if (CanSetAllCharactersIntegerValue(InputSplit))
+            else if (CanSetAllCharactersIntegerValue(InputSplit))   //Set some Integer value for all Characters in the database
                 TrySetAllCharactersIntegerValue(InputSplit);
-            else if (CanSetAllCharactersPositions(InputSplit))
+            else if (CanSetAllCharactersPositions(InputSplit))  //Set position value for all characters in the database
                 TrySetAllCharactersPositions(InputSplit);
-            else if (CanSetAllCharactersRotations(InputSplit))
+            else if (CanSetAllCharactersRotations(InputSplit))  //Set the rotation value for all characters in the database
                 TrySetAllCharactersRotations(InputSplit);
+            else if (CanSetAllCharactersCameras(InputSplit))    //Set the camera values for all characters in the database
+                TrySetAllCharactersCameras(InputSplit);
+            else if (CanPurgeDatabase(InputSplit))  //Purge all entries from the database
+                TryPurgeDatabase(InputSplit);
 
             Reset();
         }
@@ -252,6 +255,8 @@ namespace Server.Interface
                 string SetAllInteger = "Set All Characters Integer Value: setallcharactersinteger integername integervalue";
                 string SetAllPositions = "Set All Characters Positions: setallcharacterspositions xposition yposition zposition";
                 string SetAllRotations = "Set All Characters Rotations: setallcharactersrotations xrotation yrotation zrotation wrotation";
+                string SetAllCameras = "Set All Characters Cameras: setallcharacterscameras zoom xrotation yrotation";
+                string PurgeDatabase = "Remove every account and character information from the database: purgedatabase";
 
                 //Display all the strings in the message window
                 MessageLog.Print(Shutdown);
@@ -261,6 +266,8 @@ namespace Server.Interface
                 MessageLog.Print(SetAllInteger);
                 MessageLog.Print(SetAllPositions);
                 MessageLog.Print(SetAllRotations);
+                MessageLog.Print(SetAllCameras);
+                MessageLog.Print(PurgeDatabase);
 
                 return true;
             }
@@ -365,6 +372,34 @@ namespace Server.Interface
             return true;
         }
 
+        //Checks input can be used for performing setallcharacterscamera
+        //Example: setallcharacterscamera zoom xrotation yrotation
+        private bool CanSetAllCharactersCameras(string[] Input)
+        {
+            //Check argument count
+            if (Input.Length != 4)
+                return false;
+            //Check command key
+            if (Input[0] != "setallcharacterscameras")
+                return false;
+            //input is valid
+            return true;
+        }
+
+        //Checks input can be used for performing a database purge
+        //Example: purgedatabase
+        private bool CanPurgeDatabase(string[] Input)
+        {
+            //Check argument length
+            if (Input.Length != 1)
+                return false;
+            //Check command key
+            if (Input[0] != "purgedatabase")
+                return false;
+            //input is valid
+            return true;
+        }
+
         //Tries using the command arguments for performing a server shutdown
         private void TryServerShutdown(string[] Input)
         {
@@ -452,7 +487,7 @@ namespace Server.Interface
             string CharacterInfo = CharacterName + " level " + Data.Level + (Data.IsMale ? " male." : "female.");
             string CharacterPosition = "Position: " + "(" + Data.Position.X + "," + Data.Position.Y + "," + Data.Position.Z + ").";
             string CharacterRotation = "Rotation: (" + Data.Rotation.X + "," + Data.Rotation.Y + "," + Data.Rotation.Z + "," + Data.Rotation.W + ").";
-            string CharacterCamera = "Camera: Zoom:" + Data.CameraXRotation + " XRot:" + Data.CameraXRotation + " YRot:" + Data.CameraYRotation + ".";
+            string CharacterCamera = "Camera: Zoom:" + Data.CameraZoom + " XRot:" + Data.CameraXRotation + " YRot:" + Data.CameraYRotation + ".";
 
             //Display all the information to the message window
             MessageLog.Print(CharacterInfo);
@@ -537,6 +572,35 @@ namespace Server.Interface
 
             //Apply the new rotation to all characters in the database
             CharactersDatabase.SetAllRotations(Rotation);
+        }
+
+        //Tries using the command arguments for performing a setallcharacterscameras
+        private void TrySetAllCharactersCameras(string[] Input)
+        {
+            //Seperate the command arguments
+            float Zoom = float.Parse(Input[1]);
+            float XRot = float.Parse(Input[2]);
+            float YRot = float.Parse(Input[3]);
+
+            //Log what is happening here
+            MessageLog.Print("Setting the camera of all characters in the database to Zoom:" + Zoom + ", XRot:" + XRot + ", YRot:" + YRot + ".");
+
+            //Apply the new camera settings to all characters in the database
+            CharactersDatabase.SetAllCameras(Zoom, XRot, YRot);
+        }
+
+        //Tries using the command arguments for performing a database purge
+        private void TryPurgeDatabase(string[] Input)
+        {
+            //Log what is happening here
+            MessageLog.Print("Purging all entries from all databases.");
+
+            //Purge all the databases
+            AccountsDatabase.PurgeAccounts();
+            ActionBarsDatabase.PurgeActionBars();
+            CharactersDatabase.PurgeCharacters();
+            EquipmentsDatabase.PurgeEquipments();
+            InventoriesDatabase.PurgeInventories();
         }
     }
 }

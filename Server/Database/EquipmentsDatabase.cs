@@ -12,6 +12,13 @@ namespace Server.Database
 {
     class EquipmentsDatabase
     {
+        //Removes all equipment entries from the database
+        public static void PurgeEquipments()
+        {
+            string PurgeQuery = "DELETE FROM equipments";
+            CommandManager.ExecuteNonQuery(PurgeQuery, "Purging all entires from the equipments database.");
+        }
+
         //Adds an item into a characters equipment
         public static void CharacterEquipItem(string CharacterName, ItemData NewItem)
         {

@@ -8,7 +8,7 @@ using System.Numerics;
 using ContentRenderer;
 using ServerUtilities;
 using Server.Enums;
-using OpenTK.Input;
+using Server.Logging;
 
 namespace Server.Logic
 {

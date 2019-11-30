@@ -55,7 +55,6 @@ namespace Server.Logic
         {
             Renderer.Surface.Resize(resolution, false);
             Camera.AspectRatio = resolution.X / (float)resolution.Y;
-            World.OnResize(resolution);
         }
 
         public void Dispose()

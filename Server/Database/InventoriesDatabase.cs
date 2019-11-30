@@ -12,6 +12,13 @@ namespace Server.Database
 {
     class InventoriesDatabase
     {
+        //Deletes all entries from the inventories database
+        public static void PurgeInventories()
+        {
+            string PurgeQuery = "DELETE FROM inventories";
+            CommandManager.ExecuteNonQuery(PurgeQuery, "Purging all entries from the inventories database.");
+        }
+
         //Gets the bag slot number of the first free inventory slot available in a characters inventory
         private static int GetFirstFreeInventorySlot(string CharacterName)
         {

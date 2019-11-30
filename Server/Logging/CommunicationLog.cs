@@ -5,114 +5,140 @@
 // ================================================================================================================================
 
 using System;
+using System.Numerics;
 using System.Collections.Generic;
 using System.Text;
+using ServerUtilities;
+using ContentRenderer;
+using ContentRenderer.UI;
 
 namespace Server.Logging
 {
     public class CommunicationLog
     {
-        private static bool LogInitialized = false; //Tracks whether the message logger has been setup yet or not
-        private static string[] OutgoingPacketMessages; //The last 10 out messages that have been sent to the log
-        private static string[] IncomingPacketMessages; //The last 10 in messages that have been sent to the log
+        private static Dictionary<int, Message> OutgoingLog = new Dictionary<int, Message>();    //Dictionary of the last 15 messages that were sent to the outgoing log
+        private static Dictionary<int, Message> IncomingLog = new Dictionary<int, Message>();    //Dictionary of the last 15 messages that were send to the incoming log
 
-        private static string PreviousOutgoingMessage;  //Store whatever message was last sent to each message log
-        private static string PreviousIncomingMessage;
-        private static int OutgoingMessageCombo = 0;    //Count how many times each the same message has repeatedly sent to each log
-        private static int IncomingMessageCombo = 0;
+        //USed to render the communication logs contents to the window UI
+        private static TextBuilder OutgoingLogText = new TextBuilder(2048);
+        private static TextBuilder IncomingLogText = new TextBuilder(2048);
 
-        //Initializes the communication log
-        private static void Initialize()
+        private static int NextOutgoingOrderNumber = 0; //Order Number to be assigned to the next messages
+        private static int NextIncomingOrderNumber = 0;
+
+        //Store whatever messages was last sent to each log so we can combo when things are sent multiple times in a row
+        private static Message PreviousOutgoingMessage = null;
+        private static int OutgoingCombo = 0;
+        private static Message PreviousIncomingMessage = null;
+        private static int IncomingCombo = 0;
+
+        //Returns the current messages being stored in the logs as a list
+        public static List<Message> GetOutgoingMessages()
         {
-            //Set the out and in message arrays with 10 empty strings each
-            OutgoingPacketMessages = new string[10];
-            IncomingPacketMessages = new string[10];
-            for(int i = 0; i < 10; i++)
-            {
-                OutgoingPacketMessages[i] = "";
-                IncomingPacketMessages[i] = "";
-            }
+            //Create a new list to store the messages
+            List<Message> Messages = new List<Message>();
+            //Add all the messages from the dictionary into the list
+            foreach (KeyValuePair<int, Message> Message in OutgoingLog)
+                Messages.Add(Message.Value);
+            //Return the list
+            return Messages;
+        }
+        public static List<Message> GetIncomingMessages()
+        {
+            List<Message> Messages = new List<Message>();
+            foreach (KeyValuePair<int, Message> Message in IncomingLog)
+                Messages.Add(Message.Value);
+            return Messages;
+        }
 
-            //NOte that logger is not initialized
-            LogInitialized = true;
+        //Renders the current contents of each log to the window UI
+        public static void RenderOutgoingLog(Renderer Renderer, Vector2 Position, float FontSize, Vector3 FontColor, Font FontType)
+        {
+            //Display an initial string at the start indicating what is being shown here
+            Renderer.TextBatcher.Write(OutgoingLogText.Clear().Append("---Outgoing Packets Log---"), Position, FontSize, FontColor, FontType);
+            //Get the current list of messages to be displayed
+            List<Message> Messages = GetOutgoingMessages();
+            //Offset the Y value before we start drawing the contents of the log
+            Position.Y += FontSize * 1.5f;
+            //Loop through all the messages in the log
+            foreach(Message Message in Messages)
+            {
+                //Display each message on its own line, then offset the position fo the rendering of the next line
+                Renderer.TextBatcher.Write(OutgoingLogText.Clear().Append(Message.MessageContent), Position, FontSize, FontColor, FontType);
+                Position.Y += FontSize * 1.2f;
+            }
+        }
+        public static void RenderIncomingLog(Renderer Renderer, Vector2 Position, float FontSize, Vector3 FontColor, Font FontType)
+        {
+            Renderer.TextBatcher.Write(IncomingLogText.Clear().Append("---Incoming Packets Log---"), Position, FontSize, FontColor, FontType);
+            List<Message> Messages = GetIncomingMessages();
+            Position.Y += FontSize * 1.5f;
+            foreach(Message Message in Messages)
+            {
+                Renderer.TextBatcher.Write(IncomingLogText.Clear().Append(Message.MessageContent), Position, FontSize, FontColor, FontType);
+                Position.Y += FontSize * 1.2f;
+            }
         }
 
         //Stores a new message into the outgoing packet messages log
         public static void LogOut(string Message)
         {
-            //Setup the logger if its not been initialized yet
-            if (!LogInitialized)
-                Initialize();
+            //Create a new object to store the message
+            Message NewMessage = new Message(Message);
 
-            //Check if this is the same message that was previously sent to the log
-            if(Message == PreviousOutgoingMessage)
+            //Check if this message is being repeated
+            if(PreviousOutgoingMessage != null && PreviousOutgoingMessage.OriginalMessageContent == Message)
             {
                 //Increase the combo counter
-                OutgoingMessageCombo++;
-                //Update the message at the front to display the same message, showing the amount of repeats its had
-                OutgoingPacketMessages[0] = Message + " x" + OutgoingMessageCombo;
+                OutgoingCombo++;
+                //Update the message as the front of the log showing the amount of repeats its had so far
+                OutgoingLog[NextOutgoingOrderNumber].MessageContent = Message + " x" + OutgoingCombo;
             }
+            //Otherwise just add the message to the log as normal
             else
             {
                 //Reset the combo counter
-                OutgoingMessageCombo = 0;
-                //Move all the previous messages back 1 line
-                for (int i = 9; i > 0; i--)
-                    OutgoingPacketMessages[i] = OutgoingPacketMessages[i - 1];
-                //Store the new message in the first line
-                OutgoingPacketMessages[0] = Message;
+                OutgoingCombo = 0;
+                //Get the new messages order number
+                int OrderNumber = ++NextOutgoingOrderNumber;
+                //Store the message in the dictionary
+                OutgoingLog.Add(OrderNumber, NewMessage);
+                //Maintain a maximum amount of 15 messages in the log
+                if (OutgoingLog.Count > 15)
+                    OutgoingLog.Remove(OrderNumber - 15);
             }
 
-            //Store the new message as what was previously sent into the log
-            PreviousOutgoingMessage = Message;
+            //Store the new message as the one that was previously sent to the log
+            PreviousOutgoingMessage = NewMessage;
         }
 
         //Stores a new message into the incoming packet messages log
         public static void LogIn(string Message)
         {
-            //Setup the logger if its not been initialized yet
-            if (!LogInitialized)
-                Initialize();
+            //Create a new object to store the message
+            Message NewMessage = new Message(Message);
 
-            //Check if this is the same message that was previosly sent
-            if(Message == PreviousIncomingMessage)
+            //Check if this message is being repeated
+            if(PreviousIncomingMessage != null && PreviousIncomingMessage.OriginalMessageContent == Message)
             {
-                //Increase combo, update front message
-                IncomingMessageCombo++;
-                IncomingPacketMessages[0] = Message + " x" + IncomingMessageCombo;
+                //Increase the combo counter and update the message at the front of the log
+                IncomingCombo++;
+                IncomingLog[NextIncomingOrderNumber].MessageContent = Message + " x" + IncomingCombo;
             }
+            //Otherwise just add the message to the log as normal
             else
             {
-                //Reset combo, move previous messages back 1 line, store new message at front
-                IncomingMessageCombo = 0;
-                for (int i = 9; i > 0; i--)
-                    IncomingPacketMessages[i] = IncomingPacketMessages[i - 1];
-                IncomingPacketMessages[0] = Message;
+                //Reset the combo counter, get the new order number and use that to store it in the dictionary
+                IncomingCombo = 0;
+                int OrderNumber = ++NextIncomingOrderNumber;
+                IncomingLog.Add(OrderNumber, NewMessage);
+                //Maintain a maximum amount of 15 messages in the log
+                if (IncomingLog.Count > 15)
+                    IncomingLog.Remove(OrderNumber - 15);
             }
-            //Store message as previously sent
-            PreviousIncomingMessage = Message;
-        }
 
-        //Returns the current list of the 10 previous outgoing packet messages which have been sent to the log
-        public static string[] GetOutgoingMessages()
-        {
-            //Setup the logger if its not been initialized yet
-            if (!LogInitialized)
-                Initialize();
-
-            //Return the list of outgoing packet messages
-            return OutgoingPacketMessages;
-        }
-
-        //Returns the current list of the 10 previous incoming packet messages which have been sent to the log
-        public static string[] GetIncomingMessages()
-        {
-            //Setup the logger if its not been initialized yet
-            if (!LogInitialized)
-                Initialize();
-
-            //Return the list of incoming packet messages
-            return IncomingPacketMessages;
+            //Store the new message as the one that was previously sent to the log
+            PreviousIncomingMessage = NewMessage;
         }
     }
 }

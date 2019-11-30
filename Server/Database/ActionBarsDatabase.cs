@@ -12,6 +12,13 @@ namespace Server.Database
 {
     public static class ActionBarsDatabase
     {
+        //Removes all entries from the action bars database
+        public static void PurgeActionBars()
+        {
+            string PurgeQuery = "DELETE FROM actionbars";
+            CommandManager.ExecuteNonQuery(PurgeQuery, "Purging all entries from the actionbars database.");
+        }
+
         //Returns the slot number of the first available action bar slot (assumes there is one available)
         private static int GetFirstFreeActionBarSlot(string CharacterName)
         {

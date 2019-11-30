@@ -11,6 +11,13 @@ namespace Server.Database
 {
     class AccountsDatabase
     {
+        //Purges all entries from the accounts database
+        public static void PurgeAccounts()
+        {
+            string PurgeQuery = "DELETE FROM accounts";
+            CommandManager.ExecuteNonQuery(PurgeQuery, "Purging all entries from the accounts database.");
+        }
+
         //Sets some string value in the table of every account in the database
         public static void SetAllStringValue(string VariableName, string VariableValue)
         {

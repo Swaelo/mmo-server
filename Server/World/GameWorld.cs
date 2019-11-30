@@ -6,6 +6,7 @@
 
 using System;
 using System.Numerics;
+using System.Collections.Generic;
 using BepuPhysics;
 using BepuPhysics.Collidables;
 using BepuUtilities;
@@ -21,6 +22,7 @@ using Server.Interface;
 using Server.GameItems;
 using Server.Networking;
 using Server.Networking.PacketSenders;
+using OpenTK.Input;
 
 namespace Server.World
 {
@@ -35,21 +37,16 @@ namespace Server.World
         private Controls UserControls;  //Control settings for receiving input
 
         public ObservationCamera ObservationCamera = new ObservationCamera();   //The camera used to view the game world during server runtime
+        CharacterControllers Characters;
 
         private ContentArchive Content = null;  //Assets used during the servers runtime
         private SimulationTimeSamples TimeSamples = null;   //Timesamples used to evaluate and display performance metric on the graph during runtime
         private Font UIFont = null; //Font type used to draw strings to the application window
-        private TextBuilder UIText; //For drawing the performance graph info to the UI
-        private TextBuilder LogText;    //For drawing debug log messages to the UI
-        private TextBuilder PacketsOutText; //For drawing outgoing packet messages to the UI
-        private TextBuilder PacketsInText;  //For drawing incoming packet messages to the UI
-        private TextBuilder ActiveClientsText; //For showing how many client connections are currently active on the UI
+
         private float UITextSize = 16;  //Size of the font used to display messages to the UI
         private Vector3 UITextColor = new Vector3(1);
 
-        private PerformanceGraph PerformanceGraph = null;    //Graph displayed to the windows UI to monitor performance metrics during the servers runtime
-
-        private CommandInput CMDInputField = new CommandInput(); //Allows user to type messages into the server application for custom command execution 
+        private CommandInput CommandInputField = new CommandInput(); //Allows user to type messages into the server application for custom command execution 
 
         //Constructor which sets up the whole game world scene
         public GameWorld(GameLoop Loop, ContentArchive Content)
@@ -69,28 +66,19 @@ namespace Server.World
             var FontContent = Content.Load<FontContent>(@"Content\Carlito-Regular.ttf");
             UIFont = new Font(Loop.Surface.Device, Loop.Surface.Context, FontContent);
 
-            //Set up the performance graph
-            PerformanceGraph = new PerformanceGraph(UIFont, TimeSamples);
-
             //Position the camera
             ObservationCamera.PositionCamera(new Vector3(6, 2.5f, -8), -3.14f, 0);
 
             //Setup character controller and world simulation
             BufferPool = new BufferPool();
             ThreadDispatcher = new SimpleThreadDispatcher(Environment.ProcessorCount);
-            WorldSimulation = Simulation.Create(BufferPool, new CharacterNarrowphaseCallbacks(new CharacterControllers(BufferPool)), new ScenePoseIntegratorCallbacks(new Vector3(0, -10, 0)));
+            Characters = new CharacterControllers(BufferPool);
+            WorldSimulation = Simulation.Create(BufferPool, new CharacterNarrowphaseCallbacks(Characters), new ScenePoseIntegratorCallbacks(new Vector3(0, -10, 0)));
             
             //Place a ground plane to walk on
             WorldSimulation.Statics.Add(new StaticDescription(new Vector3(0), new CollidableDescription(WorldSimulation.Shapes.Add(new Box(200, 1, 200)), 0.1f)));
-            
-            //Setup text builder for rendering UI text components
-            UIText = new TextBuilder(1024);
-            LogText = new TextBuilder(2048);
-            PacketsInText = new TextBuilder(1024);
-            PacketsOutText = new TextBuilder(1024);
-            ActiveClientsText = new TextBuilder(512);
 
-            CMDInputField.Initialize();
+            CommandInputField.Initialize();
 
             //Make sure the window size is correct relative to the current resolution
             OnResize(ApplicationWindow.Resolution);
@@ -99,7 +87,7 @@ namespace Server.World
         //Allow the window to be resized
         public void OnResize(Int2 Resolution)
         {
-            PerformanceGraph.UpdateGraphTimingMode(PerformanceGraph.GraphDisplayMode, ApplicationWindow);
+            
         }
 
         private void ProcessInput(bool WindowFocused, float DeltaTime)
@@ -108,10 +96,16 @@ namespace Server.World
             if (WindowFocused)
             {
                 //Allow user to type messages into the command input window
-                CMDInputField.Update(UserInput, DeltaTime);
+                CommandInputField.Update(UserInput, DeltaTime);
+
+                if(UserInput.IsDown(MouseButton.Right))
+                {
+                    var Delta = UserInput.MouseDelta;
+                    MessageLog.Print("Mouse: " + Delta.X + ", " + Delta.Y);
+                }
 
                 //Allow the user to control the camera if the command input field is inactive
-                if (!CMDInputField.InputEnabled)
+                if (!CommandInputField.InputEnabled)
                     ObservationCamera.UpdateCamera(UserControls, UserInput, DeltaTime);
             }
             else
@@ -154,9 +148,6 @@ namespace Server.World
             //Draws various text message windows to the UI displaying a range of useful information
             RenderUI(Renderer);
 
-            //Render the performance graph to the UI
-            PerformanceGraph.RenderGraph(UIText, Renderer);
-
             //Render all the shapes in the scene
             Renderer.Shapes.AddInstances(WorldSimulation, ThreadDispatcher);
             Renderer.Lines.Extract(WorldSimulation.Bodies, WorldSimulation.Solver, WorldSimulation.BroadPhase, false, false, false, ThreadDispatcher);
@@ -164,37 +155,19 @@ namespace Server.World
 
         private void RenderUI(Renderer Renderer)
         {
-            //Display the current contents of the command input field in the middle of the screen
-            CMDInputField.Render(Renderer, UITextSize, UITextColor, UIFont);
+            //Define the locations where each element of the UI will be rendered
+            Vector2 MessageLogPos = new Vector2(10, 750);
+            Vector2 CommandInputPos = new Vector2(10, 735);
+            Vector2 PacketOutPos = new Vector2(800, 25);
+            Vector2 PacketInPos = new Vector2(450, 25);
+            Vector2 ClientsInfoPos = new Vector2(10, 25);
 
-            //Define the locations where each message log will start rendering its messages/information to
-            Vector2 LogMsgPos = new Vector2(10, 750); //Bottom-Left Corner = Debug Log
-            Vector2 PacketOutPos = new Vector2(800, 750); //Bottom-Right Corner = Outgoing Packets
-            Vector2 PacketInPos = new Vector2(525, 750);    //Bottom-Middle = Incoming Packets
-
-            //Get the lists of messages to be displayed in each of the message windows
-            string[] LogMsgs = MessageLog.GetMessages();
-            string[] PacketOutMsgs = CommunicationLog.GetOutgoingMessages();
-            string[] PacketInMsgs = CommunicationLog.GetIncomingMessages();
-
-            //Loop through to display the maximum 10 lines of information from each message log to be displayed
-            for(int i = 0; i < 10; i++)
-            {
-                //Draw the next line for each message window
-                Renderer.TextBatcher.Write(LogText.Clear().Append(LogMsgs[i]), LogMsgPos, UITextSize, UITextColor, UIFont);
-                Renderer.TextBatcher.Write(PacketsOutText.Clear().Append(PacketOutMsgs[i]), PacketOutPos, UITextSize, UITextColor, UIFont);
-                Renderer.TextBatcher.Write(PacketsInText.Clear().Append(PacketInMsgs[i]), PacketInPos, UITextSize, UITextColor, UIFont);
-
-                //Offset the Y position values so the next lines of each window are rendered in the correct locations
-                LogMsgPos.Y -= UITextSize * 1.2f;
-                PacketOutPos.Y -= UITextSize * 1.2f;
-                PacketInPos.Y -= UITextSize * 1.2f;
-            }
-
-            //Finally, in the bottom-right corner, display how many clients are currently connected to the server
-            Vector2 ActiveClientsPos = new Vector2(10, 25); //Top-Left Corner = Player Count
-            int ActiveConnections = ConnectionManager.GetClientConnections().Count;
-            Renderer.TextBatcher.Write(ActiveClientsText.Clear().Append("Clients Connected: " + ActiveConnections.ToString()), ActiveClientsPos, UITextSize, UITextColor, UIFont);
+            //Render each element to the window UI
+            CommandInputField.Render(Renderer, CommandInputPos, UITextSize, UITextColor, UIFont);
+            MessageLog.RenderLog(Renderer, MessageLogPos, UITextSize, UITextColor, UIFont);
+            CommunicationLog.RenderOutgoingLog(Renderer, PacketOutPos, UITextSize, UITextColor, UIFont);
+            CommunicationLog.RenderIncomingLog(Renderer, PacketInPos, UITextSize, UITextColor, UIFont);
+            ConnectionManager.RenderClientsInfo(Renderer, ClientsInfoPos, UITextSize, UITextColor, UIFont);
         }
 
         //Adds any clients character into the game world who have just logged in and are waiting to be added before they are allowed to start playing
