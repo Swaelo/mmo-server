@@ -133,6 +133,7 @@ namespace Server.Networking
         {
             //Account Management Packet Handlers
             PacketHandlers.Add(ClientPacketType.AccountLoginRequest, AccountManagementPacketHandler.HandleAccountLoginRequest);
+            PacketHandlers.Add(ClientPacketType.AccountLogoutAlert, AccountManagementPacketHandler.HandleAccountLogoutAlert);
             PacketHandlers.Add(ClientPacketType.AccountRegistrationRequest, AccountManagementPacketHandler.HandleAccountRegisterRequest);
             PacketHandlers.Add(ClientPacketType.CharacterDataRequest, AccountManagementPacketHandler.HandleCharacterDataRequest);
             PacketHandlers.Add(ClientPacketType.CharacterCreationRequest, AccountManagementPacketHandler.HandleCreateCharacterRequest);

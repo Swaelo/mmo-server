@@ -8,26 +8,27 @@ public enum ClientPacketType
 {
     //Account Management Packet Types
     AccountLoginRequest = 1,
-    AccountRegistrationRequest = 2,
-    CharacterDataRequest = 3,
-    CharacterCreationRequest = 4,
+    AccountLogoutAlert = 2,
+    AccountRegistrationRequest = 3,
+    CharacterDataRequest = 4,
+    CharacterCreationRequest = 5,
 
     //Game World State Packet Types
-    EnterWorldRequest = 5,
-    PlayerReadyAlert = 6,
+    EnterWorldRequest = 6,
+    PlayerReadyAlert = 7,
 
     //Player Communication Packet Types
-    PlayerChatMessage = 7,
+    PlayerChatMessage = 8,
 
     //Player Management Packet Types
-    LocalPlayerCharacterUpdate = 8,
-    LocalPlayerCameraUpdate = 9,
-    LocalPlayerPlayAnimationAlert = 10,
+    LocalPlayerCharacterUpdate = 9,
+    LocalPlayerCameraUpdate = 10,
+    LocalPlayerPlayAnimationAlert = 11,
 
     //System Packet Types
-    MissedPacketsRequest = 11,
-    StillConnectedReply = 12,
-    OutOfSyncAlert = 13
+    MissedPacketsRequest = 12,
+    StillConnectedReply = 13,
+    OutOfSyncAlert = 14
 };
 
 public enum ServerPacketType
@@ -50,14 +51,16 @@ public enum ServerPacketType
     PlayerChatMessage = 11,
 
     //Player Management Packet Types
-    UpdateRemotePlayer = 12,
-    AddRemotePlayer = 13,
-    RemoveRemotePlayer = 14,
-    AllowPlayerBegin = 15,
-    RemotePlayerPlayAnimationAlert = 16,
+    TeleportLocalPlayer = 12,
+    TeleportRemotePlayer = 13,
+    UpdateRemotePlayer = 14,
+    AddRemotePlayer = 15,
+    RemoveRemotePlayer = 16,
+    AllowPlayerBegin = 17,
+    RemotePlayerPlayAnimationAlert = 18,
 
     //System Packet Types
-    StillConnectedCheck = 17,
-    MissingPacketsRequest = 18,
-    KickedFromServer = 19
+    StillConnectedCheck = 19,
+    MissingPacketsRequest = 20,
+    KickedFromServer = 21
 };

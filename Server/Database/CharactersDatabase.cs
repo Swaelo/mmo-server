@@ -15,18 +15,38 @@ namespace Server.Database
 {
     class CharactersDatabase
     {
-        //Sets some string value in the table of every character in the database
-        public static void SetAllStringValue(string VariableName, string VariableValue)
-        {
-            string UpdateQuery = "UPDATE characters SET " + VariableName + "='" + VariableValue + "'";
-            CommandManager.ExecuteNonQuery(UpdateQuery, "Setting value of " + VariableName + " to " + VariableValue + " in all existing character tables.");
-        }
-
         //Sets some integer value in the table of every character in the database
         public static void SetAllIntegerValue(string VariableName, int IntegerValue)
         {
             string UpdateQuery = "UPDATE characters SET " + VariableName + "='" + IntegerValue + "'";
             CommandManager.ExecuteNonQuery(UpdateQuery, "Setting value of " + VariableName + " to " + IntegerValue + " in all existing character tables.");
+        }
+
+        //Sets the vector3 position value of all characters in the database
+        public static void SetAllPositions(Vector3 Position)
+        {
+            //Define the SQL query for applying the new position values to the database
+            string PositionQuery = "UPDATE characters SET " +
+                "XPosition='" + Position.X + "', " +
+                "YPosition='" + Position.Y + "', " +
+                "ZPosition='" + Position.Z + "'";
+
+            //Pass the query on to be executed in a new SQL command
+            CommandManager.ExecuteNonQuery(PositionQuery, "Setting the position of all characters in the database to " + Position.ToString() + ".");
+        }
+
+        //Sets the quaternion rotation value of all characters in the database
+        public static void SetAllRotations(Quaternion Rotation)
+        {
+            //Define the SQL query for applying the new rotation values to the database
+            string RotationQuery = "UPDATE characters SET " +
+                "XRotation='" + Rotation.X + "', " +
+                "YRotation='" + Rotation.Y + "', " +
+                "ZRotation='" + Rotation.Z + "', " +
+                "WRotation='" + Rotation.W + "'";
+
+            //Pass the query on to be executed in a new SQL command
+            CommandManager.ExecuteNonQuery(RotationQuery, "Setting the rotation of all characters in the database to " + Rotation.ToString() + ".");
         }
 
         //Checks if the given character name has already been taken by someone else or is free to use
@@ -94,6 +114,13 @@ namespace Server.Database
             return CommandManager.ReadStringValue(CharacterNameQuery, DatabaseStringName, "Reading " + AccountName + "s " + DatabaseStringName);
         }
 
+        //Lodas a characters position from the database
+        public static Vector3 GetCharactersPosition(string CharacterName)
+        {
+            string CharacterQuery = "SELECT * FROM characters WHERE CharacterName='" + CharacterName + "'";
+            return CommandManager.ReadVectorValue(CharacterQuery, "Reading " + CharacterName + "'s position values.");
+        }
+
         //Loads all of a characters information from the database
         public static CharacterData GetCharacterData(string CharacterName)
         {
@@ -123,12 +150,16 @@ namespace Server.Database
         //Backs up all of a characters information into the database
         public static void SaveCharacterData(CharacterData CharacterData)
         {
-            string SaveDataQuery = "UPDATE characters SET XPosition='" + CharacterData.Position.X + "', YPosition='" + CharacterData.Position.Y + "', ZPosition='" + CharacterData.Position.Z +
-                "', XRotation='" + CharacterData.Rotation.X + "', YRotation='" + CharacterData.Rotation.Y + "', ZRotation='" + CharacterData.CameraZoom + "', WRotation='" + CharacterData.Rotation.W +
-                "', CurrentHealth='" + CharacterData.CurrentHealth + "', MaxHealth='" + CharacterData.MaxHealth +
-                "', CameraZoom='" + CharacterData.CameraZoom + "', CameraXRotation='" + CharacterData.CameraXRotation + "', CameraYRotation='" + CharacterData.CameraYRotation +
-                "' WHERE CharacterName='" + CharacterData.Name + "'";
-            CommandManager.ExecuteNonQuery(SaveDataQuery, "Saving " + CharacterData.Name + "'s character data into the database.");
+            //Define a new SQL query to apply all the characters current values
+            string SaveDataQuery = "UPDATE characters SET " +
+                /*Position*/    "XPosition='" + CharacterData.Position.X + "', YPosition='" + CharacterData.Position.Y + "', ZPosition='" + CharacterData.Position.Z + "'" +
+                /*Rotation*/    ", XRotation='" + CharacterData.Rotation.X + "', YRotation='" + CharacterData.Rotation.Y + "', ZRotation='" + CharacterData.Rotation.Z + "', WRotation='" + CharacterData.Rotation.W + "'" +
+                /*Camera*/      ", CameraZoom='" + CharacterData.CameraZoom + "', CameraXRotation='" + CharacterData.CameraXRotation + "', CameraYRotation='" + CharacterData.CameraYRotation + "'" +
+                /*Health*/      ", CurrentHealth='" + CharacterData.CurrentHealth + "', MaxHealth='" + CharacterData.MaxHealth + "'" +
+                /*WHO*/         " WHERE CharacterName='" + CharacterData.Name + "'";
+
+            //Execute the command to update the database with the new values
+            CommandManager.ExecuteNonQuery(SaveDataQuery, "Saving " + CharacterData.Name + "'s character data values into the database.");
         }
 
         private static void SetCharacterPosition(string CharacterName, Vector3 CharacterPosition)

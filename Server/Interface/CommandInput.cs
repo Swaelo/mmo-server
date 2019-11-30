@@ -13,9 +13,9 @@ using Server.Logic;
 using Server.Logging;
 using Server.Networking;
 using Server.Networking.PacketSenders;
-using Server.Misc;
 using Server.Data;
 using Server.Database;
+using Quaternion = BepuUtilities.Quaternion;
 
 namespace Server.Interface
 {
@@ -32,34 +32,6 @@ namespace Server.Interface
         private bool BackSpaceHeld = false; //Tracks when the BackSpace is being held for continuous backspacing
         private float BackSpaceCoolDown = 0.025f; //How often to perform a backspace when its being held down
         private float NextBackSpace = 0.025f;   //How long until the next backspace is to be performed
-
-        //Whenever the Enter key is pressed, and input is detected as a valid command input, it simply activates one of these flags
-        //These are then checked by the GameWorld Update function, and commands are executed on its end, before it resets the flags
-        public bool ShutdownEvent = false;
-
-        //Where event is for looking up the location of some character
-        public bool WhereEvent = false;
-        public string WhereTarget = "";
-
-        //Event for kicking a player from the server
-        public bool KickPlayerEvent = false;
-        public string KickPlayerName = "";
-
-        //Events for looking up and viewing character and useraccount data
-        public bool CharacterInfoEvent = false;
-        public string CharacterInfoName = "";
-        public bool AccountInfoEvent = false;
-        public string AccountInfoName = "";
-
-        //Events for setting the value of some variable for every character/account in the database to the same value
-        public bool SetAllCharacterVariableEvent = false;
-        public string SetAllCharacterVariableType = "";
-        public string SetAllCharacterVariableName = "";
-        public string SetAllCharacterVariableValue = "";
-        public bool SetAllAccountVariableEvent = false;
-        public string SetAllAccountVariableType = "";
-        public string SetAllAccountVariableName = "";
-        public string SetAllAccountVariableValue = "";
 
         public void Initialize()
         {
@@ -88,11 +60,13 @@ namespace Server.Interface
                 if (Controls.Space.WasTriggered(Input))
                     MessageInput += " ";
 
-                //Check for comma's and periods
+                //Check for comma's, periods and - symbols
                 if (Controls.Comma.WasTriggered(Input))
                     MessageInput += Shift ? "<" : ",";
                 if (Controls.Period.WasTriggered(Input))
                     MessageInput += Shift ? ">" : ".";
+                if (Controls.Minus.WasTriggered(Input))
+                    MessageInput += Shift ? "_" : "-";
 
                 //Check if the user press backspace for removing letters from the end of the command input field
                 PollBackSpace(Input, DeltaTime);
@@ -240,349 +214,329 @@ namespace Server.Interface
             if (MessageInput == "")
                 return;
 
-            //Try splitting the string from its spaces to check for multi word / argument requiring commands
+            //Split the string up from its spaces, seperating the command key from its arguments
             string[] InputSplit = MessageInput.Split(" ");
 
-            if (TryWherePlayer(InputSplit) ||
-                TryShutdown(InputSplit) ||
-                TryKickPlayer(InputSplit) ||
-                TryGetCharacterInfo(InputSplit) ||
-                TryGetAccountInfo(InputSplit) ||
-                TrySetAllAccountVariable(InputSplit) ||
-                TrySetAllCharacterVariable(InputSplit)
-                ) Reset();
-            else
+            //Check if input can be used for one command after another until one can be performed
+            if (CanShowCommands(InputSplit))
                 Reset();
-        }
+            else if (CanServerShutdown(InputSplit))
+                TryServerShutdown(InputSplit);
+            else if (CanKickPlayer(InputSplit))
+                TryKickPlayer(InputSplit);
+            else if (CanCharacterInfoSearch(InputSplit))
+                TryCharacterInfoSearch(InputSplit);
+            else if (CanAccountInfoSearch(InputSplit))
+                TryAccountInfoSearch(InputSplit);
+            else if (CanSetAllCharactersIntegerValue(InputSplit))
+                TrySetAllCharactersIntegerValue(InputSplit);
+            else if (CanSetAllCharactersPositions(InputSplit))
+                TrySetAllCharactersPositions(InputSplit);
+            else if (CanSetAllCharactersRotations(InputSplit))
+                TrySetAllCharactersRotations(InputSplit);
 
-        //Checks if input is valid for setting character/account variable
-        private bool TrySetAllAccountVariable(string[] InputSplit)
-        {
-            if (InputSplit[0] != "setallaccountvariable")
-                return false;
-            if (InputSplit.Length != 4)
-                return false;
-            SetAllAccountVariableEvent = true;
-            SetAllAccountVariableType = InputSplit[1];
-            SetAllAccountVariableName = InputSplit[2];
-            SetAllAccountVariableValue = InputSplit[3];
             Reset();
-            return true;
-        }
-        private bool TrySetAllCharacterVariable(string[] InputSplit)
-        {
-            if (InputSplit[0] != "setallcharactervariable")
-                return false;
-            if (InputSplit.Length != 4)
-                return false;
-            SetAllCharacterVariableEvent = true;
-            SetAllCharacterVariableType = InputSplit[1];
-            SetAllCharacterVariableName = InputSplit[2];
-            SetAllCharacterVariableValue = InputSplit[3];
-            Reset();
-            return true;
         }
 
-        //Checks if input is valid for fetching and displays character/useraccount information
-        private bool TryGetCharacterInfo(string[] InputSplit)
+        //Checks input can be used for showing all the available commands
+        //Example: commands
+        private bool CanShowCommands(string[] Input)
         {
-            //Confirm command key
-            if (InputSplit[0] != "characterinfo")
-                return false;
-
-            //Confirm correct argument count
-            if (InputSplit.Length != 2)
-                return false;
-
-            //Flag the event
-            CharacterInfoEvent = true;
-            CharacterInfoName = InputSplit[1];
-
-            //reset/exit
-            Reset();
-            return true;
-        }
-        private bool TryGetAccountInfo(string[] InputSplit)
-        {
-            if (InputSplit[0] != "accountinfo")
-                return false;
-            if (InputSplit.Length != 2)
-                return false;
-            AccountInfoEvent = true;
-            AccountInfoName = InputSplit[1];
-            Reset();
-            return true;
-        }
-
-        //Checks if input is valid for finding a players location
-        private bool TryWherePlayer(string[] InputSplit)
-        {
-            //Check for command key
-            if (InputSplit[0] != "where")
-                return false;
-
-            //Check argument count
-            if (InputSplit.Length != 2)
-                return false;
-
-            //Flag this event
-            WhereEvent = true;
-            WhereTarget = InputSplit[1];
-
-            //Reset and exit
-            Reset();
-            return true;
-        }
-
-        //Checks if input is valid for performing a server shutdown
-        private bool TryShutdown(string[] InputSplit)
-        {
-            //Check for command key
-            if (InputSplit[0] != "shutdown")
-                return false;
-
-            //Check argument count
-            if (InputSplit.Length != 1)
-                return false;
-
-            //Flag this event
-            ShutdownEvent = true;
-
-            //Reset and exit
-            Reset();
-            return true;
-        }
-
-        //Checks if input is valid for kicking a player from the server
-        private bool TryKickPlayer(string[] InputSplit)
-        {
-            //Check for command key
-            if (InputSplit[0] != "kick")
-                return false;
-            //Check argument count
-            if (InputSplit.Length != 2)
-                return false;
-            //Flag this event
-            KickPlayerEvent = true;
-            KickPlayerName = InputSplit[1];
-            //Reset and exit
-            Reset();
-            return true;
-        }
-
-        //Tries performing any events which have been triggered
-        public void TryPerformEvents()
-        {
-            TryPerformWherePlayer();
-            TryPerformShutdown();
-            TryPerformKickPlayer();
-            TryPerformShowCharacterInfo();
-            TryPerformShowAccountInfo();
-            TryPerformSetAllAccountVariableValue();
-            TryPerformSetAllCharacterVariableValue();
-        }
-
-        //Tries using entered information to update the value of some variable in the table of every character/account
-        private void TryPerformSetAllAccountVariableValue()
-        {
-            if(SetAllAccountVariableEvent)
+            if(Input[0] == "commands")
             {
-                MessageLog.Print("Attempting to set the value of the " + SetAllAccountVariableName + " variable in all account tables to the value of " + SetAllAccountVariableValue);
-                
-                //Make sure the variable type specified is valid
-                if(!ValidInputCheckers.IsValidVariableType(SetAllAccountVariableType))
-                {
-                    MessageLog.Print("ERROR: " + SetAllAccountVariableType + " is not a valid variable type that can be used for updating database values automatically.");
-                    return;
-                }
+                //Define strings to show all the available commands
+                string Shutdown = "Server Shutdown: shutdown";
+                string KickPlayer = "Kick Player: kick charactername";
+                string CharacterInfo = "Show Character Info: characterinfo charactername";
+                string AccountInfo = "Show Account Info: accountinfo accountname";
+                string SetAllInteger = "Set All Characters Integer Value: setallcharactersinteger integername integervalue";
+                string SetAllPositions = "Set All Characters Positions: setallcharacterspositions xposition yposition zposition";
+                string SetAllRotations = "Set All Characters Rotations: setallcharactersrotations xrotation yrotation zrotation wrotation";
 
-                //Make sure the variable name is one that exists in the accounts tables
-                if(!ValidInputCheckers.IsAccountVariableNameValid(SetAllAccountVariableName))
-                {
-                    MessageLog.Print("ERROR: " + SetAllAccountVariableName + " is not a valid variable name that can be used for updating accounts table values automatically.");
-                    return;
-                }
-
-                MessageLog.Print("ERROR: Need to finish implementing the TryPerformSetAllAccountVariableValue function in the CommandInput class.");
-
-                SetAllAccountVariableEvent = false;
-            }
-        }
-        private void TryPerformSetAllCharacterVariableValue()
-        {
-            if(SetAllCharacterVariableEvent)
-            {
-                MessageLog.Print("Attempting to set the value of " + SetAllCharacterVariableName + " to " + SetAllCharacterVariableValue + " in all existing character tables.");
-                if(!ValidInputCheckers.IsValidVariableType(SetAllCharacterVariableType))
-                {
-                    MessageLog.Print("ERROR: " + SetAllCharacterVariableType + " is not a valid variable type that can be used for updating database values automatically.");
-                    return;
-                }
-                if(!ValidInputCheckers.IsCharacterVariableNameValid(SetAllCharacterVariableName))
-                {
-                    MessageLog.Print("ERROR: " + SetAllCharacterVariableName + " is not a valid variable name that can be used for updating characters table values automatically.");
-                    return;
-                }
-
-                if(SetAllCharacterVariableType != "integer")
-                {
-                    MessageLog.Print("ERROR: SetAllCharacterVariable only supports Integer type for now.");
-                    return;
-                }
-
-                //Assume they are trying to update some integer value, as thats all we need for now, the rest can be implemented later when it actually becomes useful
-                int IntegerValue = int.Parse(SetAllCharacterVariableValue);
-                CharactersDatabase.SetAllIntegerValue(SetAllCharacterVariableName, IntegerValue);
-
-                //Log that the command has been executed and disable the event flag
-                MessageLog.Print("Finished updating character database values");
-                SetAllCharacterVariableEvent = false;
-            }
-        }
-
-        //Tries using entered information to perform a player location check
-        private void TryPerformWherePlayer()
-        {
-            if(WhereEvent)
-            {
-                //Log what is happening here
-                MessageLog.Print("Finding " + WhereTarget + "'s location...");
-
-                //Get the client controlling the character we are looking for
-                ClientConnection Client = ClientSubsetFinder.GetClientUsingCharacter(WhereTarget);
-
-                //If the client was unable to be found, the character being searched for isnt in the game right now
-                if (Client == null)
-                    MessageLog.Print(WhereTarget + " could not be found.");
-                //Otherwise, we use that client to find their characters current location then display that
-                else
-                    MessageLog.Print(WhereTarget + " is located at " + Client.Character.Position.ToString());
-
-                //Disable the event flag
-                WhereEvent = false;
-            }
-        }
-
-        //Tries using entered information to perform a character/useraccount info check
-        private void TryPerformShowCharacterInfo()
-        {
-            //Perform the event whenever it has been flagged
-            if (CharacterInfoEvent)
-            {
-                //Log what is happening here
-                MessageLog.Print("Finding " + CharacterInfoName + "s character information...");
-
-                //Make sure the character exists before we try looking up its information
-                bool CharacterExists = CharactersDatabase.DoesCharacterExist(CharacterInfoName);
-                if(!CharacterExists)
-                {
-                    MessageLog.Print("ERROR: There is no character who is called " + CharacterInfoName + ", no information to display.");
-                    return;
-                }
-
-                //Get the characters information from the database
-                CharacterData CharactersInformation = CharactersDatabase.GetCharacterData(CharacterInfoName);
-
-                string CharacterInfo = "CHARACTER INFO: " + CharacterInfoName + " is a level " + CharactersInformation.Level + (CharactersInformation.IsMale ? " male" : " female") +
-                    " with " + CharactersInformation.CurrentHealth + "/" + CharactersInformation.MaxHealth + " Health Points and is currently located at " +
-                    "(" + CharactersInformation.Position.X + "," + CharactersInformation.Position.Y + "," + CharactersInformation.Position.Z + ").";
+                //Display all the strings in the message window
+                MessageLog.Print(Shutdown);
+                MessageLog.Print(KickPlayer);
                 MessageLog.Print(CharacterInfo);
-
-                //Disable the event flag now that the event has been performed
-                CharacterInfoEvent = false;
-            }
-        }
-        private void TryPerformShowAccountInfo()
-        {
-            if(AccountInfoEvent)
-            {
-                MessageLog.Print("Finding " + AccountInfoName + "s account information...");
-                bool AccountExists = AccountsDatabase.DoesAccountExist(AccountInfoName);
-                if(!AccountExists)
-                {
-                    MessageLog.Print("ERROR: There is no account with the username " + AccountInfoName + ", no information to display.");
-                    return;
-                }
-                AccountData AccountsInformation = AccountsDatabase.GetAccountData(AccountInfoName);
-                string AccountInfo = "ACCOUNT INFO: " + AccountInfoName + " has " +
-                    AccountsInformation.CharacterCount + (AccountsInformation.CharacterCount == 1 ? " character" : " characters");
-                switch(AccountsInformation.CharacterCount)
-                {
-                    case (0):
-                        AccountInfo += ".";
-                        break;
-                    case (1):
-                        AccountInfo += ", named " + AccountsInformation.FirstCharacterName;
-                        break;
-                    case (2):
-                        AccountInfo += ", named " + AccountsInformation.FirstCharacterName + " and " + AccountsInformation.SecondCharacterName;
-                        break;
-                    case (3):
-                        AccountInfo += ", named " + AccountsInformation.FirstCharacterName + ", " + AccountsInformation.SecondCharacterName + " and " + AccountsInformation.ThirdCharacterName;
-                        break;
-                }
-                AccountInfo += ".";
                 MessageLog.Print(AccountInfo);
-                AccountInfoEvent = false;
+                MessageLog.Print(SetAllInteger);
+                MessageLog.Print(SetAllPositions);
+                MessageLog.Print(SetAllRotations);
+
+                return true;
             }
+            return false;
         }
 
-        //Tries using entered information to perform a server shutdown
-        private void TryPerformShutdown()
+        //Checks input can be used for performing server shutdown
+        //Example: shutdown
+        private bool CanServerShutdown(string[] Input)
         {
-            if(ShutdownEvent)
-            {
-                //Log what is happening here
-                MessageLog.Print("Shutting down the server...");
-
-                //Get a list of all ingame clients who are logged in and playing right now
-                List<ClientConnection> ActiveClients = ClientSubsetFinder.GetInGameClients();
-
-                //Loop through all the clients and backup all their characters information into the database
-                foreach (ClientConnection ActiveClient in ActiveClients)
-                    CharactersDatabase.SaveCharacterData(ActiveClient.Character);
-
-                //Close and save the current log file properly
-                MessageLog.Close();
-
-                //Now everything is backed up, we can shutdown the application
-                Program.ApplicationWindow.Close();
-            }
+            //Check argument count
+            if (Input.Length != 1)
+                return false;
+            //Check command key
+            if (Input[0] != "shutdown")
+                return false;
+            //Input valid
+            return true;
         }
 
-        //Tries using entered information to kick a player from the server
-        private void TryPerformKickPlayer()
+        //Checks input can be used for performing player kick
+        //Example: kick charactername
+        private bool CanKickPlayer(string[] Input)
         {
-            if(KickPlayerEvent)
+            //Check argument count
+            if (Input.Length != 2)
+                return false;
+            //Check command key
+            if (Input[0] != "kick")
+                return false;
+            //Input valid
+            return true;
+        }
+
+        //Checks input can be used for performing character info lookup
+        //Example: characterinfo charactername
+        private bool CanCharacterInfoSearch(string[] Input)
+        {
+            //Check argument count
+            if (Input.Length != 2)
+                return false;
+            //Check command key
+            if (Input[0] != "characterinfo")
+                return false;
+            //Input valid
+            return true;
+        }
+
+        //Checks input can be used for performing account info lookup
+        //Example: accountinfo accountname
+        private bool CanAccountInfoSearch(string[] Input)
+        {
+            //Check argument count
+            if (Input.Length != 2)
+                return false;
+            //Check command key
+            if (Input[0] != "accountinfo")
+                return false;
+            //Input valid
+            return true;
+        }
+
+        //Checks input can be used for performing setallcharactersintegervalue
+        //Example: setallcharactersinteger variablename variablevalue
+        private bool CanSetAllCharactersIntegerValue(string[] Input)
+        {
+            //Check argument count
+            if (Input.Length != 3)
+                return false;
+            //Check command key
+            if (Input[0] != "setallcharactersinteger")
+                return false;
+            //Input valid
+            return true;
+        }
+
+        //Checks input can be used for performing setallcharacterspositions
+        //Example: setallcharacterspositions xposition yposition zposition
+        private bool CanSetAllCharactersPositions(string[] Input)
+        {
+            //Check argument count
+            if (Input.Length != 4)
+                return false;
+            //Check command key
+            if (Input[0] != "setallcharacterspositions")
+                return false;
+            //Input valid
+            return true;
+        }
+
+        //Checks input can be used for performing setallcharactersrotations
+        //Example: setallcharactersrotations xrotation yrotation zrotation wrotation
+        private bool CanSetAllCharactersRotations(string[] Input)
+        {
+            //Check argument count
+            if (Input.Length != 5)
+                return false;
+            //Check command key
+            if (Input[0] != "setallcharactersrotations")
+                return false;
+            //input valid
+            return true;
+        }
+
+        //Tries using the command arguments for performing a server shutdown
+        private void TryServerShutdown(string[] Input)
+        {
+            //Log what is happening here
+            MessageLog.Print("Server shutting down...");
+
+            //Get a list of all ingame clients who are logged in and playing right now
+            List<ClientConnection> ActiveClients = ClientSubsetFinder.GetInGameClients();
+
+            //Loop through all the active players and backup their data
+            foreach (ClientConnection ActiveClient in ActiveClients)
+                CharactersDatabase.SaveCharacterData(ActiveClient.Character);
+
+            //Close and save the current log file
+            MessageLog.Close();
+
+            //Close the application
+            Program.ApplicationWindow.Close();
+        }
+
+        //Tries using the command arguments for performing a player kick
+        private void TryKickPlayer(string[] Input)
+        {
+            //Get the characters name
+            string CharacterName = Input[1];
+
+            //Make sure the character exists
+            if(!CharactersDatabase.DoesCharacterExist(CharacterName))
             {
-                //Log what is happening here
-                MessageLog.Print("Kicking " + KickPlayerName + " from the server...");
-
-                //Get the client who this character belongs to
-                ClientConnection TargetClient = ClientSubsetFinder.GetClientUsingCharacter(KickPlayerName);
-
-                //Check we were able to find the client
-                if(TargetClient == null)
-                {
-                    //Display an error showing this command could not be performed
-                    MessageLog.Print("ERROR: Could not find " + KickPlayerName + ", so they couldnt be kicked.");
-                    //Disable the event flag and exit out of the function
-                    KickPlayerEvent = false;
-                    return;
-                }
-
-                //Tell the client they have been kicked from the game and mark them as being dead
-                SystemPacketSender.SendKickedFromServer(TargetClient.NetworkID);
-                TargetClient.ClientDead = true;
-
-                //Tell all other ingame clients to remove this character from their game worlds
-                List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(TargetClient.NetworkID);
-                foreach (ClientConnection OtherClient in OtherClients)
-                    PlayerManagementPacketSender.SendRemoveRemotePlayer(OtherClient.NetworkID, TargetClient.Character.Name);
-
-                //Disable the event flag
-                KickPlayerEvent = false;
+                MessageLog.Print("That character doesnt exist, cant kick them.");
+                return;
             }
+
+            //Get the client who this character belongs to
+            ClientConnection Client = ClientSubsetFinder.GetClientUsingCharacter(CharacterName);
+
+            //If the client couldnt be found then the character isnt logged in currently
+            if(Client == null)
+            {
+                MessageLog.Print("That character is not in the game right now, cant kick them.");
+                return;
+            }
+
+            //Show that the player is being kicked
+            MessageLog.Print("Kicking " + CharacterName + " from the game...");
+
+            //Tell the client that they have been kicked from the game and mark them to be cleaned up from the game
+            SystemPacketSender.SendKickedFromServer(Client.NetworkID);
+            Client.ClientDead = true;
+
+            //Tell everyone else to remove the client from their games
+            List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(Client.NetworkID);
+            foreach (ClientConnection OtherClient in OtherClients)
+                PlayerManagementPacketSender.SendRemoveRemotePlayer(OtherClient.NetworkID, Client.Character.Name);
+        }
+
+        //Tries using the command arguments for performing a character info search
+        private void TryCharacterInfoSearch(string[] Input)
+        {
+            //Get the characters name
+            string CharacterName = Input[1];
+
+            //Make sure the character exists
+            if(!CharactersDatabase.DoesCharacterExist(CharacterName))
+            {
+                //Say the character doesnt exist and exit the function
+                MessageLog.Print("No character named " + CharacterName + " exists, couldnt look up their info.");
+                return;
+            }
+
+            //Characters Data will be stored here once we acquire it
+            CharacterData Data;
+
+            //Find the client currently controlling this character
+            ClientConnection Client = ClientSubsetFinder.GetClientUsingCharacter(CharacterName);
+
+            //If no client was found then we want to get the characters info from the database
+            if (Client == null)
+                Data = CharactersDatabase.GetCharacterData(CharacterName);
+            //Otherwise we get the currently live data from the client who is currently using the character
+            else
+                Data = Client.Character;
+
+            //Define some nicely formatted strings containing all the characters data
+            string CharacterInfo = CharacterName + " level " + Data.Level + (Data.IsMale ? " male." : "female.");
+            string CharacterPosition = "Position: " + "(" + Data.Position.X + "," + Data.Position.Y + "," + Data.Position.Z + ").";
+            string CharacterRotation = "Rotation: (" + Data.Rotation.X + "," + Data.Rotation.Y + "," + Data.Rotation.Z + "," + Data.Rotation.W + ").";
+            string CharacterCamera = "Camera: Zoom:" + Data.CameraXRotation + " XRot:" + Data.CameraXRotation + " YRot:" + Data.CameraYRotation + ".";
+
+            //Display all the information to the message window
+            MessageLog.Print(CharacterInfo);
+            MessageLog.Print(CharacterPosition);
+            MessageLog.Print(CharacterRotation);
+            MessageLog.Print(CharacterCamera);
+        }
+
+        //Tries using the command arguments for performing an account info search
+        private void TryAccountInfoSearch(string[] Input)
+        {
+            //Get the accounts name
+            string AccountName = Input[1];
+
+            //Make sure the account exists
+            if(!AccountsDatabase.DoesAccountExist(AccountName))
+            {
+                MessageLog.Print("ERROR: There is no account called " + AccountName + ", no information to display.");
+                return;
+            }
+
+            //Get the accounts information from the database
+            AccountData Data = AccountsDatabase.GetAccountData(AccountName);
+
+            //Define a string display all the accounts info, then display it all in the message window
+            string AccountInfo = "ACCOUNT INFO: " + AccountName + " has " +
+                Data.CharacterCount + (Data.CharacterCount == 1 ? " character" : " characters");
+            switch(Data.CharacterCount)
+            {
+                case (0):
+                    AccountInfo += ".";
+                    break;
+                case (1):
+                    AccountInfo += ", named " + Data.FirstCharacterName;
+                    break;
+                case (2):
+                    AccountInfo += ", named " + Data.FirstCharacterName + " and " + Data.SecondCharacterName;
+                    break;
+                case (3):
+                    AccountInfo += ", named " + Data.FirstCharacterName + ", " + Data.SecondCharacterName + " and " + Data.ThirdCharacterName;
+                    break;
+            }
+            AccountInfo += ".";
+            MessageLog.Print(AccountInfo);
+        }
+
+        //Tries using the command arguments for performing a setallcharactersintegervalue
+        private void TrySetAllCharactersIntegerValue(string[] Input)
+        {
+            //Seperate the command arguments
+            string IntegerName = Input[1];
+            int IntegerValue = int.Parse(Input[2]);
+
+            //Log what is happening here
+            MessageLog.Print("Setting the value of the " + IntegerName + " integer to " + IntegerValue.ToString() + " in all character tables in the characters database.");
+
+            //Use the arguments to apply the new value to the character tables in the database
+            CharactersDatabase.SetAllIntegerValue(IntegerName, IntegerValue);
+        }
+
+        //Tries using the command arguments for performing a setallcharacterspositions
+        private void TrySetAllCharactersPositions(string[] Input)
+        {
+            //Seperate the command arguments
+            Vector3 Position = new Vector3(float.Parse(Input[1]), float.Parse(Input[2]), float.Parse(Input[3]));
+
+            //Log what is happening here
+            MessageLog.Print("Setting the position of all characters in the database to " + Position.ToString());
+
+            //Apply the new position to all characters in the database
+            CharactersDatabase.SetAllPositions(Position);
+        }
+
+        //Tries using the command arguments for performing a setallcharactersrotations
+        private void TrySetAllCharactersRotations(string[] Input)
+        {
+            //Seperate the command arguments
+            Quaternion Rotation = new Quaternion(float.Parse(Input[1]), float.Parse(Input[2]), float.Parse(Input[3]), float.Parse(Input[4]));
+
+            //Log what is happening here
+            MessageLog.Print("Setting the rotation of all characters in the database to " + Rotation.ToString());
+
+            //Apply the new rotation to all characters in the database
+            CharactersDatabase.SetAllRotations(Rotation);
         }
     }
 }

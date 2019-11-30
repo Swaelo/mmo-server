@@ -14,6 +14,25 @@ namespace Server.Networking.PacketSenders
 {
     public class PlayerManagementPacketSender
     {
+        public static void SendTeleportLocalPlayer(int ClientID, Vector3 Position)
+        {
+            CommunicationLog.LogOut(ClientID + " Teleport Local Player.");
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ServerPacketType.TeleportLocalPlayer);
+            Packet.WriteVector3(Position);
+            PacketQueue.QueuePacket(ClientID, Packet);
+        }
+
+        public static void SendTeleportRemotePlayer(int ClientID, string Name, Vector3 Position)
+        {
+            CommunicationLog.LogOut(ClientID + " Teleport Remote Player.");
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ServerPacketType.TeleportRemotePlayer);
+            Packet.WriteString(Name);
+            Packet.WriteVector3(Position);
+            PacketQueue.QueuePacket(ClientID, Packet);
+        }
+
         /// <summary>
         /// Tells a client the updated character values for one of the other remote player characters in their game world
         /// </summary>

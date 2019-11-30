@@ -123,9 +123,6 @@ namespace Server.World
             //Perform any actions required based on user input, move camera around the scene etc
             ProcessInput(ApplicationWindow.Focused, DeltaTime);
 
-            //Check if any events need to be executed that have been entered into the command input field
-            CMDInputField.TryPerformEvents();
-
             //Remove any item pickups from the physics scene which have been queued up to be removed
             ItemManager.ClearRemoveQueue(WorldSimulation);
 

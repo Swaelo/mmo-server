@@ -66,6 +66,19 @@ namespace Server.Networking.PacketHandlers
             AccountManagementPacketSenders.SendAccountLoginReply(ClientID, true, "Login Request Granted.");
         }
 
+        //Handles a users account logout alert
+        public static void HandleAccountLogoutAlert(int ClientID, ref NetworkPacket Packet)
+        {
+            //Log what we are doing here
+            CommunicationLog.LogIn("Handle " + ClientID + " Account Logout Alert.");
+
+            //Get the client who is logged out
+            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+
+            //Clear them as being logged in to any account
+            Client.Account = new AccountData();
+        }
+
         //Handles a users new user account registration request
         public static void HandleAccountRegisterRequest(int ClientID, ref NetworkPacket Packet)
         {
@@ -165,8 +178,11 @@ namespace Server.Networking.PacketHandlers
                 return;
             }
 
-            //Register the new character into the database and tell the client their request was granted
+            //Register the new character into the database and then reload this clients account information from the database
             CharactersDatabase.SaveNewCharacter(Client.Account.Username, CharacterName);
+            Client.Account = AccountsDatabase.GetAccountData(Client.Account.Username);
+
+            //Tell the client their character creation request has been a success
             AccountManagementPacketSenders.SendCreateCharacterReply(ClientID, true, "Character Created.");
         }
     }

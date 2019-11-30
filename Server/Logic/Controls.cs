@@ -221,6 +221,7 @@ namespace Server.Logic
         
         public InstantBind Comma;
         public InstantBind Period;
+        public InstantBind Minus;
 
         public InstantBind Q;
         public InstantBind W;
@@ -276,6 +277,7 @@ namespace Server.Logic
 
                     Comma = Key.Comma,
                     Period = Key.Period,
+                    Minus = Key.Minus,
 
                     Q = Key.Q,
                     W = Key.W,

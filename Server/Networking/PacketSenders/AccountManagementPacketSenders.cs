@@ -83,7 +83,7 @@ namespace Server.Networking.PacketSenders
             Packet.WriteInt(Client.Account.CharacterCount);
 
             //Loop through and fetch the data for each of the users characters
-            for(int i = 0; i < Client.Account.CharacterCount; i++)
+            for (int i = 0; i < Client.Account.CharacterCount; i++)
             {
                 //Fetch the data of each character in their account
                 CharacterData CharacterData = Client.Account.GetCharactersData(i + 1);
