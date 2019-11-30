@@ -3,6 +3,8 @@ This is one half of my MMO project that I have been developing in my free time o
 It's still very early on in development, but my main idea for the project was wanting to create a 3d open world mmorpg project that can be played in your web browser.  
 This project is the server application which you can run to host your own server for the mmo, its written in C#, uses TCP/WebSockets for communication with game clients.  
 Although the game client uses the Unity engine I have chosen to implement the open source physics engine BepuPhysics2 in the server project to handle all server side game logic, as this engine is also coded in C# and because its open source.  
+All you will need to compile and run the server is Visual Studio 2019 with the .NET Core 3.0 SDK installed, you will need to open port 5500 on your router to allow outside connections to be able to connect to the server.  
+After you have the server running, take at look at the other half of the project [mmo-client](https://github.com/Swaelo/mmo-client) to get a game client running to connect and start playing.
 
 # Project Requirements 
 ### Windows 10
