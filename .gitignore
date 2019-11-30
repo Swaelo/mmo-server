@@ -1,0 +1,15 @@
+.vs/
+BepuPhysics/bin/
+BepuPhysics/obj/
+BepuUtilities/bin/
+BepuUtilities/obj/
+ContentBuilder/bin/
+ContentBuilder/obj/
+ContentLoader/bin/
+ContentLoader/obj/
+ContentRenderer/bin/
+ContentRenderer/obj/
+Server/bin/
+Server/obj/
+ServerUtilities/bin/
+ServerUtilities/obj/
