@@ -40,7 +40,9 @@ namespace Server.Networking
         //Adds the packet order number to the start of the packet data
         public void AddPacketOrderNumber(int PacketNumber)
         {
-            PacketData = PacketNumber.ToString() + " " + PacketData;
+            string NewPacketData = PacketNumber.ToString() + " " + PacketData;
+            PacketData = NewPacketData;
+            RemainingPacketData = NewPacketData;
         }
 
         //Checks the current value of the RemainingPacketData to check if there is any data left to be read from it
@@ -104,8 +106,14 @@ namespace Server.Networking
             return BoolValue;
         }
 
-        //Writes a ClientPacketType enum value onto the end of the current PacketData
+        //Writes a ServerPacketType enum value onto the end of the current PacketData
         public void WriteType(ServerPacketType PacketType)
+        {
+            WriteInt((int)PacketType);
+        }
+
+        //Writes a ClientPacketType enum value onto the end of the current PacketData
+        public void WriteType(ClientPacketType PacketType)
         {
             //Just convert the enum to an integer value and write that in
             WriteInt((int)PacketType);

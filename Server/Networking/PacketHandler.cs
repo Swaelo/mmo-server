@@ -154,6 +154,10 @@ namespace Server.Networking
             PacketHandlers.Add(ClientPacketType.MissedPacketsRequest, SystemPacketHandler.HandleMissedPacketsRequest);
             PacketHandlers.Add(ClientPacketType.StillConnectedReply, SystemPacketHandler.HandleStillConnectedReply);
             PacketHandlers.Add(ClientPacketType.OutOfSyncAlert, SystemPacketHandler.HandleOutOfSyncAlert);
+
+            //Combat Packet Handlers
+            PacketHandlers.Add(ClientPacketType.PlayerAttackAlert, CombatPacketHandler.HandlePlayerAttackAlert);
+            PacketHandlers.Add(ClientPacketType.PlayerRespawnRequest, CombatPacketHandler.HandlePlayerRespawnRequest);
         }
     }
 }

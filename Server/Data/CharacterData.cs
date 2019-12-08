@@ -26,5 +26,17 @@ namespace Server.Data
         public int ExperienceToLevel = 100;   //Amount of EXP needed to reach the next level
         public int Level = 1;   //Current level
         public bool IsMale = true; //Is the character male
+        public bool IsAlive = true; //If the character currently alive
+
+        //Moves character to spawn with default camera settings
+        public void SetDefaultValues()
+        {
+            CurrentHealth = MaxHealth;
+            Position = new Vector3(15.068f, 0.079f, 22.025f);
+            Rotation = new Quaternion(0f, 0.125f, 0f, -0.992f);
+            CameraZoom = 7f;
+            CameraXRotation = -14.28f;
+            CameraYRotation = 5.449f;
+        }
     }
 }

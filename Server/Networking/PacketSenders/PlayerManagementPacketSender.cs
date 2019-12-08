@@ -42,6 +42,7 @@ namespace Server.Networking.PacketSenders
             NetworkPacket Packet = new NetworkPacket();
             Packet.WriteType(ServerPacketType.AddRemotePlayer);
             Packet.WriteString(Character.Name);
+            Packet.WriteBool(Character.IsAlive);
             Packet.WriteVector3(Character.Position);
             Packet.WriteVector3(Character.Movement);
             Packet.WriteQuaternion(Character.Rotation);

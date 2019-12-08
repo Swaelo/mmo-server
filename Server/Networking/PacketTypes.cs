@@ -28,7 +28,11 @@ public enum ClientPacketType
     //System Packet Types
     MissedPacketsRequest = 12,
     StillConnectedReply = 13,
-    OutOfSyncAlert = 14
+    OutOfSyncAlert = 14,
+
+    //Combat
+    PlayerAttackAlert = 15,
+    PlayerRespawnRequest = 16
 };
 
 public enum ServerPacketType
@@ -60,5 +64,13 @@ public enum ServerPacketType
     //System Packet Types
     StillConnectedCheck = 17,
     MissingPacketsRequest = 18,
-    KickedFromServer = 19
+    KickedFromServer = 19,
+
+    //Combat Packet Types
+    LocalPlayerTakeHit = 20,
+    RemotePlayerTakeHit = 21,
+    LocalPlayerDead = 22,
+    RemotePlayerDead = 23,
+    LocalPlayerRespawn = 24,
+    RemotePlayerRespawn = 25
 };

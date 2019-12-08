@@ -38,6 +38,7 @@ namespace Server.Networking.PacketSenders
             {
                 //Write each characters name, and current location and rotation values
                 Packet.WriteString(OtherClient.Character.Name);
+                Packet.WriteBool(OtherClient.Character.IsAlive);
                 Packet.WriteVector3(OtherClient.Character.Position);
                 Packet.WriteVector3(OtherClient.Character.Movement);
                 Packet.WriteQuaternion(OtherClient.Character.Rotation);

@@ -182,5 +182,31 @@ namespace Server.Networking
             //Return the final list of all the clients ready to enter the game
             return ReadyToEnterClients;
         }
+
+        //Returns a list of all clients who's character are waiting to perform an attack
+        public static List<ClientConnection> GetClientsAttacking()
+        {
+            List<ClientConnection> AttackingClients = new List<ClientConnection>();
+
+            foreach(ClientConnection ClientConnection in ConnectionManager.GetClientConnections())
+            {
+                if (ClientConnection.AttackPerformed)
+                    AttackingClients.Add(ClientConnection);
+            }
+
+            return AttackingClients;
+        }
+
+        //Returns a list of all clients who's characters are dead and wanting to be respawned
+        public static List<ClientConnection> GetClientsAwaitingRespawn()
+        {
+            List<ClientConnection> RespawningClients = new List<ClientConnection>();
+            foreach(ClientConnection ClientConnection in ConnectionManager.GetClientConnections())
+            {
+                if (ClientConnection.WaitingToRespawn)
+                    RespawningClients.Add(ClientConnection);
+            }
+            return RespawningClients;
+        }
     }
 }

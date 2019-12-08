@@ -237,6 +237,10 @@ namespace Server.Interface
                 TrySetAllCharactersCameras(InputSplit);
             else if (CanPurgeDatabase(InputSplit))  //Purge all entries from the database
                 TryPurgeDatabase(InputSplit);
+            else if (CanKillPlayer(InputSplit)) //Kill one of the ingame player characters
+                TryKillPlayer(InputSplit);
+            else if (CanRevivePlayer(InputSplit))   //Revive one of the ingame player characters
+                TryRevivePlayer(InputSplit);
 
             Reset();
         }
@@ -247,31 +251,73 @@ namespace Server.Interface
         {
             if(Input[0] == "commands")
             {
-                //Define strings to show all the available commands
+                MessageLog.Print("commands1: Shows the first page of available server commands.");
+                MessageLog.Print("commands2: Shows the second page of available server commands.");
+                return true;
+            }
+            else if(Input[0] == "commands1")
+            {
+                string Pre1 = "---Commands 1---";
                 string Shutdown = "Server Shutdown: shutdown";
                 string KickPlayer = "Kick Player: kick charactername";
                 string CharacterInfo = "Show Character Info: characterinfo charactername";
                 string AccountInfo = "Show Account Info: accountinfo accountname";
                 string SetAllInteger = "Set All Characters Integer Value: setallcharactersinteger integername integervalue";
                 string SetAllPositions = "Set All Characters Positions: setallcharacterspositions xposition yposition zposition";
-                string SetAllRotations = "Set All Characters Rotations: setallcharactersrotations xrotation yrotation zrotation wrotation";
-                string SetAllCameras = "Set All Characters Cameras: setallcharacterscameras zoom xrotation yrotation";
-                string PurgeDatabase = "Remove every account and character information from the database: purgedatabase";
 
-                //Display all the strings in the message window
+                MessageLog.Print(Pre1);
                 MessageLog.Print(Shutdown);
                 MessageLog.Print(KickPlayer);
                 MessageLog.Print(CharacterInfo);
                 MessageLog.Print(AccountInfo);
                 MessageLog.Print(SetAllInteger);
                 MessageLog.Print(SetAllPositions);
-                MessageLog.Print(SetAllRotations);
-                MessageLog.Print(SetAllCameras);
-                MessageLog.Print(PurgeDatabase);
 
                 return true;
             }
+            else if(Input[0] == "commands2")
+            {
+                string Pre2 = "---Commands 2---";
+                string SetAllRotations = "Set All Characters Rotations: setallcharactersrotations xrotation yrotation zrotation wrotation";
+                string SetAllCameras = "Set All Characters Cameras: setallcharacterscameras zoom xrotation yrotation";
+                string PurgeDatabase = "Remove every account and character information from the database: purgedatabase";
+                string KillPlayer = "Kill Player: kill charactername";
+                string RevivePlayer = "Revive Player: revive charactername";
+
+                MessageLog.Print(Pre2);
+                MessageLog.Print(SetAllRotations);
+                MessageLog.Print(SetAllCameras);
+                MessageLog.Print(PurgeDatabase);
+                MessageLog.Print(KillPlayer);
+                MessageLog.Print(RevivePlayer);
+
+                return true;
+            }
+
             return false;
+        }
+
+        //Checks input can be used for performing kill player command
+        private bool CanKillPlayer(string[] Input)
+        {
+            //Check argument count
+            if (Input.Length != 2)
+                return false;
+            //Check command key
+            if (Input[0] != "kill")
+                return false;
+            //Input valid
+            return true;
+        }
+
+        //Checks input can be used for performing revive player command
+        private bool CanRevivePlayer(string[] Input)
+        {
+            if (Input.Length != 2)
+                return false;
+            if (Input[0] != "revive")
+                return false;
+            return true;
         }
 
         //Checks input can be used for performing server shutdown
@@ -418,6 +464,62 @@ namespace Server.Interface
 
             //Close the application
             Program.ApplicationWindow.Close();
+        }
+
+        //Tries using the command arguments for killing one of the player characters
+        private void TryKillPlayer(string[] Input)
+        {
+            string CharacterName = Input[1];
+            if(!CharactersDatabase.DoesCharacterExist(CharacterName))
+            {
+                MessageLog.Print("That character doesnt exist, cant kill them.");
+                return;
+            }
+            ClientConnection Client = ClientSubsetFinder.GetClientUsingCharacter(CharacterName);
+            if(Client == null)
+            {
+                MessageLog.Print("That character is not ingame right now, cant kill them.");
+                return;
+            }
+            //Make sure the character is still alive
+            if(!Client.Character.IsAlive)
+            {
+                MessageLog.Print("That character is already dead, cant kill them.");
+                return;
+            }
+            MessageLog.Print("Killing " + CharacterName + "...");
+            Client.Character.IsAlive = false;
+            Program.World.WorldSimulation.Bodies.Remove(Client.BodyHandle);
+            Program.World.WorldSimulation.Shapes.Remove(Client.ShapeIndex);
+            CombatPacketSenders.SendLocalPlayerDead(Client.NetworkID);
+            foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(Client.NetworkID))
+                CombatPacketSenders.SendRemotePlayerDead(OtherClient.NetworkID, Client.Character.Name);
+        }
+        private void TryRevivePlayer(string[] Input)
+        {
+            string CharacterName = Input[1];
+            if(!CharactersDatabase.DoesCharacterExist(CharacterName))
+            {
+                MessageLog.Print("That character doesnt exist, cant revive them.");
+                return;
+            }
+            ClientConnection Client = ClientSubsetFinder.GetClientUsingCharacter(CharacterName);
+            if(Client == null)
+            {
+                MessageLog.Print("That character is not ingame right now, cant revive them.");
+                return;
+            }
+            if(Client.Character.IsAlive)
+            {
+                MessageLog.Print("That character is not dead, cant revive them.");
+                return;
+            }
+            MessageLog.Print("Reviving " + CharacterName + "...");
+            Client.Character.IsAlive = true;
+            Client.Character.SetDefaultValues();
+            CombatPacketSenders.SendLocalPlayerRespawn(Client.NetworkID, Client.Character);
+            foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(Client.NetworkID))
+                CombatPacketSenders.SendRemotePlayerRespawn(OtherClient.NetworkID, Client.Character);
         }
 
         //Tries using the command arguments for performing a player kick

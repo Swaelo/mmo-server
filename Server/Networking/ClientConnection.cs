@@ -6,12 +6,14 @@
 
 using System;
 using System.IO;
+using System.Numerics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Collections.Generic;
 using BepuPhysics;
 using BepuPhysics.Collidables;
+using Quaternion = BepuUtilities.Quaternion;
 using Server.Misc;
 using Server.Time;
 using Server.Data;
@@ -35,6 +37,12 @@ namespace Server.Networking
         //Objects containing all the information about the account this client is logged in to, and the character they are currently playing with
         public AccountData Account = new AccountData();
         public CharacterData Character = new CharacterData();
+
+        //Flag set when the player performs an attack, during physics timestep if this flag is set to true then an attack is performed, and all entities hit take damage
+        public bool AttackPerformed = false;
+        public Vector3 AttackPosition = new Vector3();
+        //Flag set when the player is dead and they have clicked the respawn button
+        public bool WaitingToRespawn = false;
 
         //If we miss some packets from a client, we need to store any later packets in the dictionary until we receive the ones that are missing, before all can be processed
         public Dictionary<int, NetworkPacket> WaitingToProcess = new Dictionary<int, NetworkPacket>();
@@ -107,7 +115,7 @@ namespace Server.Networking
             //Print an error message, flag the client as dead and exit the function if any exception occurs
             catch(IOException Exception)
             {
-                MessageLog.Error(Exception, "Error reading packet size, connection is no longer open.");
+                MessageLog.Print("Error reading packet size, connection is no longer open.");
                 ClientDead = true;
                 return;
             }
@@ -121,7 +129,7 @@ namespace Server.Networking
             //Print an error, flag the client as dead and exit the function if any exception occurs
             catch(IOException Exception)
             {
-                MessageLog.Error(Exception, "Error reregistering packet reader function to start accepting packet data from the client again.");
+                MessageLog.Print("ERROR re-registering packet reader function to start accepting packets from the client again.");
                 ClientDead = true;
                 return;
             }
@@ -231,6 +239,18 @@ namespace Server.Networking
 
             //Take note that we have completed upgrading this clients connection
             ConnectionUpgraded = true;
+        }
+
+        public void InitializePhysicsBody(Simulation WorldSimulation, Vector3 BodyLocation)
+        {
+            PhysicsShape = new Capsule(0.5f, 1);
+            ShapeIndex = WorldSimulation.Shapes.Add(PhysicsShape);
+            PhysicsDescription = new CollidableDescription(ShapeIndex, 0.1f);
+            PhysicsShape.ComputeInertia(1, out var Inertia);
+            ShapePose = new RigidPose(BodyLocation, Quaternion.Identity);
+            ActivityDescription = new BodyActivityDescription(0.01f);
+            PhysicsBody = BodyDescription.CreateDynamic(ShapePose, Inertia, PhysicsDescription, ActivityDescription);
+            BodyHandle = WorldSimulation.Bodies.Add(PhysicsBody);
         }
 
         public void SendPacket(string PacketData)
@@ -389,8 +409,6 @@ namespace Server.Networking
             //Transmit the total set of data if theres some to be sent
             if(TotalData != "")
             {
-                MessageLog.Print("Sending Packet #" + NextOutgoingPacketNumber);
-
                 //Frame the packet data and convert to bytes array, compute the total payload size
                 byte[] PacketData = GetFrameFromString(TotalData);
                 int PayloadLength = Encoding.UTF8.GetString(PacketData).Length;
