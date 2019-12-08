@@ -11,27 +11,20 @@ namespace Server.Database
 {
     class AccountsDatabase
     {
-        //Purges all entries from the accounts database
+        /// <summary>
+        /// Purges all entries from the accounts database
+        /// </summary>
         public static void PurgeAccounts()
         {
             string PurgeQuery = "DELETE FROM accounts";
             CommandManager.ExecuteNonQuery(PurgeQuery, "Purging all entries from the accounts database.");
         }
 
-        //Sets some string value in the table of every account in the database
-        public static void SetAllStringValue(string VariableName, string VariableValue)
-        {
-            string UpdateQuery = "UPDATE accounts SET " + VariableName + "='" + VariableValue + "'";
-            CommandManager.ExecuteNonQuery(UpdateQuery, "Setting value of " + VariableName + " to " + VariableValue + " in all existing account tables.");
-        }
-
-        public static void SetAllIntegerValue(string VariableName, int IntegerValue)
-        {
-            string UpdateQuery = "UPDATE accounts SET " + VariableName + "='" + IntegerValue + "'";
-            CommandManager.ExecuteNonQuery(UpdateQuery, "Setting value of " + VariableName + " to " + IntegerValue + " in all existing account tables.");
-        }
-
-        //Checks if there is an existing account that uses the given name
+        /// <summary>
+        /// Checks if there is an existing account that uses the given name
+        /// </summary>
+        /// <param name="AccountName">The account name to check for</param>
+        /// <returns></returns>
         public static bool DoesAccountExist(string AccountName)
         {
             return CommandManager.ExecuteRowCheck(
@@ -39,7 +32,11 @@ namespace Server.Database
                 "Checking if any account exists with the name " + AccountName);
         }
 
-        //Returns a new AccountData object with all the information about the requested account
+        /// <summary>
+        /// Returns a new AccountData object with all the information about the requested account
+        /// </summary>
+        /// <param name="AccountName">The name of the account data we are getting</param>
+        /// <returns></returns>
         public static AccountData GetAccountData(string AccountName)
         {
             //Create a new AccountData object to store all the data being requested
@@ -58,23 +55,34 @@ namespace Server.Database
             return AccountData;
         }
 
-        //Checks if the given account name is available for use or if its already been taken by someone else
+        /// <summary>
+        /// Checks if the given account name is available for use or if its already been taken by someone else
+        /// </summary>
+        /// <param name="AccountName">The account name to check for</param>
+        /// <returns></returns>
         public static bool IsAccountNameAvailable(string AccountName)
         {
             string AccountQuery = "SELECT * FROM accounts WHERE Username='" + AccountName + "'";
             return !CommandManager.ExecuteRowCheck(AccountQuery, "Checking if account name is available");
         }
 
-        //Saves a brand new user account into the database
-        //NOTE: Assumes this account doesnt already exist and the login credentials provided are valid
+        /// <summary>
+        /// Saves a brand new user account into the database
+        /// </summary>
+        /// <param name="AccountName">The new account name</param>
+        /// <param name="AccountPassword">The new accounts password</param>
         public static void RegisterNewAccount(string AccountName, string AccountPassword)
         {
             string RegisterQuery = "INSERT INTO accounts(Username,Password) VALUES('" + AccountName + "','" + AccountPassword + "')";
             CommandManager.ExecuteNonQuery(RegisterQuery, "Registering a new user account");
         }
 
-        //Checks if the account name and password provided are valid login credentials
-        //NOTE: Assumes this account already exists
+        /// <summary>
+        /// Checks if the account name and password provided are valid login credentials
+        /// </summary>
+        /// <param name="AccountName">The account name to check</param>
+        /// <param name="AccountPassword">The password to check against the account name</param>
+        /// <returns></returns>
         public static bool IsPasswordCorrect(string AccountName, string AccountPassword)
         {
             string PasswordQuery = "SELECT * FROM accounts WHERE Username='" + AccountName + "' AND Password='" + AccountPassword + "'";

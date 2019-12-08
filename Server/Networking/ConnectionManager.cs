@@ -24,9 +24,9 @@ namespace Server.Networking
         public static TcpListener NewClientListener;    //Receives new incoming client connections
         private static Dictionary<int, ClientConnection> ActiveConnections = new Dictionary<int, ClientConnection>();    //Each active client connection mapped to their network ID
 
-        public static float ConnectionCheckInterval = 2.5f; //How often to check for dead client connections
-        public static float NextConnectionCheck = 2.5f; //How long until we need to check for dead client connections again
-        private static int ClientConnectionTimeout = 5;    //How many seconds must pass without hearing from a client before we shut down their connection
+        public static float ConnectionCheckInterval = 2.5f; //How often to check for dead connections
+        public static float NextConnectionCheck = 2.5f;   //How long until the next connection check will be performed
+        private static int ClientConnectionTimeout = 15;    //How many seconds must pass without hearing from a client before we flag them as dead
 
         private static TextBuilder ConnectionsText = new TextBuilder(2048); //Used to render information about the active game cients to the window UI
 
@@ -70,7 +70,7 @@ namespace Server.Networking
                 if (InGame)
                     ClientInfo +=
                         /*name*/    ", <" + Client.Character.Name + ">, " +
-                        /*pos*/     "<" + Client.Character.Position.ToString() + ">, " +
+                        /*pos*/     "<" + Client.Character.Position.X + "," + Client.Character.Position.Y + "," + Client.Character.Position.Z + ">, " +
                         /*HP*/      "<" + Client.Character.CurrentHealth + "/" + Client.Character.MaxHealth + ">";
 
                 //Draw the clients information to the UI and offset the position value for drawing the next clients information

@@ -19,8 +19,8 @@ namespace Server.Logging
     public class MessageLog
     {
         private static bool LoggerInitialized = false;  //Tracks whether the message logger has been setup yet or not
-        private static Dictionary<int, Message> LogMessages = new Dictionary<int, Message>(); //Dictionary of previous messages, index by their order number
-        private static int NextMessageOrder = 0;   //The order number of the next message sent to the log
+        private static List<Message> LogMessages = new List<Message>(); //Log of previous messages sent to the log
+        public static List<Message> GetMessages() { return LogMessages; }   //Returns the list of previous messages
 
         //Used to render the message log contents to the window UI
         private static TextBuilder LogText = new TextBuilder(2048);
@@ -48,49 +48,28 @@ namespace Server.Logging
             //Create a new LogMessage object to store the new message that was sent
             Message NewMessage = new Message(Message);
 
-            //Get the new order number value of the new message
-            int OrderNumber = ++NextMessageOrder;
+            //Add it to the list of messages
+            LogMessages.Add(NewMessage);
 
-            //Add it into the dictionary
-            LogMessages.Add(OrderNumber, NewMessage);
-
-            //Maintain a maximum dictionary size of 15 messages
+            //Maintain a maximum list size of 15
             if (LogMessages.Count > 15)
-                LogMessages.Remove(OrderNumber - 15);
-        }
-
-        //Returns the current messages being stored into a List
-        public static List<Message> GetMessages()
-        {
-            //Create a new list to store the messages
-            List<Message> Messages = new List<Message>();
-
-            //Add all the messages from the dictionary into the list
-            foreach (KeyValuePair<int, Message> Message in LogMessages)
-                Messages.Add(Message.Value);
-
-            //Return the list
-            return Messages;
+                LogMessages.RemoveAt(0);
         }
 
         //Renders all the messages to the window UI
         public static void RenderLog(Renderer Renderer, Vector2 Position, float FontSize, Vector3 FontColor, Font FontType)
         {
-            //Display an initial string at the start indicating what is being shown here
-            Renderer.TextBatcher.Write(LogText.Clear().Append("---Debug Message Log---"), Position, FontSize, FontColor, FontType);
+            //Create a reversed copy of the previous messages log
+            List<Message> ReversedMessages = new List<Message>();
+            LogMessages.ForEach((Message) => { ReversedMessages.Add(new Message(Message)); });
+            ReversedMessages.Reverse();
 
-            //Get the current list of messages to be displayed in the log window
-            List<Message> Messages = GetMessages();
-
-            //Offset the Y value before we start rendering all the messages in the log
-            Position.Y -= FontSize * 2f;
-
-            //Loop through all the messages in the log
-            foreach(Message Message in Messages)
+            //Loop through and render each message to the UI
+            foreach(Message Message in ReversedMessages)
             {
-                //Display each message on its own line, then offset the position for the rendering of the next line
+                //Display each message on its own line, then move down to the next line for the next message
                 Renderer.TextBatcher.Write(LogText.Clear().Append(Message.MessageContent), Position, FontSize, FontColor, FontType);
-                Position.Y -= FontSize * 1.2f;
+                Position.Y += FontSize * 1.2f;
             }
         }
 

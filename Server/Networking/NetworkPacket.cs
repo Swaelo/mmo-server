@@ -24,6 +24,19 @@ namespace Server.Networking
             RemainingPacketData = PacketData;
         }
 
+        //copy constructor
+        public NetworkPacket(NetworkPacket CopyFrom)
+        {
+            this.PacketData = CopyFrom.PacketData;
+            this.RemainingPacketData = PacketData;
+        }
+
+        //Resets RemainingPacketData back to total PacketData value
+        public void ResetRemainingData()
+        {
+            RemainingPacketData = PacketData;
+        }
+
         //Adds the packet order number to the start of the packet data
         public void AddPacketOrderNumber(int PacketNumber)
         {

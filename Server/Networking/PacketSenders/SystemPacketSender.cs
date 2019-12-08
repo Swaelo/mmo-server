@@ -65,7 +65,7 @@ namespace Server.Networking.PacketSenders
             Packet.WriteString(Reason);
 
             //Send this packet off to them immediately to ensure its sent to them before we clean up their network connection ourselves
-            TargetClient.SendPacketImmediately(Packet);
+            PacketQueue.QueuePacket(ClientID, Packet);
         }
     }
 }

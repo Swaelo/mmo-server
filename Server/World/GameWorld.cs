@@ -37,7 +37,6 @@ namespace Server.World
         private Controls UserControls;  //Control settings for receiving input
 
         public ObservationCamera ObservationCamera = new ObservationCamera();   //The camera used to view the game world during server runtime
-        CharacterControllers Characters;
 
         private ContentArchive Content = null;  //Assets used during the servers runtime
         private SimulationTimeSamples TimeSamples = null;   //Timesamples used to evaluate and display performance metric on the graph during runtime
@@ -46,7 +45,9 @@ namespace Server.World
         private float UITextSize = 16;  //Size of the font used to display messages to the UI
         private Vector3 UITextColor = new Vector3(1);
 
-        private CommandInput CommandInputField = new CommandInput(); //Allows user to type messages into the server application for custom command execution 
+        private CommandInput CommandInputField = new CommandInput(); //Allows user to type messages into the server application for custom command execution
+
+        public bool PacketQueueEnabled = true;
 
         //Constructor which sets up the whole game world scene
         public GameWorld(GameLoop Loop, ContentArchive Content)
@@ -72,8 +73,7 @@ namespace Server.World
             //Setup character controller and world simulation
             BufferPool = new BufferPool();
             ThreadDispatcher = new SimpleThreadDispatcher(Environment.ProcessorCount);
-            Characters = new CharacterControllers(BufferPool);
-            WorldSimulation = Simulation.Create(BufferPool, new CharacterNarrowphaseCallbacks(Characters), new ScenePoseIntegratorCallbacks(new Vector3(0, -10, 0)));
+            WorldSimulation = Simulation.Create(BufferPool, new CharacterNarrowphaseCallbacks(new CharacterControllers(BufferPool)), new ScenePoseIntegratorCallbacks(new Vector3(0, -10, 0)));
             
             //Place a ground plane to walk on
             WorldSimulation.Statics.Add(new StaticDescription(new Vector3(0), new CollidableDescription(WorldSimulation.Shapes.Add(new Box(200, 1, 200)), 0.1f)));
@@ -98,15 +98,16 @@ namespace Server.World
                 //Allow user to type messages into the command input window
                 CommandInputField.Update(UserInput, DeltaTime);
 
-                if(UserInput.IsDown(MouseButton.Right))
-                {
-                    var Delta = UserInput.MouseDelta;
-                    MessageLog.Print("Mouse: " + Delta.X + ", " + Delta.Y);
-                }
-
                 //Allow the user to control the camera if the command input field is inactive
                 if (!CommandInputField.InputEnabled)
                     ObservationCamera.UpdateCamera(UserControls, UserInput, DeltaTime);
+
+                //Toggle packet queue with G key
+                if(UserInput.WasPushed(Key.G))
+                {
+                    PacketQueueEnabled = !PacketQueueEnabled;
+                    MessageLog.Print("Packet Queue " + (PacketQueueEnabled ? "Enabled." : "Disabled."));
+                }
             }
             else
                 UserInput.MouseLocked = false;
@@ -156,10 +157,10 @@ namespace Server.World
         private void RenderUI(Renderer Renderer)
         {
             //Define the locations where each element of the UI will be rendered
-            Vector2 MessageLogPos = new Vector2(10, 750);
-            Vector2 CommandInputPos = new Vector2(10, 735);
+            Vector2 MessageLogPos = new Vector2(10, 450);
+            Vector2 CommandInputPos = new Vector2(10, 430);
             Vector2 PacketOutPos = new Vector2(800, 25);
-            Vector2 PacketInPos = new Vector2(450, 25);
+            Vector2 PacketInPos = new Vector2(550, 25);
             Vector2 ClientsInfoPos = new Vector2(10, 25);
 
             //Render each element to the window UI
@@ -196,7 +197,7 @@ namespace Server.World
 
                 //Tell all other ingame clients they need to have this new player spawned into the game worlds
                 foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(ClientToAdd.NetworkID))
-                    PlayerManagementPacketSender.SendAddRemotePlayer(OtherClient.NetworkID, ClientToAdd.Character.Name, ClientToAdd.Character.Position, ClientToAdd.Character.Movement, ClientToAdd.Character.Rotation);
+                    PlayerManagementPacketSender.SendAddRemotePlayer(OtherClient.NetworkID, ClientToAdd.Character);
 
                 //Display a message showing that the clients character has been spawned into the game world
                 MessageLog.Print(ClientToAdd.Character.Name + " has entered into the game world");

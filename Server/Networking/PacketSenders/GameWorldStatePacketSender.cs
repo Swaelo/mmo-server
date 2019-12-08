@@ -4,12 +4,12 @@
 // Author:	    Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
-using System.Collections.Generic;
-using Server.Entities;
-using Server.Misc;
-using Server.GameItems;
 using Server.Database;
+using Server.Entities;
+using Server.GameItems;
 using Server.Logging;
+using Server.Misc;
+using System.Collections.Generic;
 
 namespace Server.Networking.PacketSenders
 {
@@ -41,6 +41,8 @@ namespace Server.Networking.PacketSenders
                 Packet.WriteVector3(OtherClient.Character.Position);
                 Packet.WriteVector3(OtherClient.Character.Movement);
                 Packet.WriteQuaternion(OtherClient.Character.Rotation);
+                Packet.WriteInt(OtherClient.Character.CurrentHealth);
+                Packet.WriteInt(OtherClient.Character.MaxHealth);
             }
 
             //Add this packet to the target clients outgoing packet queue
@@ -125,17 +127,21 @@ namespace Server.Networking.PacketSenders
 
             //Write the relevant data values into the packet data
             Packet.WriteType(ServerPacketType.InventoryContents);
-            Packet.WriteInt(InventoryContents.Count);
-
-            //Loop through the list of items in the players inventory and write all of their information into the packet data
-            foreach(ItemData Item in InventoryContents)
-            {
-                Packet.WriteInt(Item.ItemNumber);
-                Packet.WriteInt(Item.ItemID);
-            }
-
-            //Add this packet to the target clients outgoing packet queue
+            
+            Packet.WriteInt(0);
             PacketQueue.QueuePacket(ClientID, Packet);
+
+            //Packet.WriteInt(InventoryContents.Count);
+
+            ////Loop through the list of items in the players inventory and write all of their information into the packet data
+            //foreach(ItemData Item in InventoryContents)
+            //{
+            //    Packet.WriteInt(Item.ItemNumber);
+            //    Packet.WriteInt(Item.ItemID);
+            //}
+
+            ////Add this packet to the target clients outgoing packet queue
+            //PacketQueue.QueuePacket(ClientID, Packet);
         }
 
         /// <summary>
@@ -155,18 +161,22 @@ namespace Server.Networking.PacketSenders
 
             //Write the relevant data values into the packet data
             Packet.WriteType(ServerPacketType.EquippedItems);
-            Packet.WriteInt(EquippedItems.Count);
 
-            //Loop through the list and write in each items information into the packet data
-            foreach(ItemData Item in EquippedItems)
-            {
-                Packet.WriteInt((int)Item.ItemEquipmentSlot);
-                Packet.WriteInt(Item.ItemNumber);
-                Packet.WriteInt(Item.ItemID);
-            }
-
-            //Add this packet to the target clients outgoing packet queue
+            Packet.WriteInt(0);
             PacketQueue.QueuePacket(ClientID, Packet);
+
+            //Packet.WriteInt(EquippedItems.Count);
+
+            ////Loop through the list and write in each items information into the packet data
+            //foreach(ItemData Item in EquippedItems)
+            //{
+            //    Packet.WriteInt((int)Item.ItemEquipmentSlot);
+            //    Packet.WriteInt(Item.ItemNumber);
+            //    Packet.WriteInt(Item.ItemID);
+            //}
+
+            ////Add this packet to the target clients outgoing packet queue
+            //PacketQueue.QueuePacket(ClientID, Packet);
         }
 
         /// <summary>
@@ -186,17 +196,21 @@ namespace Server.Networking.PacketSenders
 
             //Write the relevant data values into the packet data
             Packet.WriteType(ServerPacketType.SocketedAbilities);
-            Packet.WriteInt(SocketedAbilities.Count);
 
-            //Loop through the list and write in each items information into the packet data
-            foreach(ItemData Ability in SocketedAbilities)
-            {
-                Packet.WriteInt(Ability.ItemNumber);
-                Packet.WriteInt(Ability.ItemID);
-            }
-
-            //Add this packet to the target clients outgoing packet queue
+            Packet.WriteInt(0);
             PacketQueue.QueuePacket(ClientID, Packet);
+
+            //Packet.WriteInt(SocketedAbilities.Count);
+
+            ////Loop through the list and write in each items information into the packet data
+            //foreach(ItemData Ability in SocketedAbilities)
+            //{
+            //    Packet.WriteInt(Ability.ItemNumber);
+            //    Packet.WriteInt(Ability.ItemID);
+            //}
+
+            ////Add this packet to the target clients outgoing packet queue
+            //PacketQueue.QueuePacket(ClientID, Packet);
         }
     }
 }

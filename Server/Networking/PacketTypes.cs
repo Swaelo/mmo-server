@@ -51,16 +51,14 @@ public enum ServerPacketType
     PlayerChatMessage = 11,
 
     //Player Management Packet Types
-    TeleportLocalPlayer = 12,
-    TeleportRemotePlayer = 13,
-    UpdateRemotePlayer = 14,
-    AddRemotePlayer = 15,
-    RemoveRemotePlayer = 16,
-    AllowPlayerBegin = 17,
-    RemotePlayerPlayAnimationAlert = 18,
+    UpdateRemotePlayer = 12,
+    AddRemotePlayer = 13,
+    RemoveRemotePlayer = 14,
+    AllowPlayerBegin = 15,
+    RemotePlayerPlayAnimationAlert = 16,
 
     //System Packet Types
-    StillConnectedCheck = 19,
-    MissingPacketsRequest = 20,
-    KickedFromServer = 21
+    StillConnectedCheck = 17,
+    MissingPacketsRequest = 18,
+    KickedFromServer = 19
 };

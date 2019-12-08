@@ -18,7 +18,7 @@ namespace Server.Networking.PacketHandlers
         public static void HandleAccountLoginRequest(int ClientID, ref NetworkPacket Packet)
         {
             //Log what we are doing here
-            CommunicationLog.LogIn("Handle " + ClientID + "Account Login Request.");
+            CommunicationLog.LogIn(ClientID + "Account Login Request.");
 
             //Get the username and password the user provided for trying to login with
             string AccountName = Packet.ReadString();
@@ -70,7 +70,7 @@ namespace Server.Networking.PacketHandlers
         public static void HandleAccountLogoutAlert(int ClientID, ref NetworkPacket Packet)
         {
             //Log what we are doing here
-            CommunicationLog.LogIn("Handle " + ClientID + " Account Logout Alert.");
+            CommunicationLog.LogIn(ClientID + " Account Logout Alert.");
 
             //Get the client who is logged out
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
@@ -83,7 +83,7 @@ namespace Server.Networking.PacketHandlers
         public static void HandleAccountRegisterRequest(int ClientID, ref NetworkPacket Packet)
         {
             //Log what we are doing here
-            CommunicationLog.LogIn("Handle " + ClientID + " Account Registration Request.");
+            CommunicationLog.LogIn(ClientID + " Account Registration Request.");
 
             //Fetch the username and password the client has provided
             string AccountName = Packet.ReadString();
@@ -129,7 +129,7 @@ namespace Server.Networking.PacketHandlers
         public static void HandleCharacterDataRequest(int ClientID, ref NetworkPacket Packet)
         {
             //Log what we are doing here
-            CommunicationLog.LogIn("Handle " + ClientID + " Character Data Request.");
+            CommunicationLog.LogIn(ClientID + " Character Data Request.");
 
             //Make sure we are still connected to this client
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
@@ -148,7 +148,7 @@ namespace Server.Networking.PacketHandlers
         public static void HandleCreateCharacterRequest(int ClientID, ref NetworkPacket Packet)
         {
             //Log what we are doing here
-            CommunicationLog.LogIn("Handle " + ClientID + " Character Creation Request.");
+            CommunicationLog.LogIn(ClientID + " Character Creation Request.");
 
             //Fetch the name that has been provided for the new character
             string CharacterName = Packet.ReadString();

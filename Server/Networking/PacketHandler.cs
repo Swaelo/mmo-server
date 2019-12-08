@@ -36,7 +36,7 @@ namespace Server.Networking
             int ExpectedOrderNumber = Client.LastPacketReceived + 1;
 
             //If we ever recieve a packet with an order number of -1, then that packet needs to be processed immediately
-            if(NewOrderNumber == -1)
+            if (NewOrderNumber == -1)
             {
                 //Handle this packets data now
                 HandlePacket(ClientID, NewPacket);
@@ -62,10 +62,10 @@ namespace Server.Networking
             else
             {
                 //If we are waiting for missing packets to be resent, check if we have everything needed now to catch back up
-                if(Client.WaitingForMissingPackets)
+                if (Client.WaitingForMissingPackets)
                 {
                     //Make sure we arent trying to add packets into the WaitingToProcess dictionary which are already there
-                    if(!Client.WaitingToProcess.ContainsKey(NewOrderNumber))
+                    if (!Client.WaitingToProcess.ContainsKey(NewOrderNumber))
                     {
                         //Add this packet into the WaitingToProcess dictionary
                         Client.WaitingToProcess.Add(NewOrderNumber, NewPacket);

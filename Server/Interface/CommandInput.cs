@@ -484,7 +484,7 @@ namespace Server.Interface
                 Data = Client.Character;
 
             //Define some nicely formatted strings containing all the characters data
-            string CharacterInfo = CharacterName + " level " + Data.Level + (Data.IsMale ? " male." : "female.");
+            string CharacterInfo = CharacterName + " level " + Data.Level + (Data.IsMale ? " male." : "female.") + " with " + Data.CurrentHealth + "/" + Data.MaxHealth + " HP.";
             string CharacterPosition = "Position: " + "(" + Data.Position.X + "," + Data.Position.Y + "," + Data.Position.Z + ").";
             string CharacterRotation = "Rotation: (" + Data.Rotation.X + "," + Data.Rotation.Y + "," + Data.Rotation.Z + "," + Data.Rotation.W + ").";
             string CharacterCamera = "Camera: Zoom:" + Data.CameraZoom + " XRot:" + Data.CameraXRotation + " YRot:" + Data.CameraYRotation + ".";

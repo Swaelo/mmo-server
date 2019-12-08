@@ -21,7 +21,11 @@ namespace Server.Data
         public string SecondCharacterName = ""; //Name of the second character
         public string ThirdCharacterName = "";  //Name of the third character
 
-        //Returns a new CharacterData object containing all of that characters data
+        /// <summary>
+        /// Returns a new CharacterData object containing all of that characters data
+        /// </summary>
+        /// <param name="CharacterNumber">The character slot to get data from (1,2 or 3)</param>
+        /// <returns></returns>
         public CharacterData GetCharactersData(int CharacterNumber)
         {
             //Make sure the character who's data is being requested exists

@@ -13,7 +13,7 @@ namespace Server.Networking.PacketSenders
     public static class AccountManagementPacketSenders
     {
         /// <summary>
-        /// Replies to a clients request to login to a user account
+        /// 
         /// </summary>
         /// <param name="ClientID">The clients network ID</param>
         /// <param name="LoginSuccess">If the login request was a success</param>
@@ -98,7 +98,7 @@ namespace Server.Networking.PacketSenders
                 Packet.WriteInt(CharacterData.CurrentHealth);
                 Packet.WriteInt(CharacterData.MaxHealth);
             }
-
+            
             //Add this packet to the transmission queue
             PacketQueue.QueuePacket(ClientID, Packet);
         }

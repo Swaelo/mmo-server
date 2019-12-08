@@ -16,7 +16,7 @@ namespace Server.Networking.PacketHandlers
         //When a client wants to enter the game world, we need to send them a bunch of information to set up their game world before they can enter
         public static void HandleEnterWorldRequest(int ClientID, ref NetworkPacket Packet)
         {
-            CommunicationLog.LogIn("Handle " + ClientID + " enter world request");
+            CommunicationLog.LogIn(ClientID + " enter world request");
 
             //Read the characters name the player is going to use, use it to fetch the rest of the characters data from the database
             string CharacterName = Packet.ReadString();
@@ -30,13 +30,8 @@ namespace Server.Networking.PacketHandlers
                 return;
             }
 
-            //Store all the character data values into the Client
-            Client.Character.Name = CharacterName;
-            Client.Character.Position = CharacterData.Position;
-            Client.Character.Rotation = CharacterData.Rotation;
-            Client.Character.CameraZoom = CharacterData.CameraZoom;
-            Client.Character.CameraXRotation = CharacterData.CameraXRotation;
-            Client.Character.CameraYRotation = CharacterData.CameraYRotation;
+            //Store the character data in the client
+            Client.Character = CharacterData;
 
             //Send the clients lists of other players, AI entities, item pickups, inventory contents, equipped items and socketed actionbar abilities
             GameWorldStatePacketSender.SendActivePlayerList(ClientID);
@@ -50,7 +45,7 @@ namespace Server.Networking.PacketHandlers
         //When a client has finished receiving all the setup information they will let us know when they are entering into the game world finally
         public static void HandleNewPlayerReady(int ClientID, ref NetworkPacket Packet)
         {
-            CommunicationLog.LogIn("Handle " + ClientID + " new player ready alert");
+            CommunicationLog.LogIn(ClientID + " new player ready alert");
 
             //Fetch this ClientConnection and make sure they were able to be found
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);

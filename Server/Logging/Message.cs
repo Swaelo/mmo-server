@@ -13,12 +13,19 @@ namespace Server.Logging
         public string OriginalMessageContent;   //The initial string value that was sent when this message was created
         public string MessageContent;  //Contents of the message itself
 
-        //Constructor
+        //Default Constructor
         public Message(string Content)
         {
             //Store the content and set the time this object was created
             OriginalMessageContent = Content;
             MessageContent = Content;
+        }
+
+        //Copy Constructor
+        public Message(Message Copy)
+        {
+            OriginalMessageContent = Copy.OriginalMessageContent;
+            MessageContent = Copy.MessageContent;
         }
     }
 }

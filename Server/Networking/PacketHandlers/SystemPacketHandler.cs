@@ -16,7 +16,7 @@ namespace Server.Networking.PacketHandlers
         public static void HandleMissedPacketsRequest(int ClientID, ref NetworkPacket Packet)
         {
             //Log what is happening here
-            CommunicationLog.LogIn("Handle " + ClientID + " Missed Packets Request.");
+            CommunicationLog.LogIn(ClientID + " Missed Packets Request.");
 
             //Find the client who sent this alert, and the number of the packet they want sent back to them
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
@@ -26,14 +26,18 @@ namespace Server.Networking.PacketHandlers
                 return;
             }
 
-            int MissingPacketNumber = Packet.ReadInt();
-            Client.SendMissingPacket(Client, MissingPacketNumber);
+            //Get the range of missing packet numbers that need to be resent to the client
+            int FirstMissingPacketNumber = Packet.ReadInt();
+            int LastMissingPacketNumber = Packet.ReadInt();
+
+            //Have all the missing packets sent back to the client
+            Client.ResendMissingPackets(Client, FirstMissingPacketNumber, LastMissingPacketNumber);
         }
 
         //Handle reply from client letting us know they are still connected through the network
         public static void HandleStillConnectedReply(int ClientID, ref NetworkPacket Packet)
         {
-            CommunicationLog.LogIn("Handle " + ClientID + " Still Connected Reply");
+            CommunicationLog.LogIn(ClientID + " Still Connected Reply");
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
             if (Client == null)
             {
@@ -48,7 +52,7 @@ namespace Server.Networking.PacketHandlers
         //Handle alert from server letting us know they are out of sync and need to be removed from the game
         public static void HandleOutOfSyncAlert(int ClientID, ref NetworkPacket Packet)
         {
-            CommunicationLog.LogIn("Handle " + ClientID + " Out Of Sync Alert.");
+            CommunicationLog.LogIn(ClientID + " Out Of Sync Alert.");
             
             //Get the client who is being removed from the game
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);

@@ -22,6 +22,13 @@ namespace Server.Database
             CommandManager.ExecuteNonQuery(PurgeQuery, "Purging all entries from the characters database.");
         }
 
+        //Sets some integer value in the table of a specific character in the database
+        public static void SetCharacterInteger(string CharacterName, string IntegerName, int IntegerValue)
+        {
+            string UpdateQuery = "UPDATE characters SET " + IntegerName + "='" + IntegerValue + "' WHERE CharacterName='" + CharacterName + "'";
+            CommandManager.ExecuteNonQuery(UpdateQuery, "Setting value of " + CharacterName + "'s " + IntegerName + " to " + IntegerValue + " in the database.");
+        }
+
         //Sets some integer value in the table of every character in the database
         public static void SetAllIntegerValue(string VariableName, int IntegerValue)
         {
@@ -70,7 +77,6 @@ namespace Server.Database
         }
 
         //Checks if the given character name has already been taken by someone else or is free to use
-        //NOTE: assumes the character name provided is valid
         public static bool IsCharacterNameAvailable(string CharacterName)
         {
             //Define query/command for checking if the given character name is still available
@@ -117,7 +123,9 @@ namespace Server.Database
             CommandManager.ExecuteNonQuery(EquipmentQuery, "Inserting new row into equipments table for storing data for " + AccountName + "'s new character " + CharacterName + ".");
             CommandManager.ExecuteNonQuery(ActionBarQuery, "Inserting new row into actionbars table for storing data for " + AccountName + "'s new character " + CharacterName + ".");
 
-            //Write some default position/rotation/camera setting values into the new characters table
+            //Write some default position/rotation/camera/health setting values into the new characters table
+            SetCharacterInteger(CharacterName, "MaxHealth", 10);
+            SetCharacterInteger(CharacterName, "CurrentHealth", 10);
             SetCharacterPosition(CharacterName, new Vector3(15.068f, 0.079f, 22.025f));
             SetCharacterRotation(CharacterName, new Quaternion(0f, 0.125f, 0f, -0.992f));
             SetCharacterCamera(CharacterName, 7f, -14.28f, 5.449f);
@@ -181,18 +189,21 @@ namespace Server.Database
             CommandManager.ExecuteNonQuery(SaveDataQuery, "Saving " + CharacterData.Name + "'s character data values into the database.");
         }
 
+        //Backs up a characters world position value into the database
         private static void SetCharacterPosition(string CharacterName, Vector3 CharacterPosition)
         {
             string UpdateQuery = "UPDATE characters SET XPosition='" + CharacterPosition.X + "', YPosition='" + CharacterPosition.Y + "', ZPosition='" + CharacterPosition.Z + "' WHERE CharacterName='" + CharacterName + "'";
             CommandManager.ExecuteNonQuery(UpdateQuery, "Setting " + CharacterName + "s location in the database to " + CharacterPosition.ToString());
         }
 
+        //Backs up a characters world rotation value into the database
         private static void SetCharacterRotation(string CharacterName, Quaternion CharacterRotation)
         {
             string UpdateQuery = "UPDATE characters SET XRotation='" + CharacterRotation.X + "', YRotation='" + CharacterRotation.Y + "', ZRotation='" + CharacterRotation.Z + "', WRotation='" + CharacterRotation.W + "' WHERE CharacterName='" + CharacterName + "'";
             CommandManager.ExecuteNonQuery(UpdateQuery, "Setting " + CharacterName + "s rotation in the database to " + CharacterRotation.ToString());
         }
 
+        //Backs up a characters camera zoom/rotation settings into the database
         private static void SetCharacterCamera(string CharacterName, float Zoom, float XRot, float YRot)
         {
             string UpdateQuery = "UPDATE characters SET CameraZoom='" + Zoom + "', CameraXRotation='" + XRot + "', CameraYRotation='" + YRot + "' WHERE CharacterName='" + CharacterName + "'";

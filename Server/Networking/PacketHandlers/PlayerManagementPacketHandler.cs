@@ -23,7 +23,7 @@ namespace Server.Networking.PacketHandlers
         public static void HandlePlayerCharacterUpdate(int ClientID, ref NetworkPacket Packet)
         {
             //Log what we are doing here
-            CommunicationLog.LogIn("Handle " + ClientID + " Player Character Update");
+            CommunicationLog.LogIn(ClientID + " Player Character Update");
 
             //Extract all the values from the packet data
             Vector3 Position = Packet.ReadVector3();
@@ -51,7 +51,7 @@ namespace Server.Networking.PacketHandlers
             //Share these new values to all the other clients in the game right now
             List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(ClientID);
             foreach (ClientConnection OtherClient in OtherClients)
-                PlayerManagementPacketSender.SendUpdateRemotePlayer(OtherClient.NetworkID, Client.Character.Name, Position, Movement, Rotation);
+                PlayerManagementPacketSender.SendUpdateRemotePlayer(OtherClient.NetworkID, Client.Character);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace Server.Networking.PacketHandlers
         public static void HandlePlayerCameraUpdate(int ClientID, ref NetworkPacket Packet)
         {
             //Log what we are doing here
-            CommunicationLog.LogIn("Handle " + ClientID + " Player Camera Update");
+            CommunicationLog.LogIn(ClientID + " Player Camera Update");
 
             //Extract all the values from the packet data
             float Zoom = Packet.ReadFloat();
@@ -88,7 +88,7 @@ namespace Server.Networking.PacketHandlers
 
         public static void HandlePlayAnimationAlert(int ClientID, ref NetworkPacket Packet)
         {
-            CommunicationLog.LogIn("Handle " + ClientID + " Play Animation Alert");
+            CommunicationLog.LogIn(ClientID + " Play Animation Alert");
             string AnimationName = Packet.ReadString();
             ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
             if(Client == null)
