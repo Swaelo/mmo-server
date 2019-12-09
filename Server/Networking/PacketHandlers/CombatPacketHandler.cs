@@ -15,6 +15,7 @@ namespace Server.Networking.PacketHandlers
         {
             NetworkPacket Packet = new NetworkPacket();
             Packet.WriteType(ClientPacketType.PlayerAttackAlert);
+            Packet.WriteVector3(ReadFrom.ReadVector3());
             return Packet;
         }
 

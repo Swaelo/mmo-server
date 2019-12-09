@@ -39,7 +39,6 @@ namespace Server.Networking
                 int OrderNumber = TotalPacket.ReadInt();
                 ClientPacketType PacketType = TotalPacket.ReadType();
 
-
                 //Get the rest of the values for this set based on the packet type, then put the orer number back in the front of it
                 NetworkPacket SectionPacket = ReadPacketValues(PacketType, TotalPacket);
 
