@@ -142,6 +142,25 @@ namespace Server.Networking
             return NotInGameClients;
         }
 
+        //Returns a list of all the other clients who are currently in the game world and playing with one of their characters that isnt dead
+        public static List<ClientConnection> GetInGameLivingClientsExceptFor(int ClientID)
+        {
+            //Start by fetching all the ingame clients
+            List<ClientConnection> OtherInGameClients = GetInGameClientsExceptFor(ClientID);
+
+            //Now move the ones who are living into a new list and return that
+            List<ClientConnection> Living = new List<ClientConnection>();
+            foreach(ClientConnection OtherClient in OtherInGameClients)
+            {
+                //Only add the clients with living characters to the new list
+                if (OtherClient.Character.IsAlive)
+                    Living.Add(OtherClient);
+            }
+
+            //Return the final list
+            return Living;
+        }
+
         //Returns a list of all the other clients who are currently in the game world and playing with one of their characters
         public static List<ClientConnection> GetInGameClientsExceptFor(int ClientID)
         {

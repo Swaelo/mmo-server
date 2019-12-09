@@ -32,23 +32,23 @@ namespace Server.Networking
         }
 
         //Tracks time and sends out all clients packet queues every interval
-        public static void UpdateQueue(float DeltaTime, bool Transmit)
+        public static void UpdateQueue(float DeltaTime)
         {
             //Count down the timer until it reaches zero
             NextCommunication -= DeltaTime;
             if (NextCommunication <= 0f)
-                TransmitPackets(Transmit);
+                TransmitPackets();
         }
 
         //Transmits the packets in all clients outgoing queues to them
-        private static void TransmitPackets(bool Transmit)
+        private static void TransmitPackets()
         {
             //Reset the interval timer
             NextCommunication = CommunicationInterval;
 
             //Loop through all the active clients in the game and have each one sent their queue
             foreach (ClientConnection Client in ConnectionManager.GetClientConnections())
-                Client.TransmitPackets(Transmit);
+                Client.TransmitPackets();
         }
     }
 }

@@ -97,6 +97,7 @@ namespace Server.Networking.PacketSenders
                 Packet.WriteFloat(CharacterData.CameraYRotation);
                 Packet.WriteInt(CharacterData.CurrentHealth);
                 Packet.WriteInt(CharacterData.MaxHealth);
+                Packet.WriteBool(CharacterData.IsAlive);
             }
             
             //Add this packet to the transmission queue

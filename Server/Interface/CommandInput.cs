@@ -489,8 +489,7 @@ namespace Server.Interface
             }
             MessageLog.Print("Killing " + CharacterName + "...");
             Client.Character.IsAlive = false;
-            Program.World.WorldSimulation.Bodies.Remove(Client.BodyHandle);
-            Program.World.WorldSimulation.Shapes.Remove(Client.ShapeIndex);
+            Client.RemovePhysicsBody(Program.World.WorldSimulation);
             CombatPacketSenders.SendLocalPlayerDead(Client.NetworkID);
             foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(Client.NetworkID))
                 CombatPacketSenders.SendRemotePlayerDead(OtherClient.NetworkID, Client.Character.Name);

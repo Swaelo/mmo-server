@@ -169,6 +169,7 @@ namespace Server.Database
             CharacterData.ExperienceToLevel = CommandManager.ReadIntegerValue(CharacterDataQuery, "ExperienceToLevel", "Reading " + CharacterName + "s ExperienceToLevel value");
             CharacterData.Level = CommandManager.ReadIntegerValue(CharacterDataQuery, "Level", "Reading " + CharacterName + "s Level value");
             CharacterData.IsMale = CommandManager.ReadBooleanValue(CharacterDataQuery, "IsMale", "Reading " + CharacterName + "s IsMale value");
+            CharacterData.IsAlive = CommandManager.ReadBooleanValue(CharacterDataQuery, "IsAlive", "Reading " + CharacterName + "s IsAlive value");
 
             //Return the final CharacterData object that has now been filled with all the data weve been looking for
             return CharacterData;
@@ -182,7 +183,7 @@ namespace Server.Database
                 /*Position*/    "XPosition='" + CharacterData.Position.X + "', YPosition='" + CharacterData.Position.Y + "', ZPosition='" + CharacterData.Position.Z + "'" +
                 /*Rotation*/    ", XRotation='" + CharacterData.Rotation.X + "', YRotation='" + CharacterData.Rotation.Y + "', ZRotation='" + CharacterData.Rotation.Z + "', WRotation='" + CharacterData.Rotation.W + "'" +
                 /*Camera*/      ", CameraZoom='" + CharacterData.CameraZoom + "', CameraXRotation='" + CharacterData.CameraXRotation + "', CameraYRotation='" + CharacterData.CameraYRotation + "'" +
-                /*Health*/      ", CurrentHealth='" + CharacterData.CurrentHealth + "', MaxHealth='" + CharacterData.MaxHealth + "'" +
+                /*Health*/      ", CurrentHealth='" + CharacterData.CurrentHealth + "', MaxHealth='" + CharacterData.MaxHealth + "', IsAlive='" + (CharacterData.IsAlive ? 1 : 0) + "'" +
                 /*WHO*/         " WHERE CharacterName='" + CharacterData.Name + "'";
 
             //Execute the command to update the database with the new values

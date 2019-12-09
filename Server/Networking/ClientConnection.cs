@@ -49,6 +49,7 @@ namespace Server.Networking
         public bool InGame = false; //Tracks if each client is actually in the game world with one of their characters, flagged after we have spawned them into the physics scene
 
         //Physics settings
+        public bool PhysicsActive = false;  //Tracks if this client has a body in the physics simulation right now
         public Capsule PhysicsShape;    //The character collider physics shape objeect in the world simulation
         public TypedIndex ShapeIndex;   //Index to the current collider physics shape object
         public RigidPose ShapePose;
@@ -86,7 +87,7 @@ namespace Server.Networking
         }
 
         //Copy all outgoing packets into a brand new array, then transmit them all to the client (or, resend all the packets since the last missing packet if they requested that)
-        public void TransmitPackets(bool Transmit)
+        public void TransmitPackets()
         {
             //Copy the PacketQueue into a new array, then reset it so packets can keep getting queued into it
             Dictionary<int, NetworkPacket> TransmissionQueue = new Dictionary<int, NetworkPacket>(OutgoingPacketQueue);
@@ -122,7 +123,7 @@ namespace Server.Networking
             }
 
             //Now transmit all the data if theres anything to send
-            if(TotalData != "" && Transmit)
+            if(TotalData != "")
             {
                 //Frame the data, convert to bytes and compute the total payload size
                 byte[] PacketData = GetFrameFromString(TotalData);
@@ -301,6 +302,12 @@ namespace Server.Networking
 
         public void InitializePhysicsBody(Simulation WorldSimulation, Vector3 BodyLocation)
         {
+            //Ignore trying to add any bodies who are already active
+            if (PhysicsActive)
+                return;
+
+            //Set the physics as active and add their body to the physics scene
+            PhysicsActive = true;
             PhysicsShape = new Capsule(0.5f, 1);
             ShapeIndex = WorldSimulation.Shapes.Add(PhysicsShape);
             PhysicsDescription = new CollidableDescription(ShapeIndex, 0.1f);
@@ -309,6 +316,18 @@ namespace Server.Networking
             ActivityDescription = new BodyActivityDescription(0.01f);
             PhysicsBody = BodyDescription.CreateDynamic(ShapePose, Inertia, PhysicsDescription, ActivityDescription);
             BodyHandle = WorldSimulation.Bodies.Add(PhysicsBody);
+        }
+
+        public void RemovePhysicsBody(Simulation WorldSimulation)
+        {
+            //Ignore trying to remove any bodies who arent active
+            if (!PhysicsActive)
+                return;
+
+            //Set the physics as inactive and remove their body from the physics scene
+            PhysicsActive = false;
+            WorldSimulation.Bodies.Remove(BodyHandle);
+            WorldSimulation.Shapes.Remove(ShapeIndex);
         }
 
         //Frames the message correctly so it can be sent to the client

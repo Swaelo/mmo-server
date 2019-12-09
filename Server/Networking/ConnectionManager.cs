@@ -164,8 +164,7 @@ namespace Server.Networking
                     CharactersDatabase.SaveCharacterData(DeadClient.Character);
 
                     //Remove the characters body from the servers world physics simulation
-                    WorldSimulation.Bodies.Remove(DeadClient.BodyHandle);
-                    WorldSimulation.Shapes.Remove(DeadClient.ShapeIndex);
+                    DeadClient.RemovePhysicsBody(WorldSimulation);
 
                     //Tell all the living clients to remove this character from the game worlds on their end
                     foreach (ClientConnection LivingClient in LivingClients)
@@ -197,6 +196,10 @@ namespace Server.Networking
             //Loop through them all so we can apply their new position values to their physics objects in the world simulation
             foreach(ClientConnection UpdatedClient in UpdatedClients)
             {
+                //Ignore any clients who are dead or not ingame
+                if (UpdatedClient.ClientDead || !UpdatedClient.InGame)
+                    return;
+
                 //Use the NewPosition value to reassign a new ShapePose for the clients physics body
                 UpdatedClient.ShapePose = new RigidPose(UpdatedClient.Character.Position, UpdatedClient.Character.Rotation);
                 //Calculate a new Inertia value for the clients physics body

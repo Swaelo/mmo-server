@@ -28,7 +28,6 @@ namespace Server.Networking
             if(Client == null)
             {
                 MessageLog.Print("ERROR: Client #" + ClientID + " not found, unable to read network packet from them.");
-                Client.ClientDead = true;
                 return;
             }
 

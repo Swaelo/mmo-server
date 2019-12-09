@@ -102,13 +102,6 @@ namespace Server.World
                 //Allow the user to control the camera if the command input field is inactive
                 if (!CommandInputField.InputEnabled)
                     ObservationCamera.UpdateCamera(UserControls, UserInput, DeltaTime);
-
-                //Toggle packet transmission with G
-                if(UserInput.WasPushed(Key.G))
-                {
-                    PacketQueueEnabled = !PacketQueueEnabled;
-                    MessageLog.Print("Packet Queue " + (PacketQueueEnabled ? "Enabled." : "Disabled."));
-                }
             }
             else
                 UserInput.MouseLocked = false;
@@ -116,30 +109,25 @@ namespace Server.World
 
         public void UpdateWorld(float DeltaTime)
         {
-            //Perform any actions required based on user input, move camera around the scene etc
+            //Poll input from the user
             ProcessInput(ApplicationWindow.Focused, DeltaTime);
-
-            //Remove any item pickups from the physics scene which have been queued up to be removed
-            ItemManager.ClearRemoveQueue(WorldSimulation);
-
-            //Calling this will have the ConnectionManager keep track of how much time has passed since we last heard from each client connection
-            //Then automatically cleans up and connections which have been inactive for too long
+            //Update all clients packet queues
+            PacketQueue.UpdateQueue(DeltaTime);
+            //Check how long since we last heard from each client, flagging them as dead if there's been no communication for some time
             ConnectionManager.CheckConnections(DeltaTime);
-            //Remove any character colliders from the physics scene which have been queued up to be removed
+
+            //Remove any dead clients characters from the simulation
             ConnectionManager.CleanDeadClients(WorldSimulation);
-
-            //Perform attacks by players that said they performed an attack since the last world update
-            PerformPlayerAttacks(WorldSimulation);
+            //Add any new clients into the game world who have recently logged in
+            AddNewClients();
+            //Re-add any dead clients back into the game world who have recently respawned
             RespawnDeadPlayers(WorldSimulation);
-
             //Update the positions of any character colliders who have sent us a new position update since the last world update
             ConnectionManager.UpdateClientPositions(WorldSimulation);
 
-            //Add any new clients characters into the game world who have recently logged in
-            AddNewClients();
-
-            PacketQueue.UpdateQueue(DeltaTime, PacketQueueEnabled);
-
+            //Perform attacks by players that said they performed an attack since the last world update
+            PerformPlayerAttacks(WorldSimulation);
+            
             //Simulate physics and record frame data for performance monitor
             WorldSimulation.Timestep(DeltaTime, ThreadDispatcher);
             TimeSamples.RecordFrame(WorldSimulation);
@@ -178,11 +166,11 @@ namespace Server.World
             //Loop through and perform each clients attack
             foreach(ClientConnection AttackingClient in AttackingClients)
             {
-                //Get a list of all the other players currently in the game (not including this one who is performing the attack)
-                List<ClientConnection> OtherPlayers = ClientSubsetFinder.GetInGameClientsExceptFor(AttackingClient.NetworkID);
+                //Get a list of al the other players currently in the game, who's characters are currently alive (not including this one who is performing the attack)
+                List<ClientConnection> OtherLivingPlayers = ClientSubsetFinder.GetInGameLivingClientsExceptFor(AttackingClient.NetworkID);
 
                 //Check if the attack is close enough to any of these players to hit them
-                foreach(ClientConnection OtherPlayer in OtherPlayers)
+                foreach(ClientConnection OtherPlayer in OtherLivingPlayers)
                 {
                     //Check the distance from the attack location to this player
                     float AttackDistance = Vector3.Distance(OtherPlayer.Character.Position, AttackingClient.AttackPosition);
@@ -206,8 +194,7 @@ namespace Server.World
                         {
                             //Mark the clients character as being dead and remove their characters collider from the physics scene
                             OtherPlayer.Character.IsAlive = false;
-                            WorldSimulation.Bodies.Remove(OtherPlayer.BodyHandle);
-                            WorldSimulation.Shapes.Remove(OtherPlayer.ShapeIndex);
+                            OtherPlayer.RemovePhysicsBody(WorldSimulation);
                             //Tell the client their character is now dead
                             CombatPacketSenders.SendLocalPlayerDead(OtherPlayer.NetworkID);
                             //And other clients this other character is now dead
