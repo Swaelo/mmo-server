@@ -35,7 +35,7 @@ namespace Server.Networking.PacketHandlers
             string AccountPass = Packet.ReadString();
 
             //Make sure we are still connected to this client
-            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            ClientConnection Client = ConnectionManager.GetClient(ClientID);
             if(Client == null)
             {
                 //Ignore the request if we cant find this clients network connection
@@ -52,7 +52,7 @@ namespace Server.Networking.PacketHandlers
             }
 
             //Make sure someone else isnt already logged into that account
-            if(ConnectionManager.IsAccountLoggedIn(AccountName))
+            if(ConnectionManager.AccountLoggedIn(AccountName))
             {
                 //Reject the request if the account is already being used
                 AccountManagementPacketSenders.SendAccountLoginReply(ClientID, false, "That account is already logged in.");
@@ -91,7 +91,7 @@ namespace Server.Networking.PacketHandlers
             CommunicationLog.LogIn(ClientID + " Account Logout Alert.");
 
             //Get the client who is logged out
-            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            ClientConnection Client = ConnectionManager.GetClient(ClientID);
 
             //Clear them as being logged in to any account
             Client.Account = new AccountData();
@@ -118,7 +118,7 @@ namespace Server.Networking.PacketHandlers
             string AccountPass = Packet.ReadString();
 
             //Make sure we are still connected to this client
-            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            ClientConnection Client = ConnectionManager.GetClient(ClientID);
             if(Client == null)
             {
                 //Ignore the request if we cant find this clients network connection
@@ -168,7 +168,7 @@ namespace Server.Networking.PacketHandlers
             CommunicationLog.LogIn(ClientID + " Character Data Request.");
 
             //Make sure we are still connected to this client
-            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            ClientConnection Client = ConnectionManager.GetClient(ClientID);
             if(Client == null)
             {
                 //Ignore the request if we arent connected to this client anymore
@@ -199,7 +199,7 @@ namespace Server.Networking.PacketHandlers
             string CharacterName = Packet.ReadString();
 
             //Make sure we are still connected to this client
-            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            ClientConnection Client = ConnectionManager.GetClient(ClientID);
             if(Client == null)
             {
                 //Ignore the request if the connection could not be found

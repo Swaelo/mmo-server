@@ -44,7 +44,7 @@ namespace Server.Networking.PacketSenders
         public static void SendKickedFromServer(int ClientID, string Reason = "No reason given")
         {
             //Get the client who we are kicking from the server
-            ClientConnection TargetClient = ConnectionManager.GetClientConnection(ClientID);
+            ClientConnection TargetClient = ConnectionManager.GetClient(ClientID);
 
             //Make sure we were actually able to find this client
             if(TargetClient == null)
@@ -54,13 +54,13 @@ namespace Server.Networking.PacketSenders
             }
 
             //Log what is happening here
-            MessageLog.Print("Kicking " + TargetClient.NetworkID + " from the server...");
+            MessageLog.Print("Kicking " + TargetClient.ClientID + " from the server...");
 
             //Create a new packet to send letting them know they have been kicked
             NetworkPacket Packet = new NetworkPacket();
 
             //Give it the next packet number they are expecting, then write the identifying packet type
-            Packet.WriteInt(TargetClient.GetNextOutgoingPacketNumber());
+            Packet.WriteInt(TargetClient.GetNextOrderNumber());
             Packet.WriteType(ServerPacketType.KickedFromServer);
             Packet.WriteString(Reason);
 

@@ -24,7 +24,7 @@ namespace Server.Networking
             NetworkPacket TotalPacket = new NetworkPacket(PacketData);
 
             //Fetch the client connection who sent this to us, making sure they're still active
-            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            ClientConnection Client = ConnectionManager.GetClient(ClientID);
             if(Client == null)
             {
                 MessageLog.Print("ERROR: Client #" + ClientID + " not found, unable to read network packet from them.");
@@ -42,7 +42,7 @@ namespace Server.Networking
                 NetworkPacket SectionPacket = ReadPacketValues(PacketType, TotalPacket);
 
                 //Compared this packets order number to see if its arrived in the order we were expecting
-                int ExpectedOrderNumber = Client.LastPacketNumberRecieved + 1;
+                int ExpectedOrderNumber = Client.LastPacketRecieved + 1;
                 bool InOrder = OrderNumber == ExpectedOrderNumber;
 
                 //If the packet arrived in order then it gets processed normally
@@ -59,7 +59,7 @@ namespace Server.Networking
                         Packet.Invoke(ClientID, ref SectionPacket);
 
                     //Store this as the last packet that we have processed for this client
-                    Client.LastPacketNumberRecieved = OrderNumber;
+                    Client.LastPacketRecieved = OrderNumber;
                 }
                 //If packets arrive out of order we tell the client what number we were expecting to receive next so everything since then gets resent
                 else

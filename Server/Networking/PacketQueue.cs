@@ -18,7 +18,7 @@ namespace Server.Networking
         public static void QueuePacket(int ClientID, NetworkPacket Packet)
         {
             //Get the client this packet will eventually be sent to
-            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            ClientConnection Client = ConnectionManager.GetClient(ClientID);
 
             //Make sure were still connected to them
             if (Client == null)
@@ -44,7 +44,7 @@ namespace Server.Networking
         private static void TransmitPackets()
         {
             //Loop through all the active clients in the game and have each one sent their queue
-            foreach (ClientConnection Client in ConnectionManager.GetClientConnections())
+            foreach (ClientConnection Client in ConnectionManager.GetClients())
                 Client.TransmitPackets();
 
             //Re-enable the queue updater and reset the communication interval timer

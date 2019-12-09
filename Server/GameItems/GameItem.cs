@@ -40,11 +40,11 @@ namespace Server.GameItems
             ItemData ItemData = ItemInfoDatabase.GetItemInfo(ItemNumber);
 
             //Instantiate the new item pickup into the game world
-            ItemColliderShape = new Box(.25f, .25f, .25f);
-            ItemShapeIndex = GameWorld.Shapes.Add(ItemColliderShape);
-            ItemColliderDescription = new CollidableDescription(ItemShapeIndex, 0.25f);
-            ItemColliderShape.ComputeInertia(1, out var Inertia);
-            ItemColliderHandle = GameWorld.Bodies.Add(BodyDescription.CreateDynamic(new RigidPose(ItemSpawnLocation, Quaternion.Identity), Inertia, ItemColliderDescription, new BodyActivityDescription(0.01f)));
+            //ItemColliderShape = new Box(.25f, .25f, .25f);
+            //ItemShapeIndex = GameWorld.Shapes.Add(ItemColliderShape);
+            //ItemColliderDescription = new CollidableDescription(ItemShapeIndex, 0.25f);
+            //ItemColliderShape.ComputeInertia(1, out var Inertia);
+            //ItemColliderHandle = GameWorld.Bodies.Add(BodyDescription.CreateDynamic(new RigidPose(ItemSpawnLocation, Quaternion.Identity), Inertia, ItemColliderDescription, new BodyActivityDescription(0.01f)));
         }
     }
 }

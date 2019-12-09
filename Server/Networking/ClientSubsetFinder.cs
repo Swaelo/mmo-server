@@ -36,7 +36,7 @@ namespace Server.Networking
             List<ClientConnection> UpdatedClients = new List<ClientConnection>();
 
             //Fetch the entire list of current client connections and loop through them all
-            List<ClientConnection> ClientConnections = ConnectionManager.GetClientConnections();
+            List<ClientConnection> ClientConnections = ConnectionManager.GetClients();
             foreach(ClientConnection ClientConnection in ClientConnections)
             {
                 if (ClientConnection.Character.NewPosition)
@@ -54,11 +54,11 @@ namespace Server.Networking
             List<ClientConnection> DeadClients = new List<ClientConnection>();
 
             //Fetch the entire list of current clients and loop through them all
-            List<ClientConnection> ClientConnections = ConnectionManager.GetClientConnections();
+            List<ClientConnection> ClientConnections = ConnectionManager.GetClients();
             foreach(ClientConnection ClientConnection in ClientConnections)
             {
                 //Add them to the list if they have been flagged as dead
-                if (ClientConnection.ClientDead)
+                if (ClientConnection.ConnectionDead)
                     DeadClients.Add(ClientConnection);
             }
 
@@ -73,11 +73,11 @@ namespace Server.Networking
             List<ClientConnection> LivingClients = new List<ClientConnection>();
 
             //Fetch the entire list of current clients and loop through them all
-            List<ClientConnection> ClientConnections = ConnectionManager.GetClientConnections();
+            List<ClientConnection> ClientConnections = ConnectionManager.GetClients();
             foreach (ClientConnection ClientConnection in ClientConnections)
             {
                 //Add them to the list if they have not been flagged as dead
-                if (!ClientConnection.ClientDead)
+                if (!ClientConnection.ConnectionDead)
                     LivingClients.Add(ClientConnection);
             }
 
@@ -92,11 +92,11 @@ namespace Server.Networking
             List<ClientConnection> OtherClients = new List<ClientConnection>();
 
             //Fetch the entire list of current clients and loop through them all
-            List<ClientConnection> ClientConnections = ConnectionManager.GetClientConnections();
+            List<ClientConnection> ClientConnections = ConnectionManager.GetClients();
             foreach (ClientConnection ClientConnection in ClientConnections)
             {
                 //Add them to the list if they arent the one we dont want
-                if (ClientConnection.NetworkID != ClientID)
+                if (ClientConnection.ClientID != ClientID)
                     OtherClients.Add(ClientConnection);
             }
 
@@ -111,11 +111,11 @@ namespace Server.Networking
             List<ClientConnection> InGameClients = new List<ClientConnection>();
 
             //Fetch the entire list of current clients and loop through them all
-            List<ClientConnection> ClientConnections = ConnectionManager.GetClientConnections();
+            List<ClientConnection> ClientConnections = ConnectionManager.GetClients();
             foreach (ClientConnection ClientConnection in ClientConnections)
             {
                 //Add them to the list if they are ingame
-                if (ClientConnection.InGame)
+                if (ClientConnection.Character.InGame)
                     InGameClients.Add(ClientConnection);
             }
 
@@ -130,11 +130,11 @@ namespace Server.Networking
             List<ClientConnection> NotInGameClients = new List<ClientConnection>();
 
             //Fetch the entire list of current clients and loop through them all
-            List<ClientConnection> ClientConnections = ConnectionManager.GetClientConnections();
+            List<ClientConnection> ClientConnections = ConnectionManager.GetClients();
             foreach (ClientConnection ClientConnection in ClientConnections)
             {
                 //Add them to the list if they are in the menu
-                if (!ClientConnection.InGame)
+                if (!ClientConnection.Character.InGame)
                     NotInGameClients.Add(ClientConnection);
             }
 
@@ -168,7 +168,7 @@ namespace Server.Networking
             List<ClientConnection> InGameClients = GetInGameClients();
 
             //Get the ClientConnection that we dont want in this list
-            ClientConnection ExceptFor = ConnectionManager.GetClientConnection(ClientID);
+            ClientConnection ExceptFor = ConnectionManager.GetClient(ClientID);
             if (ExceptFor == null)
             {
                 MessageLog.Print("ERROR: Client " + ClientID + " not found, unable to handle ingame clients list request.");
@@ -190,11 +190,11 @@ namespace Server.Networking
             List<ClientConnection> ReadyToEnterClients = new List<ClientConnection>();
 
             //Fetch the entire list of current clients and loop through them all
-            List<ClientConnection> ClientConnections = ConnectionManager.GetClientConnections();
+            List<ClientConnection> ClientConnections = ConnectionManager.GetClients();
             foreach (ClientConnection ClientConnection in ClientConnections)
             {
                 //Add them to the list if they are ready to enter the game
-                if (ClientConnection.WaitingToEnter)
+                if (ClientConnection.Character.WaitingToEnter)
                     ReadyToEnterClients.Add(ClientConnection);
             }
 
@@ -207,9 +207,9 @@ namespace Server.Networking
         {
             List<ClientConnection> AttackingClients = new List<ClientConnection>();
 
-            foreach(ClientConnection ClientConnection in ConnectionManager.GetClientConnections())
+            foreach(ClientConnection ClientConnection in ConnectionManager.GetClients())
             {
-                if (ClientConnection.AttackPerformed)
+                if (ClientConnection.Character.AttackPerformed)
                     AttackingClients.Add(ClientConnection);
             }
 
@@ -220,9 +220,9 @@ namespace Server.Networking
         public static List<ClientConnection> GetClientsAwaitingRespawn()
         {
             List<ClientConnection> RespawningClients = new List<ClientConnection>();
-            foreach(ClientConnection ClientConnection in ConnectionManager.GetClientConnections())
+            foreach(ClientConnection ClientConnection in ConnectionManager.GetClients())
             {
-                if (ClientConnection.WaitingToRespawn)
+                if (ClientConnection.Character.WaitingToRespawn)
                     RespawningClients.Add(ClientConnection);
             }
             return RespawningClients;

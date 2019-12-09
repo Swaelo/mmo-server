@@ -27,7 +27,7 @@ namespace Server.Networking.PacketHandlers
             CommunicationLog.LogIn(ClientID + " chat message");
 
             //Fetch this ClientConnection and make sure they were able to be found
-            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            ClientConnection Client = ConnectionManager.GetClient(ClientID);
             if (Client == null)
             {
                 MessageLog.Print("ERROR: Client not found, unable to handle chat message.");
@@ -42,7 +42,7 @@ namespace Server.Networking.PacketHandlers
 
             //Pass this chat message on to all the other clients that are ingame
             foreach (ClientConnection OtherClient in OtherClients)
-                PlayerCommunicationPacketSender.SendChatMessage(OtherClient.NetworkID, Client.Character.Name, ChatMessage);
+                PlayerCommunicationPacketSender.SendChatMessage(OtherClient.ClientID, Client.Character.Name, ChatMessage);
         }
     }
 }

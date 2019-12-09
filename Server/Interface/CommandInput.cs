@@ -489,10 +489,11 @@ namespace Server.Interface
             }
             MessageLog.Print("Killing " + CharacterName + "...");
             Client.Character.IsAlive = false;
-            Client.RemovePhysicsBody(Program.World.WorldSimulation);
-            CombatPacketSenders.SendLocalPlayerDead(Client.NetworkID);
-            foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(Client.NetworkID))
-                CombatPacketSenders.SendRemotePlayerDead(OtherClient.NetworkID, Client.Character.Name);
+            Client.Character.RemoveBody(Program.World.WorldSimulation);
+            //Client.RemovePhysicsBody(Program.World.WorldSimulation);
+            CombatPacketSenders.SendLocalPlayerDead(Client.ClientID);
+            foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(Client.ClientID))
+                CombatPacketSenders.SendRemotePlayerDead(OtherClient.ClientID, Client.Character.Name);
         }
         private void TryRevivePlayer(string[] Input)
         {
@@ -516,9 +517,9 @@ namespace Server.Interface
             MessageLog.Print("Reviving " + CharacterName + "...");
             Client.Character.IsAlive = true;
             Client.Character.SetDefaultValues();
-            CombatPacketSenders.SendLocalPlayerRespawn(Client.NetworkID, Client.Character);
-            foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(Client.NetworkID))
-                CombatPacketSenders.SendRemotePlayerRespawn(OtherClient.NetworkID, Client.Character);
+            CombatPacketSenders.SendLocalPlayerRespawn(Client.ClientID, Client.Character);
+            foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(Client.ClientID))
+                CombatPacketSenders.SendRemotePlayerRespawn(OtherClient.ClientID, Client.Character);
         }
 
         //Tries using the command arguments for performing a player kick
@@ -548,13 +549,13 @@ namespace Server.Interface
             MessageLog.Print("Kicking " + CharacterName + " from the game...");
 
             //Tell the client that they have been kicked from the game and mark them to be cleaned up from the game
-            SystemPacketSender.SendKickedFromServer(Client.NetworkID);
-            Client.ClientDead = true;
+            SystemPacketSender.SendKickedFromServer(Client.ClientID);
+            Client.ConnectionDead = true;
 
             //Tell everyone else to remove the client from their games
-            List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(Client.NetworkID);
+            List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(Client.ClientID);
             foreach (ClientConnection OtherClient in OtherClients)
-                PlayerManagementPacketSender.SendRemoveRemotePlayer(OtherClient.NetworkID, Client.Character.Name, Client.Character.IsAlive);
+                PlayerManagementPacketSender.SendRemoveRemotePlayer(OtherClient.ClientID, Client.Character.Name, Client.Character.IsAlive);
         }
 
         //Tries using the command arguments for performing a character info search

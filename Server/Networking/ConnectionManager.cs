@@ -21,210 +21,136 @@ namespace Server.Networking
 {
     public static class ConnectionManager
     {
-        public static TcpListener NewClientListener;    //Receives new incoming client connections
-        private static Dictionary<int, ClientConnection> ActiveConnections = new Dictionary<int, ClientConnection>();    //Each active client connection mapped to their network ID
+        //Listener for accepting new client connections, list of active connections and UI component for displaying all their information to the UI
+        public static TcpListener NewClientListener;
+        private static Dictionary<int, ClientConnection> ActiveConnections = new Dictionary<int, ClientConnection>();
+        private static TextBuilder ClientsInfo = new TextBuilder(2048);
 
-        public static float ConnectionCheckInterval = 2.5f; //How often to check for dead connections
-        public static float NextConnectionCheck = 2.5f;   //How long until the next connection check will be performed
-        private static int ClientConnectionTimeout = 15;    //How many seconds must pass without hearing from a client before we flag them as dead
-
-        private static TextBuilder ConnectionsText = new TextBuilder(2048); //Used to render information about the active game cients to the window UI
-
-        //Sets up the connection manager and starts listening for new incoming client connections
-        public static void InitializeManager(string ServerIP)
+        //Sets up packet handlers and starts listening for new client connections
+        public static void Initialize(string ServerIP)
         {
             PacketHandler.RegisterPacketHandlers();
-
             NewClientListener = new TcpListener(IPAddress.Parse(ServerIP), 5500);
             NewClientListener.Start();
-            NewClientListener.BeginAcceptTcpClient(new AsyncCallback(NewClientConnected), null);
+            NewClientListener.BeginAcceptTcpClient(new AsyncCallback(NewClientEvent), null);
         }
 
-        //Renders information about all the current clients connections to the window UI
-        public static void RenderClientsInfo(Renderer Renderer, Vector2 Position, float FontSize, Vector3 FontColor, Font Font)
+        //Event triggered when new client has connected to the server
+        private static void NewClientEvent(IAsyncResult Result)
         {
-            //Display an initial string at the start indicating what is being shown here
-            Renderer.TextBatcher.Write(ConnectionsText.Clear().Append("---Active Clients Info---"), Position, FontSize, FontColor, Font);
-
-            //Get the current list of active client connections
-            List<ClientConnection> Clients = GetClientConnections();
-
-            //Offset the Y value before we start rendering all the clients information to the log
-            Position.Y += FontSize * 1.5f;
-
-            //Loop through all of the active client connections
-            foreach(ClientConnection Client in Clients)
-            {
-                //Check if each one is logged into an account, and if they are ingame with a character of theirs
-                bool LoggedIn = Client.Account.Username != "";
-                bool InGame = Client.Character.Name != "";
-
-                //Create a string with all the clients info, start by putting their NetworkID
-                string ClientInfo = "<" + Client.NetworkID + ">";
-
-                //Add their current account name if they are logged into one
-                if (LoggedIn)
-                    ClientInfo += ", <" + Client.Account.Username + ">";
-
-                //Add their characters information if they are ingame with one
-                if (InGame)
-                    ClientInfo +=
-                        /*name*/    ", <" + Client.Character.Name + ">, " +
-                        /*pos*/     "<" + Client.Character.Position.X + "," + Client.Character.Position.Y + "," + Client.Character.Position.Z + ">, " +
-                        /*HP*/      "<" + Client.Character.CurrentHealth + "/" + Client.Character.MaxHealth + ">";
-
-                //Draw the clients information to the UI and offset the position value for drawing the next clients information
-                Renderer.TextBatcher.Write(ConnectionsText.Clear().Append(ClientInfo), Position, FontSize, FontColor, Font);
-                Position.Y += FontSize * 1.2f;
-            }
-        }
-
-        //Returns the entire list of ClientConnections
-        public static List<ClientConnection> GetClientConnections()
-        {
-            List<ClientConnection> ClientConnections = new List<ClientConnection>();
-            foreach (KeyValuePair<int, ClientConnection> ClientConnection in ActiveConnections)
-                ClientConnections.Add(ClientConnection.Value);
-            return ClientConnections;
-        }
-
-        //Returns a ClientConnection from its NetworkID
-        public static ClientConnection GetClientConnection (int ClientID)
-        {
-            //Return null if theres no client with this ID number
-            if (!ActiveConnections.ContainsKey(ClientID))
-                return null;
-            return ActiveConnections[ClientID];
-        }
-
-        //ASync event triggered when a new client has connected to the server, sets them up and stored them in the connections dictionary
-        private static void NewClientConnected(IAsyncResult Result)
-        {
-            //Grab the new connection into a new TcpClient object, then re-register this function again to immediatly listen for new connections again
+            //Place this connection into a new TcpClient, then reset the client listener so we can keep getting new connections
             TcpClient NewConnection = NewClientListener.EndAcceptTcpClient(Result);
-            NewClientListener.BeginAcceptTcpClient(new AsyncCallback(NewClientConnected), null);
-
-            //Place the new client connection into its own client object and store that with the rest
+            NewClientListener.BeginAcceptTcpClient(new AsyncCallback(NewClientEvent), null);
+            //Store the new connection with the other clients
             ClientConnection NewClient = new ClientConnection(NewConnection);
-            ActiveConnections.Add(NewClient.NetworkID, NewClient);
-
-            //Display a message showing that this client connection was successful
-            MessageLog.Print("New client connected from " + NewConnection.Client.RemoteEndPoint.ToString());
+            ActiveConnections.Add(NewClient.ClientID, NewClient);
         }
 
-        //Shuts down the connection with a specific client and removes them from the active connections
-        public static void CloseConnection(ClientConnection Connection)
+        //Returns all the ClientConnections in a List
+        public static List<ClientConnection> GetClients()
         {
-            //Flag this client as dead so it gets cleaned up by the GameWorld in its next pass
-            Connection.ClientDead = true;
+            List<ClientConnection> Clients = new List<ClientConnection>();
+            foreach (KeyValuePair<int, ClientConnection> Client in ActiveConnections)
+                Clients.Add(Client.Value);
+            return Clients;
         }
 
-        //Checks how much time has passed since we last heard from each of the active client connections, cleaning up any connections which have been inactive for too long
-        public static void CheckConnections(float DeltaTime)
+        public static ClientConnection GetClient(int ClientID)
         {
-            //Count down the timer until we need to perform a new connection check on all the clients
-            NextConnectionCheck -= DeltaTime;
-
-            //Check the status of all client connections and reset the timer whenever it reaches zero
-            if(NextConnectionCheck <= 0.0f)
-            {
-                //Reset the timer for checking client connections again
-                NextConnectionCheck = ConnectionCheckInterval;
-
-                //Send a message to all active client connections requesting they immediately let us know they are still connected
-                foreach(KeyValuePair<int, ClientConnection> Client in ActiveConnections)
-                {
-                    //Ask this client if they are still connected to us
-                    SystemPacketSender.SendStillConnectedCheck(Client.Key);
-
-                    //Check how much time has passed since we last heard from them, flag their connection as dead if too much time has passed
-                    int LastHeard = Client.Value.LastCommunication.AgeInSeconds();
-                    if (LastHeard >= ClientConnectionTimeout)
-                    {
-                        MessageLog.Print("Client " + Client.Value.NetworkID + " connection has been cleaned up as we havnt heard from them in a while.");
-                        Client.Value.ClientDead = true;
-                    }
-                }
-            }
+            return ActiveConnections.ContainsKey(ClientID) ? ActiveConnections[ClientID] : null;
         }
 
-        //Cleans up any dead client connections, removing their character from the physics scene, telling other clients they are now gone etc.
-        public static void CleanDeadClients(Simulation WorldSimulation)
+        //Checks if anyone logged in with the given username
+        public static bool AccountLoggedIn(string AccountName)
         {
-            //Split all the clients into two seperate lists, one containing all dead connections that need to be cleaned up, the other containing all the other connections who are still active
-            List<ClientConnection> DeadClients = ClientSubsetFinder.GetDeadClients();
-            List<ClientConnection> LivingClients = ClientSubsetFinder.GetLivingClients();
-
-            //Loop through all of the dead clients who need to be cleaned up
-            foreach(ClientConnection DeadClient in DeadClients)
-            {
-                MessageLog.Print(DeadClient.NetworkID + " client connection was cleaned up");
-
-                //Check each DeadClient to see if they have one of their characters currently active in the game world
-                if(DeadClient.InGame)
-                {
-                    //Save this characters values into the database
-                    CharactersDatabase.SaveCharacterData(DeadClient.Character);
-
-                    //Remove the characters body from the servers world physics simulation
-                    DeadClient.RemovePhysicsBody(WorldSimulation);
-
-                    //Tell all the living clients to remove this character from the game worlds on their end
-                    foreach (ClientConnection LivingClient in LivingClients)
-                        PlayerManagementPacketSender.SendRemoveRemotePlayer(LivingClient.NetworkID, DeadClient.Character.Name, DeadClient.Character.IsAlive);
-
-                    //Display a message showing that this character has been cleaned up from the game world
-                    MessageLog.Print(DeadClient.Character.Name + " was removed from the game world after their connection timed out.");
-                }
-                else
-                {
-                    //DeadClients who werent ingame yet simply show a message that their connection has been closed properly
-                    if (DeadClient.Character.Account != "")
-                        MessageLog.Print(DeadClient.Character.Account + " has been logged out after their connection timed out.");
-                    else
-                        MessageLog.Print(DeadClient.NetworkID + " has been disconnected after their connection timed out.");
-                }
-
-                //Finally, after each DeadClient has been cleaned up, we remove them from the list of active network client connections
-                ActiveConnections.Remove(DeadClient.NetworkID);
-            }
-        }
-
-        //Updates the physics body position of any clients who have sent us a new position update since the last update
-        public static void UpdateClientPositions(Simulation World)
-        {
-            //Get the list of clients with updated positions
-            List<ClientConnection> UpdatedClients = ClientSubsetFinder.GetUpdatedClients();
-
-            //Loop through them all so we can apply their new position values to their physics objects in the world simulation
-            foreach(ClientConnection UpdatedClient in UpdatedClients)
-            {
-                //Ignore any clients who are dead or not ingame
-                if (UpdatedClient.ClientDead || !UpdatedClient.InGame)
-                    return;
-
-                //Use the NewPosition value to reassign a new ShapePose for the clients physics body
-                UpdatedClient.ShapePose = new RigidPose(UpdatedClient.Character.Position, UpdatedClient.Character.Rotation);
-                //Calculate a new Inertia value for the clients physics body
-                UpdatedClient.PhysicsShape.ComputeInertia(1, out var Inertia);
-                //Use the new ShapePose and Inertia values to assign a new BodyDescription to the client
-                UpdatedClient.PhysicsBody = BodyDescription.CreateDynamic(UpdatedClient.ShapePose, Inertia, UpdatedClient.PhysicsDescription, UpdatedClient.ActivityDescription);
-                //Apply this new body description to the clients physics body inside the gameworld physics simulation
-                World.Bodies.ApplyDescription(UpdatedClient.BodyHandle, ref UpdatedClient.PhysicsBody);
-                //Reset the clients updated position flag now that their physics body has been moved to the new position
-                UpdatedClient.Character.NewPosition = false;
-            }
-        }
-        
-        //Checks everyone who is logged on to know if an account is already in use or not
-        public static bool IsAccountLoggedIn(string AccountName)
-        {
-            foreach(KeyValuePair<int, ClientConnection> Client in ActiveConnections)
-            {
+            foreach (KeyValuePair<int, ClientConnection> Client in ActiveConnections)
                 if (Client.Value.Character.Account == AccountName)
                     return true;
-            }
             return false;
+        }
+
+        //Cleans up any dead connections, removing their character from the world, and telling other clients to do the same on their end
+        public static void CleanDeadClients(Simulation World)
+        {
+            foreach(ClientConnection DeadClient in ClientSubsetFinder.GetDeadClients())
+            {
+                //Backup / Remove from World and alert other clients about any ingame dead clients
+                if(DeadClient.Character.InGame)
+                {
+                    CharactersDatabase.SaveCharacterData(DeadClient.Character);
+                    World.Bodies.Remove(DeadClient.Character.BodyHandle);
+                    World.Shapes.Remove(DeadClient.Character.BodyIndex);
+                    foreach (ClientConnection LivingClient in ClientSubsetFinder.GetInGameLivingClientsExceptFor(DeadClient.ClientID))
+                        PlayerManagementPacketSender.SendRemoveRemotePlayer(LivingClient.ClientID, DeadClient.Character.Name, DeadClient.Character.IsAlive);
+                }
+            }
+        }
+
+        //Adds any clients into the game world who are waiting for it
+        public static void AddNewClients(Simulation World)
+        {
+            foreach(ClientConnection NewClient in ClientSubsetFinder.GetClientsReadyToEnter())
+            {
+                NewClient.Character.InitializeBody(World, NewClient.Character.Position);
+                NewClient.Character.WaitingToEnter = false;
+                NewClient.Character.InGame = true;
+                PlayerManagementPacketSender.SendPlayerBegin(NewClient.ClientID);
+                foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(NewClient.ClientID))
+                    PlayerManagementPacketSender.SendAddRemotePlayer(OtherClient.ClientID, NewClient.Character);
+            }
+        }
+
+        //Respawns any clients characters who were dead and clicked the respawn button
+        public static void RespawnDeadPlayers(Simulation World)
+        {
+            foreach(ClientConnection RespawningClient in ClientSubsetFinder.GetClientsAwaitingRespawn())
+            {
+                RespawningClient.Character.SetDefaultValues();
+                RespawningClient.Character.InitializeBody(World, RespawningClient.Character.Position);
+                RespawningClient.Character.IsAlive = true;
+                CombatPacketSenders.SendLocalPlayerRespawn(RespawningClient.ClientID, RespawningClient.Character);
+                foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(RespawningClient.ClientID))
+                    CombatPacketSenders.SendRemotePlayerRespawn(OtherClient.ClientID, RespawningClient.Character);
+                RespawningClient.Character.WaitingToRespawn = false;
+            }
+        }
+
+        public static void UpdateClientPositions(Simulation World)
+        {
+            foreach(ClientConnection UpdatedClient in ClientSubsetFinder.GetUpdatedClients())
+            {
+                if (UpdatedClient.ConnectionDead || !UpdatedClient.Character.InGame)
+                    continue;
+
+                UpdatedClient.Character.UpdateBody(World, UpdatedClient.Character.Position);
+            }
+        }
+
+        public static void PerformPlayerAttacks(Simulation World)
+        {
+            foreach(ClientConnection AttackingClient in ClientSubsetFinder.GetClientsAttacking())
+            {
+                foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameLivingClientsExceptFor(AttackingClient.ClientID))
+                {
+                    float AttackDistance = Vector3.Distance(OtherClient.Character.Position, AttackingClient.Character.AttackPosition);
+                    if(AttackDistance < 1.5f)
+                    {
+                        OtherClient.Character.CurrentHealth -= 1;
+                        if(OtherClient.Character.CurrentHealth > 0)
+                        {
+                            CombatPacketSenders.SendLocalPlayerTakeHit(OtherClient.ClientID, OtherClient.Character.CurrentHealth);
+                            foreach (ClientConnection OtherOtherCLient in ClientSubsetFinder.GetInGameClientsExceptFor(OtherClient.ClientID))
+                                CombatPacketSenders.SendRemotePlayerTakeHit(OtherOtherCLient.ClientID, OtherClient.Character.Name, OtherClient.Character.CurrentHealth);
+                        }
+                        OtherClient.Character.IsAlive = false;
+                        OtherClient.Character.RemoveBody(World);
+                        CombatPacketSenders.SendLocalPlayerDead(OtherClient.ClientID);
+                        foreach (ClientConnection OtherOtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(OtherClient.ClientID))
+                            CombatPacketSenders.SendRemotePlayerDead(OtherOtherClient.ClientID, OtherClient.Character.Name);
+                    }
+                }
+                AttackingClient.Character.AttackPerformed = false;
+            }
         }
     }
 }

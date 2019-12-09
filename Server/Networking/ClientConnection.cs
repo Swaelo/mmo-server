@@ -6,160 +6,175 @@
 
 using System;
 using System.IO;
-using System.Numerics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Collections.Generic;
-using BepuPhysics;
-using BepuPhysics.Collidables;
-using Quaternion = BepuUtilities.Quaternion;
 using Server.Misc;
 using Server.Time;
 using Server.Data;
 using Server.Logging;
-using Server.Networking.PacketSenders;
 
 namespace Server.Networking
 {
     public class ClientConnection
     {
-        //Connection Settings
-        public int NetworkID;   //Each client has a unique network ID so they dont get mixed up
-        public TcpClient NetworkConnection; //The servers network connection to this client
-        private bool ConnectionUpgraded = false;    //When clients first connect we need to handshake them
-        public NetworkStream DataStream;    //Information is transmitted back and forth with this
-        public byte[] DataBuffer;   //Data is streamed into here during asynchronous reading
-        public PointInTime LastCommunication;   //The exact moment we last had communications with this client connection
-        public bool ClientDead = false; //Flag set by the ConnectionManager when it detects that this client has been disconnected and needs to be cleaned up
-        public bool ClientDeSynced = false; //Set when a client has missed packets outside of memory, they will request all data needed to resync then tell us when to disable this
+        //Connection Information
+        public int ClientID;
+        public TcpClient Connection;
+        public NetworkStream DataStream;
+        public byte[] DataBuffer;
 
-        //Objects containing all the information about the account this client is logged in to, and the character they are currently playing with
+        //Connection Settings
+        private bool ConnectionUpgraded = false;
+        public PointInTime LastCommunication;
+        public bool ConnectionDead = false;
+
+        //User Account / Player Character Details
         public AccountData Account = new AccountData();
         public CharacterData Character = new CharacterData();
 
-        //Flag set when the player performs an attack, during physics timestep if this flag is set to true then an attack is performed, and all entities hit take damage
-        public bool AttackPerformed = false;
-        public Vector3 AttackPosition = new Vector3();
-        //Flag set when the player is dead and they have clicked the respawn button
-        public bool WaitingToRespawn = false;
-
-        //Account / Character settings
-        public bool WaitingToEnter = false; //Set when client is ready to enter the game, any with this flag set are added into the physics scene at the start of each update
-        public bool InGame = false; //Tracks if each client is actually in the game world with one of their characters, flagged after we have spawned them into the physics scene
-
-        //Physics settings
-        public bool PhysicsActive = false;  //Tracks if this client has a body in the physics simulation right now
-        public Capsule PhysicsShape;    //The character collider physics shape objeect in the world simulation
-        public TypedIndex ShapeIndex;   //Index to the current collider physics shape object
-        public RigidPose ShapePose;
-        public BodyActivityDescription ActivityDescription;
-        public CollidableDescription PhysicsDescription;    //Description of the clients character collider physics object in the world simulation
-        public BodyDescription PhysicsBody; //The world simulation physics object for this clients character controller when they are in the game world
-        public int BodyHandle = -1; //The reference handle pointing to this clients world simulation physics object for this clients character controller
-        
-        //Order number for the next packet to be sent to this client
-        private int MostPreviousPacketNumber = 0;
-        public int GetNextOutgoingPacketNumber() { return ++MostPreviousPacketNumber; }
-        //Current set of packets waiting to be transmitted, and the total set of packets that have been sent to this client (maximum previous 150 packets)
-        private Dictionary<int, NetworkPacket> OutgoingPacketQueue = new Dictionary<int, NetworkPacket>();
+        //Packet Ordering / Queueing
+        private int NextOrderNumber = 0;
+        public int GetNextOrderNumber() { return ++NextOrderNumber; }
+        private Dictionary<int, NetworkPacket> PacketQueue = new Dictionary<int, NetworkPacket>();
         private Dictionary<int, NetworkPacket> PacketHistory = new Dictionary<int, NetworkPacket>();
-        //Set when this client has told us they are missing some packets and need them to be resent back again
         public bool PacketsToResend = false;
-        public int ResendStartNumber = -1;
-        //Packet order number last recieved from this client
-        public int LastPacketNumberRecieved = 0;
-        
-        //Adds a NetworkPacket to the outgoing packets queue
+        public int ResendFrom = -1;
+        public int LastPacketRecieved = 0;
+
+        //Default Constructor
+        public ClientConnection(TcpClient Connection)
+        {
+            //Store the connection and assign a new network ID
+            this.Connection = Connection;
+            ClientID = ((IPEndPoint)Connection.Client.RemoteEndPoint).Port;
+            //Set up the datastream and buffer for listening for messages from the client
+            Connection.SendBufferSize = 262144;
+            Connection.ReceiveBufferSize = 262144;
+            DataStream = Connection.GetStream();
+            DataBuffer = new byte[Connection.Available];
+            DataStream.BeginRead(DataBuffer, 0, DataBuffer.Length, ReadPacket, null);
+            //Set the time of last contact to now
+            LastCommunication = new PointInTime();
+        }
+
         public void QueuePacket(NetworkPacket Packet)
         {
             //Add the order number to the front of the packet data
-            int OrderNumber = GetNextOutgoingPacketNumber();
+            int OrderNumber = GetNextOrderNumber();
             Packet.AddPacketOrderNumber(OrderNumber);
-
-            //Add it into the queue for transmission later, and into the total history list also
-            OutgoingPacketQueue.Add(OrderNumber, Packet);
+            //Add it to the queue, and history
+            PacketQueue.Add(OrderNumber, Packet);
             PacketHistory.Add(OrderNumber, Packet);
-
-            //Maintain a maximum history of 150 previous packets
+            //Maintain a maximum 150 of the previous packets in memory
             if (PacketHistory.Count > 150)
                 PacketHistory.Remove(OrderNumber - 150);
         }
-
-        //Copy all outgoing packets into a brand new array, then transmit them all to the client (or, resend all the packets since the last missing packet if they requested that)
+        
         public void TransmitPackets()
         {
-            //Copy the PacketQueue into a new array, then reset it so packets can keep getting queued into it
-            Dictionary<int, NetworkPacket> TransmissionQueue = new Dictionary<int, NetworkPacket>(OutgoingPacketQueue);
-            OutgoingPacketQueue.Clear();
-
-            //Create a new string we will fill with the data of every packet in the transmission queue so there all sent at once
-            string TotalData = "";
-
-            //Append the data of each packet in the transmission queue if we dont have any missing packets to resent
-            if(!PacketsToResend)
+            //Copy the queue into a new array and reset it so others can be queued
+            Dictionary<int, NetworkPacket> OutgoingPackets = new Dictionary<int, NetworkPacket>(PacketQueue);
+            PacketQueue.Clear();
+            //Data of all in the queue will be combined into a string for transmission
+            string PacketData = "";
+            //If the client missed some packets then we need to resend all of them so they can catch back up
+            if(PacketsToResend)
             {
-                foreach (KeyValuePair<int, NetworkPacket> Packet in TransmissionQueue)
-                    TotalData += Packet.Value.PacketData;
-            }
-            //Otherwise we append the data of every packet from the first the client is missing, to the last one in the dictionary
-            else
-            {
-                //Check the missing packets that are being requested are still being stored in memory
-                if(!PacketHistory.ContainsKey(ResendStartNumber))
+                //Make sure the missing packets being requested are still being stored in the history
+                if(!PacketHistory.ContainsKey(ResendFrom))
                 {
-                    //Print an error and close / clean up this clients connection if they request packets outside of the current history
-                    MessageLog.Print("ERROR: Client requesting packets outside of history, closing their connection.");
-                    ClientDead = true;
+                    //Close clients connections who ask for packets outside of memory, as they cant be caught back up from that
+                    ConnectionDead = true;
                     return;
                 }
-
-                //Loop from the first missing packet number, all the way to the most previously queued packet and add all of their data into the string
-                for (int i = ResendStartNumber; i < MostPreviousPacketNumber + 1; i++)
-                    TotalData += PacketHistory[i].PacketData;
-
-                //No more packets to resent
+                //Add the data of every packet from the first the client missed, and everything after it
+                for (int i = ResendFrom; i < LastPacketRecieved + 1; i++)
+                    PacketData += PacketHistory[i].PacketData;
+                //No more packets to resend after this
                 PacketsToResend = false;
             }
-
-            //Now transmit all the data if theres anything to send
-            if(TotalData != "")
+            //Otherwise we just gather up all the packets in the outgoing queue for transmission
+            else
             {
-                //Frame the data, convert to bytes and compute the total payload size
-                byte[] PacketData = GetFrameFromString(TotalData);
-                int PayloadLength = Encoding.UTF8.GetString(PacketData).Length;
-
-                //Transmit this data to the client, making sure the connection is still active
-                try { DataStream.BeginWrite(PacketData, 0, PayloadLength, null, null); }
+                foreach (KeyValuePair<int, NetworkPacket> Packet in OutgoingPackets)
+                    PacketData += Packet.Value.PacketData;
+            }
+            //Transmit any available data to the client
+            if(PacketData != "")
+            {
+                //Frame the data and get the payload size ready for transmission
+                byte[] PacketBytes = GetFrameFromString(PacketData);
+                int PacketSize = Encoding.UTF8.GetString(PacketBytes).Length;
+                //Transmit the data to the client, making sure their connection is still open
+                try { DataStream.BeginWrite(PacketBytes, 0, PacketSize, null, null); }
                 catch(IOException Exception)
                 {
-                    //Print an error and close the clients connection if its no longer open
-                    MessageLog.Print("ERROR transmitting packets to client #" + NetworkID + ", connection no longer open.");
-                    ClientDead = true;
-                    return;
+                    //Close the clients connection if its no longer open
+                    MessageLog.Error(Exception, "Error transmitting packets to the client");
+                    ConnectionDead = true;
                 }
             }
         }
 
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="NewConnection">ConnectionManager detects new client connections then uses it to make this</param>
-        public ClientConnection(TcpClient NewConnection)
+        //Frames the message correctly so it can be sent to the client
+        private static byte[] GetFrameFromString(string Message)
         {
-            //Store the connection to the new client and assign them a new network ID
-            NetworkConnection = NewConnection;
-            NetworkID = ((IPEndPoint)NetworkConnection.Client.RemoteEndPoint).Port;
+            byte[] response;
+            byte[] bytesRaw = Encoding.Default.GetBytes(Message);
+            byte[] frame = new byte[10];
 
-            //Set the time of last communication to the moment the object is first created
-            LastCommunication = new PointInTime();
+            int indexStartRawData = -1;
+            int length = bytesRaw.Length;
 
-            //Set up the datastream and buffer, then start listening for messages from the client
-            NetworkConnection.SendBufferSize = 262144;
-            NetworkConnection.ReceiveBufferSize = 262144;
-            DataStream = NetworkConnection.GetStream();
-            DataBuffer = new byte[NetworkConnection.Available];
-            DataStream.BeginRead(DataBuffer, 0, DataBuffer.Length, ReadPacket, null);
+            frame[0] = (byte)(128 + (int)2);
+            if (length <= 125)
+            {
+                frame[1] = (byte)length;
+                indexStartRawData = 2;
+            }
+            else if (length >= 126 && length <= 65535)
+            {
+                frame[1] = (byte)126;
+                frame[2] = (byte)((length >> 8) & 255);
+                frame[3] = (byte)(length & 255);
+                indexStartRawData = 4;
+            }
+            else
+            {
+                frame[1] = (byte)127;
+                frame[2] = (byte)((length >> 56) & 255);
+                frame[3] = (byte)((length >> 48) & 255);
+                frame[4] = (byte)((length >> 40) & 255);
+                frame[5] = (byte)((length >> 32) & 255);
+                frame[6] = (byte)((length >> 24) & 255);
+                frame[7] = (byte)((length >> 16) & 255);
+                frame[8] = (byte)((length >> 8) & 255);
+                frame[9] = (byte)(length & 255);
+
+                indexStartRawData = 10;
+            }
+
+            response = new byte[indexStartRawData + length];
+
+            int i, responseIdx = 0;
+
+            //Add the frame bytes to the response
+            for (i = 0; i < indexStartRawData; i++)
+            {
+                response[responseIdx] = frame[i];
+                responseIdx++;
+            }
+
+            //Add the data bytes to the response
+            for (i = 0; i < length; i++)
+            {
+                response[responseIdx] = bytesRaw[i];
+                responseIdx++;
+            }
+
+            return response;
         }
 
         /// <summary>
@@ -174,22 +189,22 @@ namespace Server.Networking
             //Print an error message, flag the client as dead and exit the function if any exception occurs
             catch (IOException Exception)
             {
-                MessageLog.Print("Error reading packet size, connection is no longer open.");
-                ClientDead = true;
+                MessageLog.Error(Exception, "Error reading packet size, connection no longer open.");
+                ConnectionDead = true;
                 return;
             }
 
             //Copy the data buffer over into a new array and reset the buffer array for reading in the next packet
             byte[] PacketBuffer = new byte[PacketSize];
             Array.Copy(DataBuffer, PacketBuffer, PacketSize);
-            DataBuffer = new byte[NetworkConnection.Available];
+            DataBuffer = new byte[Connection.Available];
             //Immediately start reading packets again from the client back into the data buffer, making sure the connection is still open
             try { DataStream.BeginRead(DataBuffer, 0, DataBuffer.Length, ReadPacket, null); }
             //Print an error, flag the client as dead and exit the function if any exception occurs
             catch (IOException Exception)
             {
-                MessageLog.Print("ERROR re-registering packet reader function to start accepting packets from the client again.");
-                ClientDead = true;
+                MessageLog.Error(Exception, "Error registering packet reader function, client connection no longer open.");
+                ConnectionDead = true;
                 return;
             }
 
@@ -259,10 +274,10 @@ namespace Server.Networking
                 //If the FinalMessage value comes through as "\u0003?" then the connection has been closed from the client side, so we need to set
                 //them as dead so they get cleaned up by the simulation
                 if (FinalMessage == "\u0003?")
-                    ClientDead = true;
+                    ConnectionDead = true;
                 //Otherwise we just pass the message onto the packet handler as normal so it can be processed accordingly
                 else
-                    PacketHandler.ReadClientPacket(NetworkID, FinalMessage);
+                    PacketHandler.ReadClientPacket(ClientID, FinalMessage);
             }
         }
 
@@ -298,95 +313,6 @@ namespace Server.Networking
 
             //Take note that we have completed upgrading this clients connection
             ConnectionUpgraded = true;
-        }
-
-        public void InitializePhysicsBody(Simulation WorldSimulation, Vector3 BodyLocation)
-        {
-            //Ignore trying to add any bodies who are already active
-            if (PhysicsActive)
-                return;
-
-            //Set the physics as active and add their body to the physics scene
-            PhysicsActive = true;
-            PhysicsShape = new Capsule(0.5f, 1);
-            ShapeIndex = WorldSimulation.Shapes.Add(PhysicsShape);
-            PhysicsDescription = new CollidableDescription(ShapeIndex, 0.1f);
-            PhysicsShape.ComputeInertia(1, out var Inertia);
-            ShapePose = new RigidPose(BodyLocation, Quaternion.Identity);
-            ActivityDescription = new BodyActivityDescription(0.01f);
-            PhysicsBody = BodyDescription.CreateDynamic(ShapePose, Inertia, PhysicsDescription, ActivityDescription);
-            BodyHandle = WorldSimulation.Bodies.Add(PhysicsBody);
-        }
-
-        public void RemovePhysicsBody(Simulation WorldSimulation)
-        {
-            //Ignore trying to remove any bodies who arent active
-            if (!PhysicsActive)
-                return;
-
-            //Set the physics as inactive and remove their body from the physics scene
-            PhysicsActive = false;
-            WorldSimulation.Bodies.Remove(BodyHandle);
-            WorldSimulation.Shapes.Remove(ShapeIndex);
-        }
-
-        //Frames the message correctly so it can be sent to the client
-        private static byte[] GetFrameFromString(string Message)
-        {
-            byte[] response;
-            byte[] bytesRaw = Encoding.Default.GetBytes(Message);
-            byte[] frame = new byte[10];
-
-            int indexStartRawData = -1;
-            int length = bytesRaw.Length;
-
-            frame[0] = (byte)(128 + (int)2);
-            if (length <= 125)
-            {
-                frame[1] = (byte)length;
-                indexStartRawData = 2;
-            }
-            else if (length >= 126 && length <= 65535)
-            {
-                frame[1] = (byte)126;
-                frame[2] = (byte)((length >> 8) & 255);
-                frame[3] = (byte)(length & 255);
-                indexStartRawData = 4;
-            }
-            else
-            {
-                frame[1] = (byte)127;
-                frame[2] = (byte)((length >> 56) & 255);
-                frame[3] = (byte)((length >> 48) & 255);
-                frame[4] = (byte)((length >> 40) & 255);
-                frame[5] = (byte)((length >> 32) & 255);
-                frame[6] = (byte)((length >> 24) & 255);
-                frame[7] = (byte)((length >> 16) & 255);
-                frame[8] = (byte)((length >> 8) & 255);
-                frame[9] = (byte)(length & 255);
-
-                indexStartRawData = 10;
-            }
-
-            response = new byte[indexStartRawData + length];
-
-            int i, responseIdx = 0;
-
-            //Add the frame bytes to the response
-            for (i = 0; i < indexStartRawData; i++)
-            {
-                response[responseIdx] = frame[i];
-                responseIdx++;
-            }
-
-            //Add the data bytes to the response
-            for (i = 0; i < length; i++)
-            {
-                response[responseIdx] = bytesRaw[i];
-                responseIdx++;
-            }
-
-            return response;
         }
     }
 }

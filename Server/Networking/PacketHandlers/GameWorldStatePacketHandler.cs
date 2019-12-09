@@ -32,7 +32,7 @@ namespace Server.Networking.PacketHandlers
             CharacterData CharacterData = CharactersDatabase.GetCharacterData(CharacterName);
 
             //Fetch this ClientConnection and make sure they were able to be found
-            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            ClientConnection Client = ConnectionManager.GetClient(ClientID);
             if(Client == null)
             {
                 MessageLog.Print("ERROR: Client not found, unable to handle enter world request.");
@@ -65,7 +65,7 @@ namespace Server.Networking.PacketHandlers
             CommunicationLog.LogIn(ClientID + " new player ready alert");
 
             //Fetch this ClientConnection and make sure they were able to be found
-            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            ClientConnection Client = ConnectionManager.GetClient(ClientID);
             if (Client == null)
             {
                 MessageLog.Print("ERROR: Client not found, unable to handle new player ready alert.");
@@ -73,7 +73,7 @@ namespace Server.Networking.PacketHandlers
             }
 
             //Flag them as needing to be added into the game world
-            Client.WaitingToEnter = true;
+            Client.Character.WaitingToEnter = true;
         }
     }
 }

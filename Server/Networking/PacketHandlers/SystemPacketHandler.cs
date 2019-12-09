@@ -28,7 +28,7 @@ namespace Server.Networking.PacketHandlers
             CommunicationLog.LogIn(ClientID + " Missed Packets Request.");
 
             //Find the client who sent this alert, and the number of the packet they want sent back to them
-            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            ClientConnection Client = ConnectionManager.GetClient(ClientID);
             if(Client == null)
             {
                 MessageLog.Print("ERROR: Client " + ClientID + " not found, unable to handle missing packets request.");
@@ -38,8 +38,8 @@ namespace Server.Networking.PacketHandlers
 
             //Flag the client as needing to have a bunch of missing packets resent back to it again
             Client.PacketsToResend = true;
-            Client.ResendStartNumber = Packet.ReadInt();
-            MessageLog.Print("Client requested missing packets starting from packet #" + Client.ResendStartNumber);
+            Client.ResendFrom = Packet.ReadInt();
+            MessageLog.Print("Client requested missing packets starting from packet #" + Client.ResendFrom);
         }
 
         //Retrives values for an account login request
@@ -54,7 +54,7 @@ namespace Server.Networking.PacketHandlers
         public static void HandleStillConnectedReply(int ClientID, ref NetworkPacket Packet)
         {
             CommunicationLog.LogIn(ClientID + " Still Connected Reply");
-            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            ClientConnection Client = ConnectionManager.GetClient(ClientID);
             if (Client == null)
             {
                 MessageLog.Print("ERROR: Client " + ClientID + " not found, unable to handle still connected reply.");

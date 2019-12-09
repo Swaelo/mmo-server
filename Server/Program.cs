@@ -62,7 +62,7 @@ namespace Server
             ItemManager.InitializeItemManager();
 
             //Start listening for new network client connections
-            ConnectionManager.InitializeManager(ServerIP);
+            ConnectionManager.Initialize(ServerIP);
 
             //Open a new window for rendering so we can see whats going on while the server is up
             ApplicationWindow = new Window("Swaelo Server 2.0", new Int2(1024, 768), WindowMode.Windowed); // new Int2(1700, 100), WindowMode.Windowed);

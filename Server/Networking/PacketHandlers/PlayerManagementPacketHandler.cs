@@ -42,7 +42,7 @@ namespace Server.Networking.PacketHandlers
             Quaternion Rotation = Packet.ReadQuaternion();
 
             //Try getting the ClientConnection object who sent this packet to us
-            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            ClientConnection Client = ConnectionManager.GetClient(ClientID);
 
             //Display an erro and exit from the function if they couldnt be found
             if(Client == null)
@@ -62,7 +62,7 @@ namespace Server.Networking.PacketHandlers
             //Share these new values to all the other clients in the game right now
             List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(ClientID);
             foreach (ClientConnection OtherClient in OtherClients)
-                PlayerManagementPacketSender.SendUpdateRemotePlayer(OtherClient.NetworkID, Client.Character);
+                PlayerManagementPacketSender.SendUpdateRemotePlayer(OtherClient.ClientID, Client.Character);
         }
 
         //Retrives values for an account login request
@@ -93,7 +93,7 @@ namespace Server.Networking.PacketHandlers
             float YRotation = Packet.ReadFloat();
 
             //Try getting the ClientConnection object who sent this packet to us
-            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            ClientConnection Client = ConnectionManager.GetClient(ClientID);
 
             //Display an error and exit from the function if they couldnt be found
             if(Client == null)
@@ -121,7 +121,7 @@ namespace Server.Networking.PacketHandlers
         {
             CommunicationLog.LogIn(ClientID + " Play Animation Alert");
             string AnimationName = Packet.ReadString();
-            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            ClientConnection Client = ConnectionManager.GetClient(ClientID);
             if(Client == null)
             {
                 MessageLog.Print("ERROR: Client not found, unable to handle play animation alert.");
@@ -129,7 +129,7 @@ namespace Server.Networking.PacketHandlers
             }
             List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(ClientID);
             foreach (ClientConnection OtherClient in OtherClients)
-                PlayerManagementPacketSender.SendPlayAnimationAlert(OtherClient.NetworkID, Client.Character.Name, AnimationName);
+                PlayerManagementPacketSender.SendPlayAnimationAlert(OtherClient.ClientID, Client.Character.Name, AnimationName);
         }
     }
 }

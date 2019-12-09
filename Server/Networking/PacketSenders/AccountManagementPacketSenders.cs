@@ -67,7 +67,7 @@ namespace Server.Networking.PacketSenders
             CommunicationLog.LogOut(ClientID + " Character Data Reply.");
 
             //Make sure we are still connected to this client
-            ClientConnection Client = ConnectionManager.GetClientConnection(ClientID);
+            ClientConnection Client = ConnectionManager.GetClient(ClientID);
             if(Client == null)
             {
                 //Cancel the reply if the clients connection couldnt be found
