@@ -13,6 +13,15 @@ namespace Server.Networking.PacketHandlers
 {
     public static class PlayerCommunicationPacketHandler
     {
+        //Retrives values for an account login request
+        public static NetworkPacket GetValuesClientChatMessage(NetworkPacket ReadFrom)
+        {
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ClientPacketType.PlayerChatMessage);
+            Packet.WriteString(ReadFrom.ReadString());
+            return Packet;
+        }
+
         public static void HandleClientChatMessage(int ClientID, ref NetworkPacket Packet)
         {
             CommunicationLog.LogIn(ClientID + " chat message");

@@ -103,25 +103,11 @@ namespace Server.World
                 if (!CommandInputField.InputEnabled)
                     ObservationCamera.UpdateCamera(UserControls, UserInput, DeltaTime);
 
-                //Toggle packet queue with G key
+                //Toggle packet transmission with G
                 if(UserInput.WasPushed(Key.G))
                 {
-                    //Tell all connected players to kill their character
-                    foreach (ClientConnection ActiveClient in ClientSubsetFinder.GetInGameClients())
-                        CombatPacketSenders.SendLocalPlayerDead(ActiveClient.NetworkID);
-
-                    //PacketQueueEnabled = !PacketQueueEnabled;
-                    //MessageLog.Print("Packet Queue " + (PacketQueueEnabled ? "Enabled." : "Disabled."));
-                }
-
-                //Respawn all dead players with H key
-                if(UserInput.WasPushed(Key.H))
-                {
-                    foreach (ClientConnection ActiveClient in ClientSubsetFinder.GetInGameClients())
-                    {
-                        ActiveClient.Character.SetDefaultValues();
-                        CombatPacketSenders.SendLocalPlayerRespawn(ActiveClient.NetworkID, ActiveClient.Character);
-                    }
+                    PacketQueueEnabled = !PacketQueueEnabled;
+                    MessageLog.Print("Packet Queue " + (PacketQueueEnabled ? "Enabled." : "Disabled."));
                 }
             }
             else
@@ -152,7 +138,7 @@ namespace Server.World
             //Add any new clients characters into the game world who have recently logged in
             AddNewClients();
 
-            PacketQueue.UpdateQueue(DeltaTime);
+            PacketQueue.UpdateQueue(DeltaTime, PacketQueueEnabled);
 
             //Simulate physics and record frame data for performance monitor
             WorldSimulation.Timestep(DeltaTime, ThreadDispatcher);

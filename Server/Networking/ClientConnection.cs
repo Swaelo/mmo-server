@@ -44,22 +44,6 @@ namespace Server.Networking
         //Flag set when the player is dead and they have clicked the respawn button
         public bool WaitingToRespawn = false;
 
-        //If we miss some packets from a client, we need to store any later packets in the dictionary until we receive the ones that are missing, before all can be processed
-        public Dictionary<int, NetworkPacket> WaitingToProcess = new Dictionary<int, NetworkPacket>();
-        public bool WaitingForMissingPackets = false;   //Set when we detect we have missed some packets, disabled once all have been received and processed to catch back up again
-        public int FirstMissingPacketNumber;    //The packet order number of the first missing packet that we are currently waiting for
-        public int NewestPacketWaitingToProcess;    //The order number of the newest packet that is waiting to be processed (newer packets may be received and added here before we
-        //receive the older missing packets back from the client that we requested
-        public int NextOutgoingPacketNumber = 0;    //Order number for the next packet to be sent to this client
-        public int GetNextOutgoingPacketNumber() { NextOutgoingPacketNumber++; return NextOutgoingPacketNumber; }
-        private Dictionary<int, NetworkPacket> PreviousPackets = new Dictionary<int, NetworkPacket>();  //Dictionary storing the last 25 packets sent to this client
-        public int LastPacketReceived = 0;    //Order number for the next packet to be recieved from this client
-
-        public Dictionary<int, NetworkPacket> PacketQueue = new Dictionary<int, NetworkPacket>();
-        public Dictionary<int, NetworkPacket> SecondaryPacketQueue = new Dictionary<int, NetworkPacket>();
-        public Dictionary<int, NetworkPacket> PacketHistory = new Dictionary<int, NetworkPacket>();
-        private bool MainQueueTransmitting = false;
-
         //Account / Character settings
         public bool WaitingToEnter = false; //Set when client is ready to enter the game, any with this flag set are added into the physics scene at the start of each update
         public bool InGame = false; //Tracks if each client is actually in the game world with one of their characters, flagged after we have spawned them into the physics scene
@@ -72,14 +56,88 @@ namespace Server.Networking
         public CollidableDescription PhysicsDescription;    //Description of the clients character collider physics object in the world simulation
         public BodyDescription PhysicsBody; //The world simulation physics object for this clients character controller when they are in the game world
         public int BodyHandle = -1; //The reference handle pointing to this clients world simulation physics object for this clients character controller
-
-        //Returns a NetworkPacket from the list of previous packets sent to this client
-        public NetworkPacket GetPreviousPacket(int PacketOrderNumber)
+        
+        //Order number for the next packet to be sent to this client
+        private int MostPreviousPacketNumber = 0;
+        public int GetNextOutgoingPacketNumber() { return ++MostPreviousPacketNumber; }
+        //Current set of packets waiting to be transmitted, and the total set of packets that have been sent to this client (maximum previous 150 packets)
+        private Dictionary<int, NetworkPacket> OutgoingPacketQueue = new Dictionary<int, NetworkPacket>();
+        private Dictionary<int, NetworkPacket> PacketHistory = new Dictionary<int, NetworkPacket>();
+        //Set when this client has told us they are missing some packets and need them to be resent back again
+        public bool PacketsToResend = false;
+        public int ResendStartNumber = -1;
+        //Packet order number last recieved from this client
+        public int LastPacketNumberRecieved = 0;
+        
+        //Adds a NetworkPacket to the outgoing packets queue
+        public void QueuePacket(NetworkPacket Packet)
         {
-            //Return null if the packet cannot be found in the dictionary
-            if (!PreviousPackets.ContainsKey(PacketOrderNumber))
-                return null;
-            return PreviousPackets[PacketOrderNumber];
+            //Add the order number to the front of the packet data
+            int OrderNumber = GetNextOutgoingPacketNumber();
+            Packet.AddPacketOrderNumber(OrderNumber);
+
+            //Add it into the queue for transmission later, and into the total history list also
+            OutgoingPacketQueue.Add(OrderNumber, Packet);
+            PacketHistory.Add(OrderNumber, Packet);
+
+            //Maintain a maximum history of 150 previous packets
+            if (PacketHistory.Count > 150)
+                PacketHistory.Remove(OrderNumber - 150);
+        }
+
+        //Copy all outgoing packets into a brand new array, then transmit them all to the client (or, resend all the packets since the last missing packet if they requested that)
+        public void TransmitPackets(bool Transmit)
+        {
+            //Copy the PacketQueue into a new array, then reset it so packets can keep getting queued into it
+            Dictionary<int, NetworkPacket> TransmissionQueue = new Dictionary<int, NetworkPacket>(OutgoingPacketQueue);
+            OutgoingPacketQueue.Clear();
+
+            //Create a new string we will fill with the data of every packet in the transmission queue so there all sent at once
+            string TotalData = "";
+
+            //Append the data of each packet in the transmission queue if we dont have any missing packets to resent
+            if(!PacketsToResend)
+            {
+                foreach (KeyValuePair<int, NetworkPacket> Packet in TransmissionQueue)
+                    TotalData += Packet.Value.PacketData;
+            }
+            //Otherwise we append the data of every packet from the first the client is missing, to the last one in the dictionary
+            else
+            {
+                //Check the missing packets that are being requested are still being stored in memory
+                if(!PacketHistory.ContainsKey(ResendStartNumber))
+                {
+                    //Print an error and close / clean up this clients connection if they request packets outside of the current history
+                    MessageLog.Print("ERROR: Client requesting packets outside of history, closing their connection.");
+                    ClientDead = true;
+                    return;
+                }
+
+                //Loop from the first missing packet number, all the way to the most previously queued packet and add all of their data into the string
+                for (int i = ResendStartNumber; i < MostPreviousPacketNumber + 1; i++)
+                    TotalData += PacketHistory[i].PacketData;
+
+                //No more packets to resent
+                PacketsToResend = false;
+            }
+
+            //Now transmit all the data if theres anything to send
+            if(TotalData != "" && Transmit)
+            {
+                //Frame the data, convert to bytes and compute the total payload size
+                byte[] PacketData = GetFrameFromString(TotalData);
+                int PayloadLength = Encoding.UTF8.GetString(PacketData).Length;
+
+                //Transmit this data to the client, making sure the connection is still active
+                try { DataStream.BeginWrite(PacketData, 0, PayloadLength, null, null); }
+                catch(IOException Exception)
+                {
+                    //Print an error and close the clients connection if its no longer open
+                    MessageLog.Print("ERROR transmitting packets to client #" + NetworkID + ", connection no longer open.");
+                    ClientDead = true;
+                    return;
+                }
+            }
         }
 
         /// <summary>
@@ -113,7 +171,7 @@ namespace Server.Networking
             int PacketSize = -1;
             try { PacketSize = DataStream.EndRead(Result); }
             //Print an error message, flag the client as dead and exit the function if any exception occurs
-            catch(IOException Exception)
+            catch (IOException Exception)
             {
                 MessageLog.Print("Error reading packet size, connection is no longer open.");
                 ClientDead = true;
@@ -127,7 +185,7 @@ namespace Server.Networking
             //Immediately start reading packets again from the client back into the data buffer, making sure the connection is still open
             try { DataStream.BeginRead(DataBuffer, 0, DataBuffer.Length, ReadPacket, null); }
             //Print an error, flag the client as dead and exit the function if any exception occurs
-            catch(IOException Exception)
+            catch (IOException Exception)
             {
                 MessageLog.Print("ERROR re-registering packet reader function to start accepting packets from the client again.");
                 ClientDead = true;
@@ -138,7 +196,7 @@ namespace Server.Networking
             if (!ConnectionUpgraded)
                 UpgradeConnection(PacketBuffer);
             //Otherwise we need to extract the packet data from the buffer and decode it so we can read and process the messages within
-            else if(PacketSize > 0)
+            else if (PacketSize > 0)
             {
                 //Visit https://tools.ietf.org/html/rfc6455#section-5.2 for more information on how this decoding works
                 //Lets first extract the data from the first byte
@@ -253,67 +311,6 @@ namespace Server.Networking
             BodyHandle = WorldSimulation.Bodies.Add(PhysicsBody);
         }
 
-        public void SendPacket(string PacketData)
-        {
-            NetworkPacket NewPacket = new NetworkPacket(PacketData);
-            SendPacket(NewPacket);
-        }
-
-        //Transmits a packet to this client, and stores it in the list of previously sent packets
-        public void SendPacket(NetworkPacket Packet)
-        {
-            //Check if we should be transmitting packets right now
-            if (!Program.World.PacketQueueEnabled)
-                return;
-
-            //Frame the packet data and convert into a byte array ready for transmission
-            byte[] PacketData = GetFrameFromString(Packet.PacketData);
-            string PacketString = Encoding.UTF8.GetString(PacketData);
-
-            //Now try sending to the client, making sure the connection is still active
-            try { DataStream.BeginWrite(PacketData, 0, PacketString.Length, null, null); }
-            catch(IOException Exception)
-            {
-                MessageLog.Error(Exception, "Error sending packet to dead client connection, marking them for cleanup.");
-                ClientDead = true;
-            }
-        }
-
-        //Transmits a range of missing packets back to the client who requested them to be resent
-        public void ResendMissingPackets(ClientConnection Client, int FirstMissingPacketNumber, int LastMissingPacketNumber)
-        {
-            //First check that these missing packets are still stored in memory
-            if(!PreviousPackets.ContainsKey(FirstMissingPacketNumber))
-            {
-                //Log an error and kick the player from the server
-                MessageLog.Print("ERROR: Client requested missing packets no longer stored in memory, they must reconnect to continue playing.");
-                SystemPacketSender.SendKickedFromServer(Client.NetworkID, "Missed packets no longer kept in memory, you must reconnect to continue playing.");
-                //Mark the client as dead so they get cleaned up and removed from everyones gameworld
-                Client.ClientDead = true;
-                return;
-            }
-
-            //Combine the data of every missing packet into a single string object
-            string MissingPacketsData = "";
-            for (int i = FirstMissingPacketNumber; i < LastMissingPacketNumber + 1; i++)
-            {
-                MissingPacketsData += PreviousPackets[i].PacketData;
-                MessageLog.Print("Sending missing packet #" + i + " back to client.");
-            }
-
-            //Frame the data and convert to binary, then gert the total payload size
-            byte[] PacketData = GetFrameFromString(MissingPacketsData);
-            int PayloadSize = Encoding.UTF8.GetString(PacketData).Length;
-
-            //Send the missing packets to the client
-            try { DataStream.BeginWrite(PacketData, 0, PayloadSize, null, null); }
-            catch (IOException Exception)
-            {
-                MessageLog.Error(Exception, "Error sending missing packets back to now dead client, marking for cleanup.");
-                ClientDead = true;
-            }
-        }
-
         //Frames the message correctly so it can be sent to the client
         private static byte[] GetFrameFromString(string Message)
         {
@@ -357,76 +354,20 @@ namespace Server.Networking
             int i, responseIdx = 0;
 
             //Add the frame bytes to the response
-            for(i = 0; i < indexStartRawData; i++)
+            for (i = 0; i < indexStartRawData; i++)
             {
                 response[responseIdx] = frame[i];
                 responseIdx++;
             }
 
             //Add the data bytes to the response
-            for(i = 0; i < length; i++)
+            for (i = 0; i < length; i++)
             {
                 response[responseIdx] = bytesRaw[i];
                 responseIdx++;
             }
 
             return response;
-        }
-
-        //Adds a NetworkPacket to the outgoing packets queue
-        public void QueuePacket(NetworkPacket Packet)
-        {
-            //Add the next packet order number onto the front of the packets data
-            int OrderNumber = GetNextOutgoingPacketNumber();
-            Packet.AddPacketOrderNumber(OrderNumber);
-
-            //Add it into whatever queue we should be using
-            if (!MainQueueTransmitting)
-                PacketQueue.Add(OrderNumber, Packet);
-            else
-                SecondaryPacketQueue.Add(OrderNumber, Packet);
-
-            //Store all packets in the history dictionary by their order numbers
-            PacketHistory.Add(OrderNumber, Packet);
-
-            //Maintain a maximum history size of 150 packets
-            if (PacketHistory.Count > 150)
-                PacketHistory.Remove(OrderNumber - 150);
-        }
-
-        //Use the secondary queue while we transmit all packets to the client, then change back to the main queue afterwards
-        public void TransmitPackets()
-        {
-            //Reset the secondary queue then enable the flag so it gets used while be transmit the others
-            SecondaryPacketQueue.Clear();
-            MainQueueTransmitting = true;
-
-            //Create a new string, and combine the data of every packet in the main queue into it
-            string TotalData = "";
-            foreach (KeyValuePair<int, NetworkPacket> Packet in PacketQueue)
-                TotalData += Packet.Value.PacketData;
-
-            //Transmit the total set of data if theres some to be sent
-            if(TotalData != "")
-            {
-                //Frame the packet data and convert to bytes array, compute the total payload size
-                byte[] PacketData = GetFrameFromString(TotalData);
-                int PayloadLength = Encoding.UTF8.GetString(PacketData).Length;
-
-                //Try sending to the client, making sure the connection is still active
-                try { DataStream.BeginWrite(PacketData, 0, PayloadLength, null, null); }
-                catch(IOException Exception)
-                {
-                    MessageLog.Error(Exception, "Error sending packet to dead client connections, marking them for cleanup.");
-                    ClientDead = true;
-                }
-            }
-
-            //Reset the MainQueue, copy anything in SecondaryQueue over to it, then reenable the main queue again
-            PacketQueue.Clear();
-            foreach (KeyValuePair<int, NetworkPacket> Packet in SecondaryPacketQueue)
-                PacketQueue.Add(Packet.Key, Packet.Value);
-            MainQueueTransmitting = false;
         }
     }
 }

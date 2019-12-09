@@ -10,6 +10,14 @@ namespace Server.Networking.PacketHandlers
 {
     public static class CombatPacketHandler
     {
+        //Retrives values for an account login request
+        public static NetworkPacket GetValuesPlayerAttackAlert(NetworkPacket ReadFrom)
+        {
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ClientPacketType.PlayerAttackAlert);
+            return Packet;
+        }
+
         //Handles alert from player letting us know they have performed an attack, checks if it hits anyone then updated their health
         public static void HandlePlayerAttackAlert(int ClientID, ref NetworkPacket Packet)
         {
@@ -28,6 +36,14 @@ namespace Server.Networking.PacketHandlers
             //Flag the client as needing to perform an attack on the next physics update
             Client.AttackPerformed = true;
             Client.AttackPosition = Packet.ReadVector3();
+        }
+
+        //Retrives values for an account login request
+        public static NetworkPacket GetValuesPlayerRespawnRequest(NetworkPacket ReadFrom)
+        {
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ClientPacketType.PlayerRespawnRequest);
+            return Packet;
         }
 
         //Handles request from the player asking to have their character respawned

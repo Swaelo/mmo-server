@@ -28,11 +28,10 @@ public enum ClientPacketType
     //System Packet Types
     MissedPacketsRequest = 12,
     StillConnectedReply = 13,
-    OutOfSyncAlert = 14,
 
     //Combat
-    PlayerAttackAlert = 15,
-    PlayerRespawnRequest = 16
+    PlayerAttackAlert = 14,
+    PlayerRespawnRequest = 15
 };
 
 public enum ServerPacketType

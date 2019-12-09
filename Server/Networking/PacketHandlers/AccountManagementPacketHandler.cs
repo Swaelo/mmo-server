@@ -14,6 +14,16 @@ namespace Server.Networking.PacketHandlers
 {
     public static class AccountManagementPacketHandler
     {
+        //Retrives values for an account login request
+        public static NetworkPacket GetValuesAccountLoginRequest(NetworkPacket ReadFrom)
+        {
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ClientPacketType.AccountLoginRequest);
+            Packet.WriteString(ReadFrom.ReadString());
+            Packet.WriteString(ReadFrom.ReadString());
+            return Packet;
+        }
+
         //Handles a users account login request
         public static void HandleAccountLoginRequest(int ClientID, ref NetworkPacket Packet)
         {
@@ -66,6 +76,14 @@ namespace Server.Networking.PacketHandlers
             AccountManagementPacketSenders.SendAccountLoginReply(ClientID, true, "Login Request Granted.");
         }
 
+        //Retrives values for an account login request
+        public static NetworkPacket GetValuesAccountLogoutAlert(NetworkPacket ReadFrom)
+        {
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ClientPacketType.AccountLogoutAlert);
+            return Packet;
+        }
+
         //Handles a users account logout alert
         public static void HandleAccountLogoutAlert(int ClientID, ref NetworkPacket Packet)
         {
@@ -77,6 +95,16 @@ namespace Server.Networking.PacketHandlers
 
             //Clear them as being logged in to any account
             Client.Account = new AccountData();
+        }
+
+        //Retrives values for an account login request
+        public static NetworkPacket GetValuesAccountRegisterRequest(NetworkPacket ReadFrom)
+        {
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ClientPacketType.AccountRegistrationRequest);
+            Packet.WriteString(ReadFrom.ReadString());
+            Packet.WriteString(ReadFrom.ReadString());
+            return Packet;
         }
 
         //Handles a users new user account registration request
@@ -125,6 +153,14 @@ namespace Server.Networking.PacketHandlers
             AccountManagementPacketSenders.SendAccountRegistrationReply(ClientID, true, "Account Registered Successfully.");
         }
 
+        //Retrives values for an account login request
+        public static NetworkPacket GetValuesCharacterDataRequest(NetworkPacket ReadFrom)
+        {
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ClientPacketType.CharacterDataRequest);
+            return Packet;
+        }
+
         //Handles a users character data request
         public static void HandleCharacterDataRequest(int ClientID, ref NetworkPacket Packet)
         {
@@ -142,6 +178,15 @@ namespace Server.Networking.PacketHandlers
 
             //Fulfil the users request
             AccountManagementPacketSenders.SendCharacterDataReply(ClientID, Client.Account.Username);
+        }
+
+        //Retrives values for an account login request
+        public static NetworkPacket GetValuesCreateCharacterRequest(NetworkPacket ReadFrom)
+        {
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ClientPacketType.CharacterCreationRequest);
+            Packet.WriteString(ReadFrom.ReadString());
+            return Packet;
         }
 
         //Handles a users character creation request

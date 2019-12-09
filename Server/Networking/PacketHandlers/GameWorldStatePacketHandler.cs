@@ -13,6 +13,15 @@ namespace Server.Networking.PacketHandlers
 {
     public static class GameWorldStatePacketHandler
     {
+        //Retrives values for an account login request
+        public static NetworkPacket GetValuesEnterWorldRequest(NetworkPacket ReadFrom)
+        {
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ClientPacketType.EnterWorldRequest);
+            Packet.WriteString(ReadFrom.ReadString());
+            return Packet;
+        }
+
         //When a client wants to enter the game world, we need to send them a bunch of information to set up their game world before they can enter
         public static void HandleEnterWorldRequest(int ClientID, ref NetworkPacket Packet)
         {
@@ -40,6 +49,14 @@ namespace Server.Networking.PacketHandlers
             GameWorldStatePacketSender.SendInventoryContents(ClientID, CharacterName);
             GameWorldStatePacketSender.SendEquippedItems(ClientID, CharacterName);
             GameWorldStatePacketSender.SendSocketedAbilities(ClientID, CharacterName);
+        }
+
+        //Retrives values for an account login request
+        public static NetworkPacket GetValuesNewPlayerReady(NetworkPacket ReadFrom)
+        {
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ClientPacketType.PlayerReadyAlert);
+            return Packet;
         }
 
         //When a client has finished receiving all the setup information they will let us know when they are entering into the game world finally

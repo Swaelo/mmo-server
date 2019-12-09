@@ -15,6 +15,17 @@ namespace Server.Networking.PacketHandlers
 {
     public class PlayerManagementPacketHandler
     {
+        //Retrives values for an account login request
+        public static NetworkPacket GetValuesPlayerCharacterUpdate(NetworkPacket ReadFrom)
+        {
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ClientPacketType.LocalPlayerCharacterUpdate);
+            Packet.WriteVector3(ReadFrom.ReadVector3());
+            Packet.WriteVector3(ReadFrom.ReadVector3());
+            Packet.WriteQuaternion(ReadFrom.ReadQuaternion());
+            return Packet;
+        }
+
         /// <summary>
         /// Handles a client players updated character values to be shared all across the network
         /// </summary>
@@ -54,6 +65,17 @@ namespace Server.Networking.PacketHandlers
                 PlayerManagementPacketSender.SendUpdateRemotePlayer(OtherClient.NetworkID, Client.Character);
         }
 
+        //Retrives values for an account login request
+        public static NetworkPacket GetValuesPlayerCameraUpdate(NetworkPacket ReadFrom)
+        {
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ClientPacketType.LocalPlayerCameraUpdate);
+            Packet.WriteFloat(ReadFrom.ReadFloat());
+            Packet.WriteFloat(ReadFrom.ReadFloat());
+            Packet.WriteFloat(ReadFrom.ReadFloat());
+            return Packet;
+        }
+
         /// <summary>
         /// Handles a client players updated camera values to be stored in their ClientConnection, until
         /// they either leave or the server is being shutdown, to then be backed up into the database
@@ -84,6 +106,15 @@ namespace Server.Networking.PacketHandlers
             Client.Character.CameraZoom = Zoom;
             Client.Character.CameraXRotation = XRotation;
             Client.Character.CameraYRotation = YRotation;
+        }
+
+        //Retrives values for an account login request
+        public static NetworkPacket GetValuesPlayAnimationAlert(NetworkPacket ReadFrom)
+        {
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ClientPacketType.LocalPlayerPlayAnimationAlert);
+            Packet.WriteString(ReadFrom.ReadString());
+            return Packet;
         }
 
         public static void HandlePlayAnimationAlert(int ClientID, ref NetworkPacket Packet)

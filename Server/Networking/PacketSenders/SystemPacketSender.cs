@@ -26,13 +26,13 @@ namespace Server.Networking.PacketSenders
         /// //Sends a message to a client letting them know we have missed some packets and need them to be resent to us again
         /// </summary>
         /// <param name="ClientID">NetworkID of the target client</param>
-        /// <param name="NextExpectedPacketNumber">Number of the last packet recieved from this client</param>
-        public static void SendMissingPacketsRequest(int ClientID, int NextExpectedPacketNumber)
+        /// <param name="FirstMissedPacket">Number of the first packet you need resent, all the way to the last</param>
+        public static void SendMissingPacketsRequest(int ClientID, int FirstMissedPacket)
         {
             CommunicationLog.LogOut(ClientID + " Missing Packets Request.");
             NetworkPacket Packet = new NetworkPacket();
             Packet.WriteType(ServerPacketType.MissingPacketsRequest);
-            Packet.WriteInt(NextExpectedPacketNumber);
+            Packet.WriteInt(FirstMissedPacket);
             PacketQueue.QueuePacket(ClientID, Packet);
         }
 
