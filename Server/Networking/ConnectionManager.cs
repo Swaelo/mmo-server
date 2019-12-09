@@ -140,7 +140,10 @@ namespace Server.Networking
                     //Check how much time has passed since we last heard from them, flag their connection as dead if too much time has passed
                     int LastHeard = Client.Value.LastCommunication.AgeInSeconds();
                     if (LastHeard >= ClientConnectionTimeout)
+                    {
+                        MessageLog.Print("Client " + Client.Value.NetworkID + " connection has been cleaned up as we havnt heard from them in a while.");
                         Client.Value.ClientDead = true;
+                    }
                 }
             }
         }

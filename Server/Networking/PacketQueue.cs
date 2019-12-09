@@ -11,8 +11,8 @@ namespace Server.Networking
 {
     public static class PacketQueue
     {
-        private static float CommunicationInterval = 0.1f;    //How often the outgoing packets list will be transmitted to each client
-        private static float NextCommunication = 0.1f;    //Time remaining before we next transmitted all queued packets to their clients
+        private static float CommunicationInterval = 0.5f;    //How often the outgoing packets list will be transmitted to each client
+        private static float NextCommunication = 0.5f;    //Time remaining before we next transmitted all queued packets to their clients
 
         //Adds a network packet onto one of the clients outgoing packet queues
         public static void QueuePacket(int ClientID, NetworkPacket Packet)
@@ -43,12 +43,12 @@ namespace Server.Networking
         //Transmits the packets in all clients outgoing queues to them
         private static void TransmitPackets()
         {
-            //Reset the interval timer
-            NextCommunication = CommunicationInterval;
-
             //Loop through all the active clients in the game and have each one sent their queue
             foreach (ClientConnection Client in ConnectionManager.GetClientConnections())
                 Client.TransmitPackets();
+
+            //Re-enable the queue updater and reset the communication interval timer
+            NextCommunication = CommunicationInterval;
         }
     }
 }

@@ -63,7 +63,10 @@ namespace Server.Networking
                 }
                 //If packets arrive out of order we tell the client what number we were expecting to receive next so everything since then gets resent
                 else
+                {
                     SystemPacketSender.SendMissingPacketsRequest(ClientID, ExpectedOrderNumber);
+                    return;
+                }
             }
         }
 

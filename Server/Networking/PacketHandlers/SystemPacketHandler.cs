@@ -35,9 +35,11 @@ namespace Server.Networking.PacketHandlers
                 return;
             }
 
+
             //Flag the client as needing to have a bunch of missing packets resent back to it again
             Client.PacketsToResend = true;
             Client.ResendStartNumber = Packet.ReadInt();
+            MessageLog.Print("Client requested missing packets starting from packet #" + Client.ResendStartNumber);
         }
 
         //Retrives values for an account login request
