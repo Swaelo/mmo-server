@@ -57,7 +57,7 @@ namespace Server.Networking.PacketSenders
         /// </summary>
         /// <param name="ClientID">NetworkID of the target client</param>
         /// <param name="CharacterName">Name of the character to be removed</param>
-        public static void SendRemoveRemotePlayer(int ClientID, string CharacterName)
+        public static void SendRemoveRemotePlayer(int ClientID, string CharacterName, bool IsAlive)
         {
             CommunicationLog.LogOut(ClientID + " remove other player");
 
@@ -67,6 +67,7 @@ namespace Server.Networking.PacketSenders
             //Write all the relevant data into the network packet
             Packet.WriteType(ServerPacketType.RemoveRemotePlayer);
             Packet.WriteString(CharacterName);
+            Packet.WriteBool(IsAlive);
 
             //Add this packet to the target clients outgoing packet queue
             PacketQueue.QueuePacket(ClientID, Packet);

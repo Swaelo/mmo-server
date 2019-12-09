@@ -554,7 +554,7 @@ namespace Server.Interface
             //Tell everyone else to remove the client from their games
             List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(Client.NetworkID);
             foreach (ClientConnection OtherClient in OtherClients)
-                PlayerManagementPacketSender.SendRemoveRemotePlayer(OtherClient.NetworkID, Client.Character.Name);
+                PlayerManagementPacketSender.SendRemoveRemotePlayer(OtherClient.NetworkID, Client.Character.Name, Client.Character.IsAlive);
         }
 
         //Tries using the command arguments for performing a character info search
