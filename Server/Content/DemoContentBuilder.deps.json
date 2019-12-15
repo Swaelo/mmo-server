@@ -1,0 +1,191 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v2.1",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v2.1": {
+      "DemoContentBuilder/1.0.0": {
+        "dependencies": {
+          "BepuUtilities": "2.0.0",
+          "CjClutter.ObjLoader": "1.0.0",
+          "DemoContentLoader": "1.0.0",
+          "SharpDX": "4.2.0",
+          "SharpDX.D3DCompiler": "4.2.0",
+          "SharpFontStandard": "4.0.1",
+          "SixLabors.ImageSharp": "1.0.0-beta0007"
+        },
+        "runtime": {
+          "DemoContentBuilder.dll": {}
+        }
+      },
+      "CjClutter.ObjLoader/1.0.0": {
+        "runtime": {
+          "lib/netstandard1.4/CjClutter.ObjLoader.Loader.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Microsoft.Net.Compilers.Toolset/3.1.0": {},
+      "SharpDX/4.2.0": {
+        "runtime": {
+          "lib/netstandard1.1/SharpDX.dll": {
+            "assemblyVersion": "4.2.0.0",
+            "fileVersion": "4.2.0.0"
+          }
+        }
+      },
+      "SharpDX.D3DCompiler/4.2.0": {
+        "dependencies": {
+          "SharpDX": "4.2.0"
+        },
+        "runtime": {
+          "lib/netstandard1.1/SharpDX.D3DCompiler.dll": {
+            "assemblyVersion": "4.2.0.0",
+            "fileVersion": "4.2.0.0"
+          }
+        }
+      },
+      "SharpFontStandard/4.0.1": {
+        "runtime": {
+          "lib/netstandard1.2/SharpFontStandard.dll": {
+            "assemblyVersion": "4.0.1.200",
+            "fileVersion": "4.0.1.200"
+          }
+        }
+      },
+      "SixLabors.Core/1.0.0-beta0008": {
+        "dependencies": {
+          "System.Runtime.CompilerServices.Unsafe": "4.7.0"
+        },
+        "runtime": {
+          "lib/netcoreapp2.1/SixLabors.Core.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "SixLabors.ImageSharp/1.0.0-beta0007": {
+        "dependencies": {
+          "Microsoft.Net.Compilers.Toolset": "3.1.0",
+          "SixLabors.Core": "1.0.0-beta0008",
+          "System.Runtime.CompilerServices.Unsafe": "4.7.0"
+        },
+        "runtime": {
+          "lib/netcoreapp2.1/SixLabors.ImageSharp.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "System.Numerics.Vectors/4.5.0": {},
+      "System.Runtime.CompilerServices.Unsafe/4.7.0": {
+        "runtime": {
+          "lib/netcoreapp2.0/System.Runtime.CompilerServices.Unsafe.dll": {
+            "assemblyVersion": "4.0.6.0",
+            "fileVersion": "4.700.19.56404"
+          }
+        }
+      },
+      "BepuUtilities/2.0.0": {
+        "dependencies": {
+          "System.Numerics.Vectors": "4.5.0",
+          "System.Runtime.CompilerServices.Unsafe": "4.7.0"
+        },
+        "runtime": {
+          "BepuUtilities.dll": {}
+        }
+      },
+      "DemoContentLoader/1.0.0": {
+        "dependencies": {
+          "BepuUtilities": "2.0.0"
+        },
+        "runtime": {
+          "DemoContentLoader.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "DemoContentBuilder/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "CjClutter.ObjLoader/1.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-yTcKHBQcX0fu36zV1itp0KDXA3ynp0nlfVihczRgRyQ+e4oxOjYE5Prj32zFg2ABPRXJ5ZER2AqdHeZ/IHjRWQ==",
+      "path": "cjclutter.objloader/1.0.0",
+      "hashPath": "cjclutter.objloader.1.0.0.nupkg.sha512"
+    },
+    "Microsoft.Net.Compilers.Toolset/3.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-/iwBIkmusIUlBrln8AbKpYIcSGnImCYUMFSC3QOpGuOmnle44w2ORyH8IFDi8rbQNKjDH9HBmtPML/kW3GuxyA==",
+      "path": "microsoft.net.compilers.toolset/3.1.0",
+      "hashPath": "microsoft.net.compilers.toolset.3.1.0.nupkg.sha512"
+    },
+    "SharpDX/4.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-3pv0LFMvfK/dv1qISJnn8xBeeT6R/FRvr0EV4KI2DGsL84Qlv6P7isWqxGyU0LCwlSVCJN3jgHJ4Bl0KI2PJww==",
+      "path": "sharpdx/4.2.0",
+      "hashPath": "sharpdx.4.2.0.nupkg.sha512"
+    },
+    "SharpDX.D3DCompiler/4.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Rnsd6Ilp127xbXqhTit8WKFQUrXwWxqVGpglyWDNkIBCk0tWXNQEjrJpsl0KAObzyZaa33+EXAikLVt5fnd3GA==",
+      "path": "sharpdx.d3dcompiler/4.2.0",
+      "hashPath": "sharpdx.d3dcompiler.4.2.0.nupkg.sha512"
+    },
+    "SharpFontStandard/4.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-8UUiCS6RQndQUKj56rLTWSXD/0XLFRY67az09so0UqdoDYuKIenX/KQryVdsFndWY/EgIQDPx1akRwxxtpWhvw==",
+      "path": "sharpfontstandard/4.0.1",
+      "hashPath": "sharpfontstandard.4.0.1.nupkg.sha512"
+    },
+    "SixLabors.Core/1.0.0-beta0008": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-rrKPDN107tVOh+mUoNh+kHELa7WfYZREPPbYdiKJ3Rd6dex/UgDWDGBOjPJn4BBhmts/VGuaXMXyfT/BwiuH2g==",
+      "path": "sixlabors.core/1.0.0-beta0008",
+      "hashPath": "sixlabors.core.1.0.0-beta0008.nupkg.sha512"
+    },
+    "SixLabors.ImageSharp/1.0.0-beta0007": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-R7BMm1MPyE3n4kSmTrdhB6iQmIZmSjBhnHG8mYrfi9t5CmIIgXhmGHHLZTZHa17Ka4b5bhUUqssAVEHDlDqnuQ==",
+      "path": "sixlabors.imagesharp/1.0.0-beta0007",
+      "hashPath": "sixlabors.imagesharp.1.0.0-beta0007.nupkg.sha512"
+    },
+    "System.Numerics.Vectors/4.5.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-QQTlPTl06J/iiDbJCiepZ4H//BVraReU4O4EoRw1U02H5TLUIT7xn3GnDp9AXPSlJUDyFs4uWjWafNX6WrAojQ==",
+      "path": "system.numerics.vectors/4.5.0",
+      "hashPath": "system.numerics.vectors.4.5.0.nupkg.sha512"
+    },
+    "System.Runtime.CompilerServices.Unsafe/4.7.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-IpU1lcHz8/09yDr9N+Juc7SCgNUz+RohkCQI+KsWKR67XxpFr8Z6c8t1iENCXZuRuNCc4HBwme/MDHNVCwyAKg==",
+      "path": "system.runtime.compilerservices.unsafe/4.7.0",
+      "hashPath": "system.runtime.compilerservices.unsafe.4.7.0.nupkg.sha512"
+    },
+    "BepuUtilities/2.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "DemoContentLoader/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

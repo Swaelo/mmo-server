@@ -1,0 +1,1 @@
+dotnet DemoContentBuilder.dll ServerContents.content

@@ -4,6 +4,7 @@
 // Author:      Harley Laurie https://www.github.com/Swaelo/
 // ================================================================================================================================
 
+using Server.Logging;
 using System.Numerics;
 using Quaternion = BepuUtilities.Quaternion;
 using BepuPhysics;
@@ -19,7 +20,7 @@ namespace Server.Data
         public Vector3 Position = Vector3.Zero;    //Characters position in the world
         public bool NewPosition = false;
         public Quaternion Rotation = Quaternion.Identity; //Character current rotation
-        public Vector3 Movement = Vector3.Zero;    //Characters current input movement vector
+        public bool NewRotation = false;
         public int CurrentHealth = 1;   //Current number of Health Points
         public int MaxHealth = 1;   //Current maximum number of Health Points
         public int Experience = 0;  //Current EXP value
@@ -67,22 +68,24 @@ namespace Server.Data
             if (BodyActive)
                 return;
             BodyActive = true;
-            BodyShape = new Capsule(0.5f, 1);
+            BodyShape = new Capsule(0.5f, 2);
             BodyIndex = World.Shapes.Add(BodyShape);
             CollidableDescription = new CollidableDescription(BodyIndex, 0.1f);
             BodyShape.ComputeInertia(1, out var Inertia);
-            BodyPose = new RigidPose(Location, Quaternion.Identity);
+            Vector3 SpawnLocation = new Vector3(Location.X, Location.Y + 1.5f, Location.Z);
+            BodyPose = new RigidPose(SpawnLocation, Quaternion.Identity);
             ActivityDescription = new BodyActivityDescription(0.01f);
-            BodyDescription = BodyDescription.CreateDynamic(BodyPose, Inertia, CollidableDescription, ActivityDescription);
+            BodyDescription = BodyDescription.CreateKinematic(BodyPose, CollidableDescription, ActivityDescription);
             BodyHandle = World.Bodies.Add(BodyDescription);
         }
 
         //Update the body with a new location
-        public void UpdateBody(Simulation World, Vector3 NewLocation)
+        public void UpdateBody(Simulation World)
         {
-            BodyPose = new RigidPose(Position, Rotation);
+            Vector3 UpdatePosition = new Vector3(Position.X, Position.Y + 1.5f, Position.Z);
+            BodyPose = new RigidPose(UpdatePosition, Rotation);
             BodyShape.ComputeInertia(1, out var Inertia);
-            BodyDescription = BodyDescription.CreateDynamic(BodyPose, Inertia, CollidableDescription, ActivityDescription);
+            BodyDescription = BodyDescription.CreateKinematic(BodyPose, CollidableDescription, ActivityDescription);
             World.Bodies.ApplyDescription(BodyHandle, ref BodyDescription);
             NewPosition = false;
         }

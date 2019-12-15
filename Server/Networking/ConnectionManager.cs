@@ -11,6 +11,8 @@ using System.Net.Sockets;
 using System.Collections.Generic;
 using Server.Networking.PacketSenders;
 using Server.Logging;
+using Server.World;
+using Server.Data;
 using Server.Database;
 using BepuPhysics;
 using ServerUtilities;
@@ -25,6 +27,11 @@ namespace Server.Networking
         public static TcpListener NewClientListener;
         private static Dictionary<int, ClientConnection> ActiveConnections = new Dictionary<int, ClientConnection>();
         private static TextBuilder ClientsInfo = new TextBuilder(2048);
+
+        //Check with clients every so often to see if they're still there
+        private static float ClientCheckInterval = 1.0f;
+        private static float NextClientCheck = 1.0f;
+        private static float ClientConnectionTimeout = 15;
 
         //Sets up packet handlers and starts listening for new client connections
         public static void Initialize(string ServerIP)
@@ -55,9 +62,40 @@ namespace Server.Networking
             return Clients;
         }
 
+        //Gets a ClientConnection from its ClientID
         public static ClientConnection GetClient(int ClientID)
         {
             return ActiveConnections.ContainsKey(ClientID) ? ActiveConnections[ClientID] : null;
+        }
+
+        //Gets a ClientConnection who is controlling the given character
+        public static ClientConnection GetClient(CharacterData Character)
+        {
+            //Loop through all the active clients
+            foreach(KeyValuePair<int, ClientConnection> Client in ActiveConnections)
+            {
+                //Return the client who is controlling the provided character
+                if (Client.Value.Character == Character)
+                    return Client.Value;
+            }
+            return null;
+        }
+
+        public static void CheckClients(float DeltaTime)
+        {
+            NextClientCheck -= DeltaTime;
+            if(NextClientCheck <= 0.0f)
+            {
+                NextClientCheck = ClientCheckInterval;
+                foreach(KeyValuePair<int, ClientConnection> Client in ActiveConnections)
+                {
+                    SystemPacketSender.SendStillConnectedCheck(Client.Key);
+
+                    int LastHeard = Client.Value.LastCommunication.AgeInSeconds();
+                    if (LastHeard >= ClientConnectionTimeout)
+                        Client.Value.ConnectionDead = true;
+                }
+            }
         }
 
         //Checks if anyone logged in with the given username
@@ -78,11 +116,11 @@ namespace Server.Networking
                 if(DeadClient.Character.InGame)
                 {
                     CharactersDatabase.SaveCharacterData(DeadClient.Character);
-                    World.Bodies.Remove(DeadClient.Character.BodyHandle);
-                    World.Shapes.Remove(DeadClient.Character.BodyIndex);
+                    DeadClient.Character.RemoveBody(World);
                     foreach (ClientConnection LivingClient in ClientSubsetFinder.GetInGameLivingClientsExceptFor(DeadClient.ClientID))
                         PlayerManagementPacketSender.SendRemoveRemotePlayer(LivingClient.ClientID, DeadClient.Character.Name, DeadClient.Character.IsAlive);
                 }
+                ActiveConnections.Remove(DeadClient.ClientID);
             }
         }
 
@@ -122,33 +160,55 @@ namespace Server.Networking
                 if (UpdatedClient.ConnectionDead || !UpdatedClient.Character.InGame)
                     continue;
 
-                UpdatedClient.Character.UpdateBody(World, UpdatedClient.Character.Position);
+                UpdatedClient.Character.UpdateBody(World);
             }
         }
 
         public static void PerformPlayerAttacks(Simulation World)
         {
-            foreach(ClientConnection AttackingClient in ClientSubsetFinder.GetClientsAttacking())
+            //Get a list of every client who's character is performing an attack this turn, and a list of every client who's character is currently inside the PVP battle arena
+            List<ClientConnection> AttackingClients = ClientSubsetFinder.GetClientsAttacking();
+            List<ClientConnection> ClientsInArena = PVPBattleArena.GetClientsInside();
+
+            //Loop through all of the attacking clients so their attacks can be processed
+            foreach(ClientConnection AttackingClient in AttackingClients)
             {
-                foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameLivingClientsExceptFor(AttackingClient.ClientID))
+                //If the AttackingClient is inside the BattleArena, check their attack against the other players also in the arena
+                if(ClientsInArena.Contains(AttackingClient))
                 {
-                    float AttackDistance = Vector3.Distance(OtherClient.Character.Position, AttackingClient.Character.AttackPosition);
-                    if(AttackDistance < 1.5f)
+                    //Get a list of all the other clients in the arena to check the attack against
+                    List<ClientConnection> OtherClients = PVPBattleArena.GetClientsInside();
+                    OtherClients.Remove(AttackingClient);
+                    foreach(ClientConnection OtherClient in OtherClients)
                     {
-                        OtherClient.Character.CurrentHealth -= 1;
-                        if(OtherClient.Character.CurrentHealth > 0)
+                        //Check the distance between the clients attack position and the other client to see if the attack hit
+                        float AttackDistance = Vector3.Distance(AttackingClient.Character.AttackPosition, OtherClient.Character.Position);
+                        if(AttackDistance <= 1.5f)
                         {
-                            CombatPacketSenders.SendLocalPlayerTakeHit(OtherClient.ClientID, OtherClient.Character.CurrentHealth);
-                            foreach (ClientConnection OtherOtherCLient in ClientSubsetFinder.GetInGameClientsExceptFor(OtherClient.ClientID))
-                                CombatPacketSenders.SendRemotePlayerTakeHit(OtherOtherCLient.ClientID, OtherClient.Character.Name, OtherClient.Character.CurrentHealth);
+                            //Reduce the other characters health
+                            OtherClient.Character.CurrentHealth -= 1;
+
+                            //Send a damage alert to all clients if they survive the attack
+                            if(OtherClient.Character.CurrentHealth > 0)
+                            {
+                                CombatPacketSenders.SendLocalPlayerTakeHit(OtherClient.ClientID, OtherClient.Character.CurrentHealth);
+                                foreach (ClientConnection OtherOtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(OtherClient.ClientID))
+                                    CombatPacketSenders.SendRemotePlayerTakeHit(OtherOtherClient.ClientID, OtherClient.Character.Name, OtherClient.Character.CurrentHealth);
+                            }
+                            
+                            //Send a death alert to all clients if they are killed by the attack
+                            if(OtherClient.Character.CurrentHealth <= 0)
+                            {
+                                OtherClient.Character.IsAlive = false;
+                                OtherClient.Character.RemoveBody(World);
+                                CombatPacketSenders.SendLocalPlayerDead(OtherClient.ClientID);
+                                foreach (ClientConnection OtherOtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(OtherClient.ClientID))
+                                    CombatPacketSenders.SendRemotePlayerDead(OtherOtherClient.ClientID, OtherClient.Character.Name);
+                            }
                         }
-                        OtherClient.Character.IsAlive = false;
-                        OtherClient.Character.RemoveBody(World);
-                        CombatPacketSenders.SendLocalPlayerDead(OtherClient.ClientID);
-                        foreach (ClientConnection OtherOtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(OtherClient.ClientID))
-                            CombatPacketSenders.SendRemotePlayerDead(OtherOtherClient.ClientID, OtherClient.Character.Name);
                     }
                 }
+                //Disable the clients Attack flag now that the attack has been processed
                 AttackingClient.Character.AttackPerformed = false;
             }
         }

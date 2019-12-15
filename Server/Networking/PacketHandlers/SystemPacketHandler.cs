@@ -24,22 +24,12 @@ namespace Server.Networking.PacketHandlers
         //Handle alert from client letting us know they have missed some packets and need to be resent
         public static void HandleMissedPacketsRequest(int ClientID, ref NetworkPacket Packet)
         {
-            //Log what is happening here
-            CommunicationLog.LogIn(ClientID + " Missed Packets Request.");
-
-            //Find the client who sent this alert, and the number of the packet they want sent back to them
             ClientConnection Client = ConnectionManager.GetClient(ClientID);
-            if(Client == null)
+            if(Client != null)
             {
-                MessageLog.Print("ERROR: Client " + ClientID + " not found, unable to handle missing packets request.");
-                return;
+                Client.PacketsToResend = true;
+                Client.ResendFrom = Packet.ReadInt();
             }
-
-
-            //Flag the client as needing to have a bunch of missing packets resent back to it again
-            Client.PacketsToResend = true;
-            Client.ResendFrom = Packet.ReadInt();
-            MessageLog.Print("Client requested missing packets starting from packet #" + Client.ResendFrom);
         }
 
         //Retrives values for an account login request

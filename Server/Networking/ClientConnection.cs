@@ -72,47 +72,44 @@ namespace Server.Networking
                 PacketHistory.Remove(OrderNumber - 150);
         }
         
-        public void TransmitPackets()
+        public void TransmitPackets(bool Transmit)
         {
-            //Copy the queue into a new array and reset it so others can be queued
-            Dictionary<int, NetworkPacket> OutgoingPackets = new Dictionary<int, NetworkPacket>(PacketQueue);
+            //Copy the current outgoing queue into a new array and reset the queue
+            Dictionary<int, NetworkPacket> TransmissionQueue = new Dictionary<int, NetworkPacket>(PacketQueue);
             PacketQueue.Clear();
-            //Data of all in the queue will be combined into a string for transmission
+
+            //All packet data will be combined into this string
             string PacketData = "";
-            //If the client missed some packets then we need to resend all of them so they can catch back up
-            if(PacketsToResend)
+
+            //Append data of each packet onto the send
+            if(!PacketsToResend)
             {
-                //Make sure the missing packets being requested are still being stored in the history
-                if(!PacketHistory.ContainsKey(ResendFrom))
+                foreach (KeyValuePair<int, NetworkPacket> Packet in TransmissionQueue)
                 {
-                    //Close clients connections who ask for packets outside of memory, as they cant be caught back up from that
-                    ConnectionDead = true;
-                    return;
+                    PacketData += Packet.Value.PacketData;
                 }
-                //Add the data of every packet from the first the client missed, and everything after it
-                for (int i = ResendFrom; i < LastPacketRecieved + 1; i++)
-                    PacketData += PacketHistory[i].PacketData;
-                //No more packets to resend after this
-                PacketsToResend = false;
             }
-            //Otherwise we just gather up all the packets in the outgoing queue for transmission
+            //Otherwise we need to append the data of all the missing packets
             else
             {
-                foreach (KeyValuePair<int, NetworkPacket> Packet in OutgoingPackets)
-                    PacketData += Packet.Value.PacketData;
+                for (int i = ResendFrom; i < LastPacketRecieved + 1; i++)
+                {
+                    if (PacketHistory.ContainsKey(i))
+                    {
+                        PacketData += PacketHistory[i].PacketData;
+                    }
+                }
+                PacketsToResend = false;
             }
-            //Transmit any available data to the client
-            if(PacketData != "")
+
+            if(PacketData != "" && Transmit)
             {
-                //Frame the data and get the payload size ready for transmission
                 byte[] PacketBytes = GetFrameFromString(PacketData);
                 int PacketSize = Encoding.UTF8.GetString(PacketBytes).Length;
-                //Transmit the data to the client, making sure their connection is still open
                 try { DataStream.BeginWrite(PacketBytes, 0, PacketSize, null, null); }
                 catch(IOException Exception)
                 {
-                    //Close the clients connection if its no longer open
-                    MessageLog.Error(Exception, "Error transmitting packets to the client");
+                    MessageLog.Error(Exception, "Error transmitting packets to client");
                     ConnectionDead = true;
                 }
             }

@@ -67,5 +67,20 @@ namespace Server.Networking.PacketSenders
             //Send this packet off to them immediately to ensure its sent to them before we clean up their network connection ourselves
             PacketQueue.QueuePacket(ClientID, Packet);
         }
+
+        public static void SendUIMessage(int ClientID, string MessageContent)
+        {
+            ClientConnection TargetClient = ConnectionManager.GetClient(ClientID);
+            if(TargetClient == null)
+            {
+                MessageLog.Print("ERROR: Cant send UI message to client #" + ClientID + " as they could not be found: dead connection?");
+                return;
+            }
+
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ServerPacketType.UIMessage);
+            Packet.WriteString(MessageContent);
+            PacketQueue.QueuePacket(ClientID, Packet);
+        }
     }
 }

@@ -88,9 +88,10 @@ namespace Server.Networking
             PacketHandlers.Add(ClientPacketType.PlayerChatMessage, PlayerCommunicationPacketHandler.HandleClientChatMessage);
 
             //Player Management Packet Handlers
-            PacketHandlers.Add(ClientPacketType.LocalPlayerCharacterUpdate, PlayerManagementPacketHandler.HandlePlayerCharacterUpdate);
-            PacketHandlers.Add(ClientPacketType.LocalPlayerCameraUpdate, PlayerManagementPacketHandler.HandlePlayerCameraUpdate);
-            PacketHandlers.Add(ClientPacketType.LocalPlayerPlayAnimationAlert, PlayerManagementPacketHandler.HandlePlayAnimationAlert);
+            PacketHandlers.Add(ClientPacketType.PlayerPositionUpdate, PlayerManagementPacketHandler.HandlePlayerPositionUpdate);
+            PacketHandlers.Add(ClientPacketType.PlayerRotationUpdate, PlayerManagementPacketHandler.HandlePlayerRotationUpdate);
+            PacketHandlers.Add(ClientPacketType.PlayerCameraUpdate, PlayerManagementPacketHandler.HandlePlayerCameraUpdate);
+            PacketHandlers.Add(ClientPacketType.PlayAnimationAlert, PlayerManagementPacketHandler.HandlePlayAnimationAlert);
 
             //System Packet Handlers
             PacketHandlers.Add(ClientPacketType.MissedPacketsRequest, SystemPacketHandler.HandleMissedPacketsRequest);
@@ -128,11 +129,13 @@ namespace Server.Networking
                     return PlayerCommunicationPacketHandler.GetValuesClientChatMessage(ReadFrom);
 
                 //Player Management
-                case (ClientPacketType.LocalPlayerCharacterUpdate):
-                    return PlayerManagementPacketHandler.GetValuesPlayerCharacterUpdate(ReadFrom);
-                case (ClientPacketType.LocalPlayerCameraUpdate):
+                case (ClientPacketType.PlayerPositionUpdate):
+                    return PlayerManagementPacketHandler.GetValuesPlayerPositionUpdate(ReadFrom);
+                case (ClientPacketType.PlayerRotationUpdate):
+                    return PlayerManagementPacketHandler.GetValuesPlayerRotationUpdate(ReadFrom);
+                case (ClientPacketType.PlayerCameraUpdate):
                     return PlayerManagementPacketHandler.GetValuesPlayerCameraUpdate(ReadFrom);
-                case (ClientPacketType.LocalPlayerPlayAnimationAlert):
+                case (ClientPacketType.PlayAnimationAlert):
                     return PlayerManagementPacketHandler.GetValuesPlayAnimationAlert(ReadFrom);
 
                 //System

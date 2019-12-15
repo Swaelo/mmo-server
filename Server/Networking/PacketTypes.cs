@@ -21,17 +21,18 @@ public enum ClientPacketType
     PlayerChatMessage = 8,
 
     //Player Management Packet Types
-    LocalPlayerCharacterUpdate = 9,
-    LocalPlayerCameraUpdate = 10,
-    LocalPlayerPlayAnimationAlert = 11,
+    PlayerPositionUpdate = 9,
+    PlayerRotationUpdate = 10,
+    PlayerCameraUpdate = 11,
+    PlayAnimationAlert = 12,
 
     //System Packet Types
-    MissedPacketsRequest = 12,
-    StillConnectedReply = 13,
+    MissedPacketsRequest = 13,
+    StillConnectedReply = 14,
 
     //Combat
-    PlayerAttackAlert = 14,
-    PlayerRespawnRequest = 15
+    PlayerAttackAlert = 15,
+    PlayerRespawnRequest = 16
 };
 
 public enum ServerPacketType
@@ -54,22 +55,24 @@ public enum ServerPacketType
     PlayerChatMessage = 11,
 
     //Player Management Packet Types
-    UpdateRemotePlayer = 12,
-    AddRemotePlayer = 13,
-    RemoveRemotePlayer = 14,
-    AllowPlayerBegin = 15,
-    RemotePlayerPlayAnimationAlert = 16,
+    PlayerPositionUpdate = 12,
+    PlayerRotationUpdate = 13,
+    AddPlayer = 14,
+    RemovePlayer = 15,
+    AllowPlayerBegin = 16,
+    PlayAnimationAlert = 17,
 
     //System Packet Types
-    StillConnectedCheck = 17,
-    MissingPacketsRequest = 18,
-    KickedFromServer = 19,
+    StillConnectedCheck = 18,
+    MissingPacketsRequest = 19,
+    KickedFromServer = 20,
+    UIMessage = 21,
 
     //Combat Packet Types
-    LocalPlayerTakeHit = 20,
-    RemotePlayerTakeHit = 21,
-    LocalPlayerDead = 22,
-    RemotePlayerDead = 23,
-    LocalPlayerRespawn = 24,
-    RemotePlayerRespawn = 25
+    LocalPlayerTakeHit = 22,
+    RemotePlayerTakeHit = 23,
+    LocalPlayerDead = 24,
+    RemotePlayerDead = 25,
+    LocalPlayerRespawn = 26,
+    RemotePlayerRespawn = 27
 };

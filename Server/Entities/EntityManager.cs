@@ -29,7 +29,7 @@ namespace Server.Entities
             //remove them from the list of entities
             ActiveEntities.Remove(OldEntity);
             //remove them from the physics simulation too
-            Program.World.WorldSimulation.Bodies.Remove(OldEntity.BodyID);
+            Program.World.World.Bodies.Remove(OldEntity.BodyID);
         }
 
         //Removes a whole list of entities from the game world

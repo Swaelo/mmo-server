@@ -15,21 +15,20 @@ namespace Server.Networking.PacketSenders
 {
     public class PlayerManagementPacketSender
     {
-        //Tells a client the updated character values for one of the other remote player characters in their game world
-        public static void SendUpdateRemotePlayer(int ClientID, CharacterData Character)
+        public static void SendPlayerPositionUpdate(int ClientID, CharacterData Character)
         {
-            //Log what we are doing here
-            CommunicationLog.LogOut(ClientID + " Remote Player Update.");
-            //Create a new NetworkPacket filled with all the nessacery character data values
             NetworkPacket Packet = new NetworkPacket();
-            Packet.WriteType(ServerPacketType.UpdateRemotePlayer);
+            Packet.WriteType(ServerPacketType.PlayerPositionUpdate);
             Packet.WriteString(Character.Name);
             Packet.WriteVector3(Character.Position);
-            Packet.WriteVector3(Character.Movement);
+            PacketQueue.QueuePacket(ClientID, Packet);
+        }
+        public static void SendPlayerRotationUpdate(int ClientID, CharacterData Character)
+        {
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ServerPacketType.PlayerRotationUpdate);
+            Packet.WriteString(Character.Name);
             Packet.WriteQuaternion(Character.Rotation);
-            Packet.WriteInt(Character.CurrentHealth);
-            Packet.WriteInt(Character.MaxHealth);
-            //Queue the packet for network transmission
             PacketQueue.QueuePacket(ClientID, Packet);
         }
 
@@ -40,11 +39,10 @@ namespace Server.Networking.PacketSenders
             CommunicationLog.LogOut(ClientID + " Add Remote Player.");
             //Create a new NetworkPacket filled with all the nessacery character data values
             NetworkPacket Packet = new NetworkPacket();
-            Packet.WriteType(ServerPacketType.AddRemotePlayer);
+            Packet.WriteType(ServerPacketType.AddPlayer);
             Packet.WriteString(Character.Name);
             Packet.WriteBool(Character.IsAlive);
             Packet.WriteVector3(Character.Position);
-            Packet.WriteVector3(Character.Movement);
             Packet.WriteQuaternion(Character.Rotation);
             Packet.WriteInt(Character.CurrentHealth);
             Packet.WriteInt(Character.MaxHealth);
@@ -65,7 +63,7 @@ namespace Server.Networking.PacketSenders
             NetworkPacket Packet = new NetworkPacket();
 
             //Write all the relevant data into the network packet
-            Packet.WriteType(ServerPacketType.RemoveRemotePlayer);
+            Packet.WriteType(ServerPacketType.RemovePlayer);
             Packet.WriteString(CharacterName);
             Packet.WriteBool(IsAlive);
 
@@ -90,7 +88,7 @@ namespace Server.Networking.PacketSenders
         {
             CommunicationLog.LogOut(ClientID + " play animation alert");
             NetworkPacket Packet = new NetworkPacket();
-            Packet.WriteType(ServerPacketType.RemotePlayerPlayAnimationAlert);
+            Packet.WriteType(ServerPacketType.PlayAnimationAlert);
             Packet.WriteString(CharacterName);
             Packet.WriteString(AnimationName);
             PacketQueue.QueuePacket(ClientID, Packet);

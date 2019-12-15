@@ -23,9 +23,13 @@ namespace Server.Logic
             SceneCamera = Loop.Camera;
         }
 
-        public void PositionCamera(Vector3 Position, float Yaw, float Pitch)
+        public void PositionCamera(Vector3 Position)
         {
             SceneCamera.Position = Position;
+        }
+
+        public void FaceCamera(float Yaw, float Pitch)
+        {
             SceneCamera.Yaw = Yaw;
             SceneCamera.Pitch = Pitch;
         }
@@ -46,8 +50,7 @@ namespace Server.Logic
             if (UserControls.MoveDown.IsDown(UserInput))
                 CameraOffset += SceneCamera.Down;
 
-            if (UserControls.LockMouse.WasTriggered(UserInput))
-                CameraLock = !CameraLock;
+            CameraLock = UserControls.RMB.IsDown(UserInput);
 
             //Only update the camera position if its to be moved past a minimum distance
             float CameraMovement = CameraOffset.Length();

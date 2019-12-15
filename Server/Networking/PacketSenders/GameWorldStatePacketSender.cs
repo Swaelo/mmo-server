@@ -40,7 +40,6 @@ namespace Server.Networking.PacketSenders
                 Packet.WriteString(OtherClient.Character.Name);
                 Packet.WriteBool(OtherClient.Character.IsAlive);
                 Packet.WriteVector3(OtherClient.Character.Position);
-                Packet.WriteVector3(OtherClient.Character.Movement);
                 Packet.WriteQuaternion(OtherClient.Character.Rotation);
                 Packet.WriteInt(OtherClient.Character.CurrentHealth);
                 Packet.WriteInt(OtherClient.Character.MaxHealth);

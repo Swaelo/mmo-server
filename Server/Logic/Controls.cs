@@ -333,6 +333,7 @@ namespace Server.Logic
         public InstantBind MoveFaster;
         public HoldableBind Grab;
         public HoldableBind GrabRotate;
+        public HoldableBind RMB;
         public float MouseSensitivity;
         public float CameraSlowMoveSpeed;
         public float CameraMoveSpeed;
@@ -362,7 +363,7 @@ namespace Server.Logic
                     MoveUp = Key.ShiftLeft,
                     MoveSlower = MouseWheelAction.ScrollDown,
                     MoveFaster = MouseWheelAction.ScrollUp,
-                    Grab = MouseButton.Right,
+                    RMB = MouseButton.Right,
                     GrabRotate = Key.Q,
                     MouseSensitivity = 3e-3f,
                     CameraSlowMoveSpeed = 0.5f,

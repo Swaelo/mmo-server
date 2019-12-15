@@ -5,6 +5,7 @@
 // ================================================================================================================================
 
 using System.Collections.Generic;
+using Server.Data;
 using Server.Logging;
 
 namespace Server.Networking
@@ -121,6 +122,16 @@ namespace Server.Networking
 
             //Return the final list of InGame Clients
             return InGameClients;
+        }
+
+        //Returns a list of all the clients characters currently in the game world
+        public static List<CharacterData> GetInGameCharacters()
+        {
+            List<ClientConnection> InGameClients = GetInGameClients();
+            List<CharacterData> InGameCharacters = new List<CharacterData>();
+            foreach (ClientConnection Client in InGameClients)
+                InGameCharacters.Add(Client.Character);
+            return InGameCharacters;
         }
 
         //Returns a list of all the clients who havnt yet logged into the game world (still in the menus somewhere)

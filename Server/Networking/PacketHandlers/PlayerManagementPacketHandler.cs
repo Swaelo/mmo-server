@@ -15,61 +15,51 @@ namespace Server.Networking.PacketHandlers
 {
     public class PlayerManagementPacketHandler
     {
-        //Retrives values for an account login request
-        public static NetworkPacket GetValuesPlayerCharacterUpdate(NetworkPacket ReadFrom)
+        public static NetworkPacket GetValuesPlayerPositionUpdate(NetworkPacket ReadFrom)
         {
             NetworkPacket Packet = new NetworkPacket();
-            Packet.WriteType(ClientPacketType.LocalPlayerCharacterUpdate);
+            Packet.WriteType(ClientPacketType.PlayerPositionUpdate);
             Packet.WriteVector3(ReadFrom.ReadVector3());
-            Packet.WriteVector3(ReadFrom.ReadVector3());
+            return Packet;
+        }
+        public static void HandlePlayerPositionUpdate(int ClientID, ref NetworkPacket Packet)
+        {
+            Vector3 Position = Packet.ReadVector3();
+            ClientConnection Client = ConnectionManager.GetClient(ClientID);
+            if(Client != null)
+            {
+                Client.Character.Position = Position;
+                Client.Character.NewPosition = true;
+                foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(ClientID))
+                    PlayerManagementPacketSender.SendPlayerPositionUpdate(OtherClient.ClientID, Client.Character);
+            }
+        }
+
+        public static NetworkPacket GetValuesPlayerRotationUpdate(NetworkPacket ReadFrom)
+        {
+            NetworkPacket Packet = new NetworkPacket();
+            Packet.WriteType(ClientPacketType.PlayerRotationUpdate);
             Packet.WriteQuaternion(ReadFrom.ReadQuaternion());
             return Packet;
         }
-
-        /// <summary>
-        /// Handles a client players updated character values to be shared all across the network
-        /// </summary>
-        /// <param name="ClientID">NetworkID of the target client</param>
-        /// <param name="Packet">Packet containing the information were after</param>
-        public static void HandlePlayerCharacterUpdate(int ClientID, ref NetworkPacket Packet)
+        public static void HandlePlayerRotationUpdate(int ClientID, ref NetworkPacket Packet)
         {
-            //Log what we are doing here
-            CommunicationLog.LogIn(ClientID + " Player Character Update");
-
-            //Extract all the values from the packet data
-            Vector3 Position = Packet.ReadVector3();
-            Vector3 Movement = Packet.ReadVector3();
             Quaternion Rotation = Packet.ReadQuaternion();
-
-            //Try getting the ClientConnection object who sent this packet to us
             ClientConnection Client = ConnectionManager.GetClient(ClientID);
-
-            //Display an erro and exit from the function if they couldnt be found
-            if(Client == null)
+            if(Client != null)
             {
-                MessageLog.Print("ERROR: " + ClientID + " ClientConnection object couldnt be found, Player Character Update could not be performed.");
-                return;
+                Client.Character.Rotation = Rotation;
+                Client.Character.NewRotation = true;
+                foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(ClientID))
+                    PlayerManagementPacketSender.SendPlayerRotationUpdate(OtherClient.ClientID, Client.Character);
             }
-
-            //Update the values in the ClientConnection object
-            Client.Character.Position = Position;
-            Client.Character.Movement = Movement;
-            Client.Character.Rotation = Rotation;
-
-            //Set its NewPosition flag so it gets updated in the physics scene
-            Client.Character.NewPosition = true;
-
-            //Share these new values to all the other clients in the game right now
-            List<ClientConnection> OtherClients = ClientSubsetFinder.GetInGameClientsExceptFor(ClientID);
-            foreach (ClientConnection OtherClient in OtherClients)
-                PlayerManagementPacketSender.SendUpdateRemotePlayer(OtherClient.ClientID, Client.Character);
         }
 
         //Retrives values for an account login request
         public static NetworkPacket GetValuesPlayerCameraUpdate(NetworkPacket ReadFrom)
         {
             NetworkPacket Packet = new NetworkPacket();
-            Packet.WriteType(ClientPacketType.LocalPlayerCameraUpdate);
+            Packet.WriteType(ClientPacketType.PlayerCameraUpdate);
             Packet.WriteFloat(ReadFrom.ReadFloat());
             Packet.WriteFloat(ReadFrom.ReadFloat());
             Packet.WriteFloat(ReadFrom.ReadFloat());
@@ -112,7 +102,7 @@ namespace Server.Networking.PacketHandlers
         public static NetworkPacket GetValuesPlayAnimationAlert(NetworkPacket ReadFrom)
         {
             NetworkPacket Packet = new NetworkPacket();
-            Packet.WriteType(ClientPacketType.LocalPlayerPlayAnimationAlert);
+            Packet.WriteType(ClientPacketType.PlayAnimationAlert);
             Packet.WriteString(ReadFrom.ReadString());
             return Packet;
         }

@@ -16,6 +16,8 @@ using Server.Networking.PacketSenders;
 using Server.Data;
 using Server.Database;
 using Quaternion = BepuUtilities.Quaternion;
+using ContentLoader;
+using System.IO;
 
 namespace Server.Interface
 {
@@ -241,6 +243,8 @@ namespace Server.Interface
                 TryKillPlayer(InputSplit);
             else if (CanRevivePlayer(InputSplit))   //Revive one of the ingame player characters
                 TryRevivePlayer(InputSplit);
+            else if (CanArchiveContents(InputSplit))    //Compile all contents into a new content archive
+                TryArchiveContents(InputSplit);
 
             Reset();
         }
@@ -283,6 +287,7 @@ namespace Server.Interface
                 string PurgeDatabase = "Remove every account and character information from the database: purgedatabase";
                 string KillPlayer = "Kill Player: kill charactername";
                 string RevivePlayer = "Revive Player: revive charactername";
+                string ArchiveContents = "Archive Server Contents: archivecontents";
 
                 MessageLog.Print(Pre2);
                 MessageLog.Print(SetAllRotations);
@@ -290,11 +295,22 @@ namespace Server.Interface
                 MessageLog.Print(PurgeDatabase);
                 MessageLog.Print(KillPlayer);
                 MessageLog.Print(RevivePlayer);
+                MessageLog.Print(ArchiveContents);
 
                 return true;
             }
 
             return false;
+        }
+
+        //Checks input can be used for saving archiving all the content
+        private bool CanArchiveContents(string[] Input)
+        {
+            if (Input.Length != 1)
+                return false;
+            if (Input[0] != "archivecontents")
+                return false;
+            return true;
         }
 
         //Checks input can be used for performing kill player command
@@ -446,6 +462,11 @@ namespace Server.Interface
             return true;
         }
 
+        private void TryArchiveContents(string[] Input)
+        {
+            
+        }
+
         //Tries using the command arguments for performing a server shutdown
         private void TryServerShutdown(string[] Input)
         {
@@ -489,7 +510,7 @@ namespace Server.Interface
             }
             MessageLog.Print("Killing " + CharacterName + "...");
             Client.Character.IsAlive = false;
-            Client.Character.RemoveBody(Program.World.WorldSimulation);
+            Client.Character.RemoveBody(Program.World.World);
             //Client.RemovePhysicsBody(Program.World.WorldSimulation);
             CombatPacketSenders.SendLocalPlayerDead(Client.ClientID);
             foreach (ClientConnection OtherClient in ClientSubsetFinder.GetInGameClientsExceptFor(Client.ClientID))
@@ -573,7 +594,7 @@ namespace Server.Interface
             }
 
             //Characters Data will be stored here once we acquire it
-            CharacterData Data;
+            Server.Data.CharacterData Data;
 
             //Find the client currently controlling this character
             ClientConnection Client = ClientSubsetFinder.GetClientUsingCharacter(CharacterName);
