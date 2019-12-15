@@ -97,6 +97,15 @@ namespace Server.World
             //Use those to add it into the world
             MeshManager.AddStatic(World, ArenaMeshHandle, ArenaPosition, ArenaRotation);
 
+            //Place the jumping cubes
+            World.Statics.Add(new StaticDescription(new Vector3(1.299f, 2.3f, -31.24f), new CollidableDescription(World.Shapes.Add(new Box(5, 5, 5)), 0.1f)));
+            World.Statics.Add(new StaticDescription(new Vector3(-26.56f, 2.3f, -35.2f), new CollidableDescription(World.Shapes.Add(new Box(5, 5, 5)), 0.1f)));
+            World.Statics.Add(new StaticDescription(new Vector3(-33.12f, 2.3f, -21.65f), new CollidableDescription(World.Shapes.Add(new Box(5, 5, 5)), 0.1f)));
+            World.Statics.Add(new StaticDescription(new Vector3(-26.05f, 2.3f, -9.38f), new CollidableDescription(World.Shapes.Add(new Box(5, 5, 5)), 0.1f)));
+            World.Statics.Add(new StaticDescription(new Vector3(-10.31f, 2.3f, -5.62f), new CollidableDescription(World.Shapes.Add(new Box(5, 5, 5)), 0.1f)));
+            World.Statics.Add(new StaticDescription(new Vector3(1.94f, 2.3f, -15.88f), new CollidableDescription(World.Shapes.Add(new Box(5, 5, 5)), 0.1f)));
+            World.Statics.Add(new StaticDescription(new Vector3(-11.3f, 2.3f, -37.44f), new CollidableDescription(World.Shapes.Add(new Box(5, 5, 5)), 0.1f)));
+
             //Place a ground plane to walk on
             World.Statics.Add(new StaticDescription(new Vector3(0, -0.5f, 0), new CollidableDescription(World.Shapes.Add(new Box(100, 1, 100)), 0.1f)));
 
