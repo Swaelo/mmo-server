@@ -9,8 +9,9 @@ After you have the server running, take at look at the other half of the project
 # Project Requirements 
 ### Windows 10
 I've always used Windows 10 while working on this project, I suspect you may be able to get it running in Windows 8 or 8.1 but that’s totally up to you.  Any issues caused by trying this are left up to you to figure out on your own.  
-### Visual Studio Professional 2019
-Just like with the Windows 10 requirement, this is what I have always used so I know it works.  You can very likely get it running in older versions (I'm certain 2017 will work with just a few changes), but again that’s totally up to you.
+### Visual Studio 2019
+Just like with the Windows 10 requirement, this is what I have always used so I know it works.  You can very likely get it running in older versions (I'm certain 2017 will work with just a few changes), but again that’s totally up to you.  
+For this guide I will be using the Community edition, but it also works if you use Professional edition.
 ### .NET Core 3.1  
 For compiling and debugging the application you will need to install the SDK through the Visual Studio Installer  
 To run standalone release builds you will need the [runtimes](https://dotnet.microsoft.com/download/dotnet-core/3.1)
