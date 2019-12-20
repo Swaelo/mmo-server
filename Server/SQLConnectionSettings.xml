@@ -1,6 +1,0 @@
-﻿<root>
-  <NetworkPort>3306</NetworkPort>
-  <WindowsServiceName>serverdatabase</WindowsServiceName>
-  <Username>swaelo</Username>
-  <Password>2beardmore</Password>
-</root>
