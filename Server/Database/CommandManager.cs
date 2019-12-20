@@ -5,6 +5,7 @@
 // ================================================================================================================================
 
 using System;
+using System.Xml;
 using System.Numerics;
 using MySql.Data.MySqlClient;
 using Server.Logging;
@@ -14,17 +15,28 @@ namespace Server.Database
 {
     public static class CommandManager
     {
-        //Used to establish a new connection with the SQL Database Server
-        private static string ConnectionString =
-                "Server=203.221.43.175;" +
-                "Port=3306;" +
-                "Database=serverdatabase;" +
-                "User=swaelo;" +
-                "Password=2beardmore;";
-
         //Opens a new connection with the SQL Database Server
         private static MySqlConnection OpenConnection()
         {
+            //Open the XML document containing the server connection settings
+            XmlDocument ConnectionSettings = new XmlDocument();
+            ConnectionSettings.Load("SQLConnectionSettings.xml");
+
+            //Extract all the required values from this file that we will need to connect to the SQL database
+            string ServerIP = ConnectionSettings.DocumentElement.SelectSingleNode("/root/NetworkIP").InnerText;
+            string ServerPort = ConnectionSettings.DocumentElement.SelectSingleNode("/root/NetworkPort").InnerText;
+            string ServiceName = ConnectionSettings.DocumentElement.SelectSingleNode("/root/WindowsServiceName").InnerText;
+            string UserName = ConnectionSettings.DocumentElement.SelectSingleNode("/root/Username").InnerText;
+            string Password = ConnectionSettings.DocumentElement.SelectSingleNode("/root/Password").InnerText;
+
+            //Create the SQL Connection String from all these values
+            string ConnectionString =
+                "Server=" + ServerIP + ";" +
+                "Port=" + ServerPort + ";" +
+                "Database=" + ServiceName + ";" +
+                "User=" + UserName + ";" +
+                "Password=" + Password + ";";
+
             MySqlConnection NewConnection = new MySqlConnection(ConnectionString);
             NewConnection.Open();
             return NewConnection;
@@ -55,7 +67,7 @@ namespace Server.Database
             MySqlCommand Command = CreateCommand(CommandQuery, Connection, Context);
 
             //Execute the command if it was created successfully
-            if(Command != null)
+            if(Command != null && Command.Connection != null)
             {
                 try { Command.ExecuteNonQuery(); }
                 catch (MySqlException Exception) { MessageLog.Error(Exception, "Error executing non query command: " + Context); }
